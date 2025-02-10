@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '947c501831366deb5e5f19e43dac710ed1309c3fcf0da962c8524122a4e9a142'
+LOVELY_INTEGRITY = '3062e877afa10107b5e3bbd8ec9b301a451c24f4ae132c36908811e861037ba4'
 
 --Updates all display information for all displays for a given screenmode. Returns the key for the resolution option cycle
 --
@@ -818,7 +818,7 @@ function modulate_sound(dt)
   for k, v in pairs(G.ARGS.ambient_sounds) do
     AC[k] = AC[k] or {}
     AC[k].per = (k == 'ambientOrgan1') and 0.7 or (k == 'ambientFire1' and 1.1) or (k == 'ambientFire2' and 1.05) or 1
-    AC[k].vol = (not G.video_organ and G.STATE == G.STATES.SPLASH) and 0 or AC[k].vol and v.volfunc(AC[k].vol) or 0
+    AC[k].vol = Cartomancer.handle_flames_volume((not G.video_organ and G.STATE == G.STATES.SPLASH) and 0 or AC[k].vol and v.volfunc(AC[k].vol) or 0)
   end
 
   G.ARGS.push = G.ARGS.push or {}
@@ -1577,6 +1577,14 @@ function save_with_action(action)
   G.action = nil
 end
 
+function cry_prob(owned, den, rigged)
+	prob = G.GAME and G.GAME.probabilities.normal or 1
+	if rigged then 
+		return den
+	else
+		return prob*owned
+	end
+end
 function save_run()
   if G.F_NO_SAVING == true then return end
   local cardAreas = {}
@@ -1984,73 +1992,24 @@ end
 function get_front_spriteinfo(_front)
   if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.Collabs then
     local collab = G.SETTINGS.CUSTOM_DECK.Collabs[_front.suit]
-    if collab then
+    if collab and collab ~= 'default' then
         local deckSkin = SMODS.DeckSkins[collab]
         if deckSkin then
-            if deckSkin.outdated then
-                local hasRank = false
-                for i = 1, #deckSkin.ranks do
-                    if deckSkin.ranks[i] == _front.value then hasRank = true break end
-                end
-                if hasRank then
-                    local atlas = G.ASSET_ATLAS[G.SETTINGS.colour_palettes[_front.suit] == 'hc' and deckSkin.hc_atlas or deckSkin.lc_atlas]
-                    if atlas then
-                        if deckSkin.pos_style == 'collab' then
-                            return atlas, G.COLLABS.pos[_front.value]
-                        elseif deckSkin.pos_style == 'suit' then
-                            return atlas, { x = _front.pos.x, y = 0}
-                        elseif deckSkin.pos_style == 'deck' then
-                            return atlas, _front.pos
-                        elseif deckSkin.pos_style == 'ranks' or nil then
-                            for i, rank in ipairs(deckSkin.ranks) do
-                                if rank == _front.value then
-                                    return atlas, { x = i - 1, y = 0}
-                                end
-                            end
-                        end
-                    end
-                end
-                return G.ASSET_ATLAS[G.SETTINGS.colour_palettes[_front.suit] == 'hc' and _front.hc_atlas or _front.lc_atlas or {}] or G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(G.SETTINGS.colour_palettes[_front.suit] == 'hc' and 2 or 1)], _front.pos
-            else
-                local palette = deckSkin.palette_map and deckSkin.palette_map[G.SETTINGS.colour_palettes[_front.suit] or ''] or (deckSkin.palettes or {})[1]
-                local hasRank = false
-                for i = 1, #palette.ranks do
-                    if palette.ranks[i] == _front.value then hasRank = true break end
-                end
-                if hasRank then
-                    local atlas = G.ASSET_ATLAS[palette.atlas]
-                    if type(palette.pos_style) == "table" then
-                        if palette.pos_style[_front.value] then
-                            if palette.pos_style[_front.value].atlas then
-                                atlas = G.ASSET_ATLAS[palette.pos_style[_front.value].atlas]
-                            end
-                            if palette.pos_style[_front.value].pos then
-                                return atlas, palette.pos_style[_front.value].pos
-                            end
-                        elseif palette.pos_style.fallback_style then
-                            if palette.pos_style.fallback_style == 'collab' then
-                                return atlas, G.COLLABS.pos[_front.value]
-                            elseif palette.pos_style.fallback_style == 'suit' then
-                                return atlas, { x = _front.pos.x, y = 0}
-                            elseif palette.pos_style.fallback_style == 'deck' then
-                                return atlas, _front.pos
-                            end
-                        end
-                    elseif palette.pos_style == 'collab' then
+            local hasRank = false
+            for i = 1, #deckSkin.ranks do
+                if deckSkin.ranks[i] == _front.value then hasRank = true break end
+            end
+            if hasRank then
+                local atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and deckSkin.hc_atlas or deckSkin.lc_atlas]
+                if atlas then
+                    if  deckSkin.posStyle == 'collab' then
                         return atlas, G.COLLABS.pos[_front.value]
-                    elseif palette.pos_style == 'suit' then
+                    elseif deckSkin.posStyle == 'suit' then
                         return atlas, { x = _front.pos.x, y = 0}
-                    elseif palette.pos_style == 'deck' then
+                    elseif deckSkin.posStyle == 'deck' then
                         return atlas, _front.pos
-                    elseif palette.pos_style == 'ranks' or nil then
-                        for i, rank in ipairs(palette.ranks) do
-                            if rank == _front.value then
-                                return atlas, { x = i - 1, y = 0}
-                            end
-                        end
                     end
                 end
-                return G.ASSET_ATLAS[palette.hc_default and _front.hc_atlas or _front.lc_atlas or {}] or G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(palette.hc_default and 2 or 1)], _front.pos
             end
         end
     end

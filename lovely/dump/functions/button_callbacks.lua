@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'e36471bd79b456102440b1c69061665aed2f0a92e67cfd840d15eafe4e55be17'
+LOVELY_INTEGRITY = '4a318253e70cba949d05bfb650e28bf79699539c4f0e57a07f3ad3d649a8688b'
 
 --Moves the tutorial to the next step in queue
 --
@@ -55,7 +55,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_buy = function(e)
-    if (to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (e.config.ref_table.cost > 0) then
+    if (e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) and (e.config.ref_table.cost > 0) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -77,7 +77,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_buy_and_use = function(e)
-    if (((to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (e.config.ref_table.cost > 0)) or (not e.config.ref_table:can_use_consumeable())) then
+    if (((e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) and (e.config.ref_table.cost > 0)) or (not e.config.ref_table:can_use_consumeable())) then
         e.UIBox.states.visible = false
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
@@ -96,7 +96,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_redeem = function(e)
-  if to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at) then
+  if e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at then
       e.config.colour = G.C.UI.BACKGROUND_INACTIVE
       e.config.button = nil
   else
@@ -111,7 +111,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_open = function(e)
-  if (e.config.ref_table.cost) > 0 and (to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) then
+  if (e.config.ref_table.cost) > 0 and (e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) then
       e.config.colour = G.C.UI.BACKGROUND_INACTIVE
       e.config.button = nil
   else
@@ -2020,12 +2020,12 @@ G.FUNCS.flame_handler = function(e)
       local exptime = math.exp(-0.4*G.real_dt)
       
       if to_big(G.ARGS.score_intensity.earned_score) >= to_big(G.ARGS.score_intensity.required_score) and to_big(G.ARGS.score_intensity.required_score) > to_big(0) then
-        _F.intensity = ((G.pack_cards and not G.pack_cards.REMOVED) or (G.TAROT_INTERRUPT)) and 0 or math.max(0., math.log(G.ARGS.score_intensity.earned_score, 5)-2)
+        _F.intensity = ((G.pack_cards and not G.pack_cards.REMOVED) or (G.TAROT_INTERRUPT)) and 0 or Cartomancer.get_flames_intensity()
       else
         _F.intensity = 0
       end
 
-      _F.timer = _F.timer + G.real_dt*(1 + _F.intensity*0.2)
+      _F.timer = Cartomancer.handle_flames_timer(_F.timer, _F.intensity)
       if _F.intensity_vel < 0 then _F.intensity_vel = _F.intensity_vel*(1 - 10*G.real_dt) end
       _F.intensity_vel = (1-exptime)*(_F.intensity - _F.real_intensity)*G.real_dt*25 + exptime*_F.intensity_vel
       _F.real_intensity = math.max(0, _F.real_intensity + _F.intensity_vel)
@@ -2078,7 +2078,7 @@ end
   end
 
   G.FUNCS.can_reroll = function(e)
-    if ((to_big(G.GAME.dollars)-to_big(G.GAME.bankrupt_at)) - to_big(G.GAME.current_round.reroll_cost) < to_big(0)) and G.GAME.current_round.reroll_cost ~= 0 then
+    if ((G.GAME.dollars-G.GAME.bankrupt_at) - G.GAME.current_round.reroll_cost < 0) and G.GAME.current_round.reroll_cost ~= 0 then 
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
         --e.children[1].children[1].config.shadow = false
@@ -2220,29 +2220,30 @@ end
             nc = obj:keep_on_use(card)
         end
     end
-    if card.area and (not nc or card.area == G.pack_cards) then card.area:remove_card(card) end
+    if not nc and card.area then card.area:remove_card(card) end
     
-    if booster_obj and booster_obj.select_card then
-        local area = type(booster_obj.select_card) == 'table' and (booster_obj.select_card[e.config.ref_table.ability.set] or nil) or booster_obj.select_card
-        G[area]:emplace(card)
-        play_sound('card1', 0.8, 0.6)
-        play_sound('generic1')
-        dont_dissolve = true
-        delay_fac = 0.2
-    elseif card.ability.consumeable then
-          if nc then
-          if area then area:remove_from_highlighted(card) end
-          play_sound('cardSlide2', nil, 0.3)
-          dont_dissolve = true
-      end
-      if (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
+    if card.ability.consumeable then
+      if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED then
         card.T.x = G.hand.T.x + G.hand.T.w/2 - card.T.w/2
         card.T.y = G.hand.T.y + G.hand.T.h/2 - card.T.h/2 - 0.5
         discover_card(card.config.center)
-      elseif not nc then draw_card(G.hand, G.play, 1, 'up', true, card, nil, mute) end
+      elseif nc then
+          area:remove_from_highlighted(card)
+          play_sound('cardSlide2', nil, 0.3)
+          dont_dissolve = true
+      else draw_card(G.hand, G.play, 1, 'up', true, card, nil, mute) end
       delay(0.2)
       e.config.ref_table:use_consumeable(area)
-      SMODS.calculate_context({using_consumeable = true, consumeable = card, area = card.from_area})
+      if card.edition and card.edition.key then
+          local ed = SMODS.Centers[card.edition.key]
+          if ed.calculate and type(ed.calculate) == 'function' then
+              ed:calculate(card, {from_consumable = true})
+          end
+      end
+      for i = 1, #G.jokers.cards do
+        G.jokers.cards[i]:calculate_joker({using_consumeable = true, consumeable = card})
+      end
+        G.GAME.selected_back:trigger_effect({context = 'using_consumeable', consumeable = card})
     elseif card.ability.set == 'Enhanced' or card.ability.set == 'Default' then 
       G.playing_card = (G.playing_card and G.playing_card + 1) or 1
       G.deck:emplace(card)
@@ -2293,8 +2294,6 @@ end
                   prev_state == G.STATES.SPECTRAL_PACK or prev_state == G.STATES.STANDARD_PACK or
                   prev_state == G.STATES.SMODS_BOOSTER_OPENED or
                   prev_state == G.STATES.BUFFOON_PACK) and G.booster_pack then
-                  if nc and area == G.pack_cards then G.pack_cards:remove_card(card); G.consumeables:emplace(card) end
-                  booster_obj = nil
                   if area == G.consumeables or area == G.hand then
                     G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
                     G.booster_pack.alignment.offset.py = nil
@@ -2346,7 +2345,12 @@ end
   G.FUNCS.sell_card = function(e)
     local card = e.config.ref_table
     card:sell_card()
-    SMODS.calculate_context({selling_card = true, card = card})
+    for i = 1, #G.jokers.cards do
+      if G.jokers.cards[i] ~= card then 
+        G.jokers.cards[i]:calculate_joker({selling_card = true, card = card})
+      end
+    end
+        G.GAME.selected_back:trigger_effect({context = 'selling_card', card = card})
   end
 
   G.FUNCS.can_confirm_contest_name = function(e)
@@ -2438,7 +2442,6 @@ G.FUNCS.buy_from_shop = function(e)
         trigger = 'after',
         delay = 0.1,
         func = function()
-          c1.from_area = c1.area
           c1.area:remove_card(c1)
           c1:add_to_deck()
           if c1.children.price then c1.children.price:remove() end
@@ -2459,11 +2462,7 @@ G.FUNCS.buy_from_shop = function(e)
             else
               G.jokers:emplace(c1)
             end
-            G.E_MANAGER:add_event(Event({func = function()
-                local eval, post = eval_card(c1, {buying_card = true, card = c1})
-                SMODS.trigger_effects({eval, post}, c1)
-                return true
-                end}))
+            G.E_MANAGER:add_event(Event({func = function() c1:calculate_joker({buying_card = true, card = c1}) return true end}))
           end
           --Tallies for unlocks
           G.GAME.round_scores.cards_purchased.amt = G.GAME.round_scores.cards_purchased.amt + 1
@@ -2477,7 +2476,10 @@ G.FUNCS.buy_from_shop = function(e)
             G.GAME.current_round.jokers_purchased = G.GAME.current_round.jokers_purchased + 1
           end
 
-          SMODS.calculate_context({buying_card = true, card = c1})
+          for i = 1, #G.jokers.cards do
+            G.jokers.cards[i]:calculate_joker({buying_card = true, card = c1})
+          end
+            G.GAME.selected_back:trigger_effect({context = 'buying_card', card = c1})
 
           if G.GAME.modifiers.inflation then 
             G.GAME.inflation = G.GAME.inflation + 1
@@ -2509,7 +2511,10 @@ end
     stop_use()
     G.CONTROLLER.locks.toggle_shop = true
     if G.shop then 
-      SMODS.calculate_context({ending_shop = true})
+      for i = 1, #G.jokers.cards do
+        G.jokers.cards[i]:calculate_joker({ending_shop = true})
+      end
+        G.GAME.selected_back:trigger_effect({context = 'ending_shop'})
       G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -2582,8 +2587,10 @@ end
   end
 
   G.FUNCS.skip_booster = function(e)
-  booster_obj = nil
-    SMODS.calculate_context({skipping_booster = true})
+    for i = 1, #G.jokers.cards do
+      G.jokers.cards[i]:calculate_joker({skipping_booster = true})
+    end
+      G.GAME.selected_back:trigger_effect({context = 'skipping_booster'})
     G.FUNCS.end_consumeable(e)
   end
 
@@ -2614,7 +2621,11 @@ end
     delay(0.2*delayfac)
     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2*delayfac,
     func = function()
-      G.FUNCS.draw_from_hand_to_deck()
+      if not G.GAME.USING_RUN then
+      	G.FUNCS.draw_from_hand_to_deck()
+      else
+      	G.FUNCS.draw_from_hand_to_run()
+      end
       G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2*delayfac,
           func = function()
                 if G.shop and G.shop.alignment.offset.py then 
@@ -2791,7 +2802,10 @@ end
         trigger = 'immediate',
         func = function()
           delay(0.3)
-          SMODS.calculate_context({skip_blind = true})
+          for i = 1, #G.jokers.cards do
+            G.jokers.cards[i]:calculate_joker({skip_blind = true})
+          end
+            G.GAME.selected_back:trigger_effect({context = 'skip_blind'})
           save_run()
           for i = 1, #G.GAME.tags do
             G.GAME.tags[i]:apply_to_run({type = 'immediate'})
@@ -2806,7 +2820,7 @@ end
   end
 
   G.FUNCS.reroll_boss_button = function(e)
-    if ((G.GAME.dollars-G.GAME.bankrupt_at) - cry_cheapest_boss_reroll() >= 0) and
+    if ((to_big(G.GAME.dollars)-to_big(G.GAME.bankrupt_at)) - to_big(cry_cheapest_boss_reroll()) >= to_big(0)) and
       (G.GAME.used_vouchers["v_retcon"] or
       (G.GAME.used_vouchers["v_directors_cut"] and not G.GAME.round_resets.boss_rerolled)) then 
         e.config.colour = G.C.RED
@@ -2822,16 +2836,6 @@ end
   end
 
   G.FUNCS.reroll_boss = function(e) 
-  if not G.blind_select_opts then
-      G.GAME.round_resets.boss_rerolled = true
-      if not G.from_boss_tag then ease_dollars(-cry_cheapest_boss_reroll()) end
-      G.from_boss_tag = nil
-      G.GAME.round_resets.blind_choices.Boss = get_new_boss()
-      for i = 1, #G.GAME.tags do
-          if G.GAME.tags[i]:apply_to_run({type = 'new_blind_choice'}) then break end
-      end
-      return true
-  end
     stop_use()
     G.GAME.round_resets.boss_rerolled = true
     if not G.from_boss_tag then ease_dollars(-cry_cheapest_boss_reroll()) end
@@ -2931,7 +2935,10 @@ end
             G.CONTROLLER.interrupt.focus = false
             G.CONTROLLER.locks.shop_reroll = false
             G.CONTROLLER:recall_cardarea_focus('shop_jokers')
-            SMODS.calculate_context({reroll_shop = true})
+            for i = 1, #G.jokers.cards do
+              G.jokers.cards[i]:calculate_joker({reroll_shop = true})
+            end
+              G.GAME.selected_back:trigger_effect({context = 'reroll_shop'})
             return true
           end
         }))

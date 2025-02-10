@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'fff73090942942422c5293599c9a5f94fd18419e9275888a510770e6688dd01c'
+LOVELY_INTEGRITY = '6ce2fb7d4e93be5cc027ce62976490e8adadb9539ab9eecba2f579bc9b8dc2e5'
 
 --Class
 Game = Object:extend()
@@ -109,7 +109,109 @@ function Game:start_up()
     boot_timer('window init', 'savemanager')
     --call the save manager to wait for any save requests
     G.SAVE_MANAGER = {
-        thread = love.thread.newThread('engine/save_manager.lua'),
+        thread = love.thread.newThread([[require "love.system" 
+        
+        if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
+        
+        require "love.timer"
+        require "love.thread"
+        require 'love.filesystem'
+        require "engine/object"
+        require "engine/string_packer"
+        
+        --vars needed for sound manager thread
+        CHANNEL = love.thread.getChannel("save_request")
+        
+        talisman = "]] .. Talisman.config_file.break_infinity .. [["
+        
+        --untested
+        function tal_compress_and_save(_file, _data)
+          local save_string = type(_data) == 'table' and STR_PACK(_data) or _data
+          local fallback_save = STR_PACK({GAME = {won = true}}) --just bare minimum to not crash, maybe eventually display some info?
+          if talisman == 'bignumber' then
+            fallback_save = "if not BigMeta then " .. fallback_save
+          elseif talisman == 'omeganum' then
+            fallback_save = "if not OmegaMeta then " .. fallback_save
+          else
+            fallback_save = "if BigMeta or OmegaMeta then " .. fallback_save
+          end
+          fallback_save = fallback_save .. " end"
+          save_string = fallback_save .. " " .. save_string
+          save_string = love.data.compress('string', 'deflate', save_string, 1)
+          love.filesystem.write(_file,save_string)
+        end
+        
+         while true do
+            --Monitor the channel for any new requests
+            local request = CHANNEL:demand() -- Value from channel
+            if request then
+                --Saves progress for settings, unlocks, alerts and discoveries
+                if request.type == 'save_progress' then
+                    local prefix_profile = (request.save_progress.SETTINGS.profile or 1)..''
+                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
+                    prefix_profile = prefix_profile..'/'
+        
+                    if not love.filesystem.getInfo(prefix_profile..'meta.jkr') then
+                        love.filesystem.append( prefix_profile..'meta.jkr', 'return {}' )
+                    end
+        
+                    local meta = STR_UNPACK(get_compressed(prefix_profile..'meta.jkr') or 'return {}')
+                    meta.unlocked = meta.unlocked or {}
+                    meta.discovered = meta.discovered or {}
+                    meta.alerted = meta.alerted or {}
+        
+                    local _append = false
+        
+                    for k, v in pairs(request.save_progress.UDA) do
+                        if string.find(v, 'u') and not meta.unlocked[k] then 
+                            meta.unlocked[k] = true
+                            _append = true
+                        end
+                        if string.find(v, 'd') and not meta.discovered[k] then 
+                            meta.discovered[k] = true
+                            _append = true
+                        end
+                        if string.find(v, 'a') and not meta.alerted[k] then 
+                            meta.alerted[k] = true
+                            _append = true
+                        end
+                    end
+                    if _append then compress_and_save( prefix_profile..'meta.jkr', STR_PACK(meta)) end
+        
+                    compress_and_save('settings.jkr', request.save_progress.SETTINGS)
+                    compress_and_save(prefix_profile..'profile.jkr', request.save_progress.PROFILE)
+        
+                    CHANNEL:push('done')
+                --Saves the settings file
+                elseif request.type == 'save_settings' then 
+                    compress_and_save('settings.jkr', request.save_settings)
+                    compress_and_save(request.profile_num..'/profile.jkr', request.save_profile)
+                    --Saves the metrics file
+                elseif request.type == 'save_metrics' then 
+                    compress_and_save('metrics.jkr', request.save_metrics)
+                --Saves any notifications
+                elseif request.type == 'save_notify' then 
+                    local prefix_profile = (request.profile_num or 1)..''
+                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
+                    prefix_profile = prefix_profile..'/'
+        
+                    if not love.filesystem.getInfo(prefix_profile..'unlock_notify.jkr') then love.filesystem.append( prefix_profile..'unlock_notify.jkr', '') end
+                    local unlock_notify = get_compressed(prefix_profile..'unlock_notify.jkr') or ''
+        
+                    if request.save_notify and not string.find(unlock_notify, request.save_notify) then 
+                        compress_and_save( prefix_profile..'unlock_notify.jkr', unlock_notify..request.save_notify..'\n')
+                    end
+        
+                --Saves the run
+                elseif request.type == 'save_run' then 
+                    local prefix_profile = (request.profile_num or 1)..''
+                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
+                    prefix_profile = prefix_profile..'/'
+        
+                    tal_compress_and_save(prefix_profile..'save.jkr', request.save_table)
+                end
+            end
+        end]]),
         channel = love.thread.getChannel('save_request')
     }
     G.SAVE_MANAGER.thread:start(2)
@@ -220,6 +322,7 @@ function Game:start_up()
         end
     end
     set_profile_progress()
+    Cartomancer.load_mod_file('internal/localization.lua', 'localization')
     boot_timer('prep stage', 'splash prep',1)
     self:splash_screen()
     boot_timer('splash prep', 'end',1)
@@ -1252,7 +1355,7 @@ function Game:prep_stage(new_stage, new_state, new_game_obj)
         self.CONTROLLER.locks[k] = nil
     end
     if new_game_obj then self.GAME = self:init_game_object() end
-    if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
+    if new_game_obj and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
     self.STAGE = new_stage or self.STAGES.MAIN_MENU
     self.STATE = new_state or self.STATES.MENU
     self.STATE_COMPLETE = false
@@ -1449,12 +1552,12 @@ function Game:splash_screen()
                  		local option = math.random(#mcard)
                    		local chosenoption = mcard[option]
                        		if chosenoption == "j_cry_biggestm" or chosenoption == "j_cry_reverse" then --These don't render properly; replace these with loopy instead
-                			SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS['j_cry_loopy'])
+                			SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS['j_cry_loopy'],{bypass_discovery_center = true, bypass_discovery_ui = true})
                    		else
-                     			SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[chosenoption])
+                     			SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[chosenoption],{bypass_discovery_center = true, bypass_discovery_ui = true})
                      		end
                   	else
-                   		SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS['j_jolly'])
+                   		SC = Card(G.ROOM.T.w/2 - SC_scale*G.CARD_W/2, 10. + G.ROOM.T.h/2 - SC_scale*G.CARD_H/2, SC_scale*G.CARD_W, SC_scale*G.CARD_H, G.P_CARDS.empty, G.P_CENTERS['j_jolly'],{bypass_discovery_center = true, bypass_discovery_ui = true})
                 	end
                 end
                 SC.T.y = G.ROOM.T.h/2 - SC_scale*G.CARD_H/2
@@ -1948,6 +2051,10 @@ function Game:init_game_object()
         pseudorandom = {},
         starting_deck_size = 52,
         ecto_minus = 1,
+        cry_bonusvouchercount = 0,
+        cry_bonusvouchersused = {},
+        voucher_edition_index = {},
+        voucher_sticker_index = {eternal = {}, perishable = {}, rental = {}, pinned = {}, banana = {}},	-- might as well
         pack_size = 2,
         skips = 0,
         STOP_USE = 0,
@@ -2008,6 +2115,9 @@ function Game:init_game_object()
                 hand_level = ''
             },
             used_packs = {},
+            cry_bonusvouchers = {},
+            cry_voucher_stickers = {eternal = false, perishable = false, rental = false, pinned = false, banana = false},
+            cry_voucher_edition = {},
             cards_flipped = 0,
             round_text = 'Round ',
             idol_card = {suit = 'Spades', rank = 'Ace'},
@@ -2090,13 +2200,20 @@ function Game:start_run(args)
     local selected_back = saveTable and saveTable.BACK.name or (args.challenge and args.challenge.deck and args.challenge.deck.type) or (self.GAME.viewed_back and self.GAME.viewed_back.name) or self.GAME.selected_back and self.GAME.selected_back.name or 'Red Deck'
     selected_back = get_deck_from_name(selected_back)
     self.GAME = saveTable and saveTable.GAME or self:init_game_object()
-    if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
+    if (not saveTable or not saveTable.GAME) and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
     Handy.UI.init()
     self.GAME.modifiers = self.GAME.modifiers or {}
     self.GAME.stake = args.stake or self.GAME.stake or 1
     self.GAME.STOP_USE = 0
     self.GAME.selected_back = Back(selected_back)
     self.GAME.selected_back_key = selected_back
+    G.GAME.cry_voucher_centers = {}
+    for k, v in pairs(G.P_CENTERS) do
+    	if v.set == 'Voucher' then
+    		G.GAME.cry_voucher_centers[k] = {config = {}}
+    		G.GAME.cry_voucher_centers[k].config = copy_table(v.config)
+    	end
+    end
 
     G.C.UI_CHIPS[1], G.C.UI_CHIPS[2], G.C.UI_CHIPS[3], G.C.UI_CHIPS[4] = G.C.BLUE[1], G.C.BLUE[2], G.C.BLUE[3], G.C.BLUE[4]
     G.C.UI_MULT[1], G.C.UI_MULT[2], G.C.UI_MULT[3], G.C.UI_MULT[4] = G.C.RED[1], G.C.RED[2], G.C.RED[3], G.C.RED[4]
@@ -2216,13 +2333,6 @@ function Game:start_run(args)
     end
 
     G.GAME.chips_text = ''
-    G.GAME.cry_voucher_centers = {}
-    for k, v in pairs(G.P_CENTERS) do
-    	if v.set == 'Voucher' then
-    		G.GAME.cry_voucher_centers[k] = {config = {}}
-    		G.GAME.cry_voucher_centers[k].config = copy_table(v.config)
-    	end
-    end
 
     if not saveTable then
         if args.seed then self.GAME.seeded = true end
@@ -2261,6 +2371,9 @@ function Game:start_run(args)
         if not self.GAME.modifiers.cry_no_vouchers then
             if not G.GAME.modifiers.cry_voucher_restock_antes or G.GAME.round_resets.ante % G.GAME.modifiers.cry_voucher_restock_antes == 0 then
                 self.GAME.current_round.voucher = G.SETTINGS.tutorial_progress and G.SETTINGS.tutorial_progress.forced_voucher or get_next_voucher_key()
+                for i = 1, self.GAME.cry_bonusvouchercount do
+                	self.GAME.current_round.cry_bonusvouchers[i] = get_next_voucher_key()
+                end
             end
         else
             very_fair_quip = pseudorandom_element(G.localization.misc.very_fair_quips, pseudoseed("cry_very_fair"))
@@ -2348,11 +2461,6 @@ function Game:start_run(args)
         0, 0,
         CAI.discard_W,CAI.discard_H,
         {card_limit = 1e308, type = 'discard'})
-    self.vouchers = CardArea(
-        G.discard.T.x, G.discard.T.y,
-        G.discard.T.w, G.discard.T.h,
-        { type = "discard", card_limit = 1e308 }
-    )
     self.deck = CardArea(
         0, 0,
         CAI.deck_W,CAI.deck_H, 
@@ -2553,6 +2661,7 @@ function Game:start_run(args)
         reset_blinds()
     end
 
+    Cartomancer.update_tags_visibility()
     G.FUNCS.blind_chip_UI_scale(G.hand_text_area.blind_chips)
      
     self.HUD:recalculate()
@@ -2589,7 +2698,7 @@ function Game:update(dt)
     self.TIMERS.BACKGROUND = self.TIMERS.BACKGROUND + dt*(G.ARGS.spin and G.ARGS.spin.amount or 0)
     self.real_dt = dt
 
-    if self.real_dt > 0.05 then print('LONG DT @ '..math.floor(G.TIMERS.REAL)..': '..self.real_dt) end
+    if require('debugplus.config').getValue('enableLongDT') and self.real_dt > 0.05 then print('LONG DT @ '..math.floor(G.TIMERS.REAL)..': '..self.real_dt) end
     if not G.fbf or G.new_frame then
         G.new_frame = false
 
@@ -2607,7 +2716,7 @@ function Game:update(dt)
         if G.STATE ~= G.ACC_state then G.ACC = 0 end
         G.ACC_state = G.STATE
 
-        if (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.NEW_ROUND) then 
+        if (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.NEW_ROUND) or Incantation and Incantation.accelerate then
             G.ACC = math.min((G.ACC or 0) + dt*0.2*self.SETTINGS.GAMESPEED, 16)
              elseif Handy.insta_cash_out.is_skipped then G.ACC = 999 
         else
@@ -2667,7 +2776,23 @@ function Game:update(dt)
         end
 
 
-        if G.GAME.USING_RUN then self.STATE = self.STATES.SHOP end
+        if G.GAME.USING_RUN then
+        	if not (self.STATE == self.STATES.STANDARD_PACK or self.STATE == self.STATES.BUFFOON_PACK or self.STATE == self.STATES.PLANET_PACK or self.STATE == self.STATES.TAROT_PACK or self.STATE == self.STATES.SPECTRAL_PACK or self.STATE == self.STATES.SMODS_BOOSTER_OPENED) then -- do you are have stupid
+        		self.STATE = self.STATES.SHOP
+        	end
+        	if G.GAME.blind then G.GAME.blind:change_colour() end	-- aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        	if G.load_cry_runarea then
+        		G.cry_runarea = CardArea(
+        			G.discard.T.x,
+        			G.discard.T.y,
+        			G.discard.T.w,
+        			G.discard.T.h,
+        			{ type = "discard", card_limit = 1e100 }
+        		)
+        		G.cry_runarea:load(G.load_cry_runarea)
+        		G.load_cry_runarea = nil
+        	end
+        end
         if self.STATE == self.STATES.SELECTING_HAND then
             if (not G.hand.cards[1]) and G.deck.cards[1] then 
                 G.STATE = G.STATES.DRAW_TO_HAND
@@ -2851,7 +2976,6 @@ function Game:update(dt)
             if G.FILE_HANDLER.run then
                 G.SAVE_MANAGER.channel:push({
                     type = 'save_run',
-                    talisman = Talisman.config_file.break_infinity,
                     save_table = G.ARGS.save_run,
                     profile_num = G.SETTINGS.profile})
                 G.SAVED_GAME = nil
@@ -3107,11 +3231,23 @@ love.graphics.pop()
 
     timer_checkpoint('canvas', 'draw')
 
-    if not _RELEASE_MODE and G.DEBUG and not G.video_control and G.F_VERBOSE then 
+    if require("debugplus.config").getValue("showHUD") and not G.video_control and G.F_VERBOSE then
         love.graphics.push()
         love.graphics.setColor(0, 1, 1,1)
         local fps = love.timer.getFPS( )
-        love.graphics.print("Current FPS: "..fps, 10, 10)
+        do
+            local otherSize = 0
+            for k,v in pairs(G.E_MANAGER.queues or {}) do 
+                if k ~= 'base' then 
+                    otherSize = otherSize + #v
+                end
+            end
+            if otherSize ~= 0 then
+                love.graphics.print(string.format("Current FPS: %d\nBase event queue: %d\nOther event queues: %d", fps, #(G.E_MANAGER.queues and G.E_MANAGER.queues.base or {}), otherSize), 10, 10)
+            else
+                love.graphics.print(string.format("Current FPS: %d\nBase event queue: %d", fps, #(G.E_MANAGER.queues and G.E_MANAGER.queues.base or {})), 10, 10)
+            end
+        end
 
         if G.check and G.SETTINGS.perf_mode then
             local section_h = 30
@@ -3130,6 +3266,10 @@ love.graphics.pop()
                         end
                         love.graphics.rectangle('fill', 10+poll_w*kk,  20 + v_off, 5*poll_w, -(vv)*resolution)
                     end
+                    v_off = v_off + section_h
+                    end
+                    local v_off = v_off - section_h * #b.checkpoint_list
+                    for k, v in ipairs(b.checkpoint_list) do
                     love.graphics.setColor(a == 2 and 0.5 or 1, a == 2 and 1 or 0.5, 1,1)
                     love.graphics.print(v.label..': '..(string.format("%.2f",1000*(v.average or 0)))..'\n', 10, -section_h + 30 + v_off)
                     v_off = v_off + section_h
@@ -3299,20 +3439,48 @@ function Game:update_shop(dt)
                                             	end
                                             end
                                             G.shop_vouchers:emplace(card)
-                                        end
+                                        end for i = 1, #G.GAME.current_round.cry_bonusvouchers do
+	if not G.GAME.cry_bonusvouchersused[i] then
+		local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2,
+			G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[G.GAME.current_round.cry_bonusvouchers[i]],{bypass_discovery_center = true, bypass_discovery_ui = true})
+		card.shop_cry_bonusvoucher = i
+		cry_misprintize(card)
+		if G.GAME.events.ev_cry_choco2 then
+			card.misprint_cost_fac = (card.misprint_cost_fac or 1) * 2
+			card:set_cost()
+		end
+		if G.GAME.modifiers.cry_enable_flipped_in_shop and pseudorandom('cry_flip_vouch'..G.GAME.round_resets.ante) > 0.7 then
+			card.cry_flipped = true
+		end
+		create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
+		card:start_materialize()
+		if G.GAME.current_round.cry_voucher_edition then	-- eh why not
+			card:set_edition(G.GAME.current_round.cry_voucher_edition, true, true)
+		end
+		G.shop_vouchers.config.card_limit = G.shop_vouchers.config.card_limit + 1	-- does this actually matter/even get reset??? i'm confused but whatever
+		G.shop_vouchers:emplace(card)
+	end
+end
+
                                     end
                                     
 
-                                    if G.GAME.events.ev_cry_choco10 and not G.load_shop_vouchers then
-                                        local card = create_card('Joker', G.jokers, true, nil, nil, nil, nil, 'cry_antique')
-                                        cry_misprintize(card)
-                                        card.misprint_cost_fac = 50/card.cost
-                                        card:set_cost()
-                                        create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
-                                        card:start_materialize()
-                                        card.ability.cry_antique = true
-                                        G.shop_vouchers.config.card_limit = G.shop_vouchers.config.card_limit + 1
-                                        G.shop_vouchers:emplace(card)
+                                    if G.GAME.events.ev_cry_choco10 then
+                                        local add = true
+                                        for k, v in pairs(G.shop_vouchers.cards) do		-- G.load_shop_vouchers is already set to nil here, just do a normal check
+                                            if v.ability.cry_antique then add = false end
+                                        end
+                                        if add then
+                                            local card = create_card('Joker', G.jokers, true, nil, nil, nil, nil, 'cry_antique')
+                                            cry_misprintize(card)
+                                            card.misprint_cost_fac = 50/card.cost
+                                            card:set_cost()
+                                            create_shop_card_ui(card, 'Voucher', G.shop_vouchers)
+                                            card:start_materialize()
+                                            card.ability.cry_antique = true
+                                            G.shop_vouchers.config.card_limit = G.shop_vouchers.config.card_limit + 1
+                                            G.shop_vouchers:emplace(card)
+                                        end
                                     end
                                     if G.load_shop_booster then 
                                         nosave_shop = true
@@ -3461,9 +3629,14 @@ end
 
                 if G.GAME.current_round.hands_played == 0 and
                     G.GAME.current_round.discards_used == 0 and G.GAME.facing_blind then
-                        SMODS.calculate_context({first_hand_drawn = true})
+                    for i = 1, #G.hand.cards do
+                        eval_card(G.hand.cards[i], {first_hand_drawn = true})
                     end
-                    SMODS.calculate_context({hand_drawn = true})
+                    for i = 1, #G.jokers.cards do
+                        G.jokers.cards[i]:calculate_joker({first_hand_drawn = true})
+                    end
+                        G.GAME.selected_back:trigger_effect({context = 'first_hand_drawn'})
+                end
 
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',

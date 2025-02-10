@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'ab00e08d711a2c3f72976a640fd09ce67bc5a2fbcc3a1d480a50325ec883c75e'
+LOVELY_INTEGRITY = 'ab88a2edb6834f9903a71e4d3886fdab11953bd163c30e4b5640c2bb3712b019'
 
 function set_screen_positions()
     if G.STAGE == G.STAGES.RUN then
@@ -75,7 +75,7 @@ function ease_dollars(mod, instant)
         mod = mod or 0
         local text = '+'..localize('$')
         local col = G.C.MONEY
-        if to_big(mod) < to_big(0) then
+        if mod < 0 then
             text = '-'..localize('$')
             col = G.C.RED              
         else
@@ -120,7 +120,7 @@ function ease_discard(mod, instant, silent)
         mod = math.max(-G.GAME.current_round.discards_left, mod)
         local text = '+'
         local col = G.C.GREEN
-        if to_big(mod) < to_big(0) then
+        if mod < 0 then
             text = ''
             col = G.C.RED
         end
@@ -159,7 +159,7 @@ function ease_hands_played(mod, instant)
         mod = mod or 0
         local text = '+'
         local col = G.C.GREEN
-        if to_big(mod) < to_big(0) then
+        if mod < 0 then
             text = ''
             col = G.C.RED
         end
@@ -200,7 +200,7 @@ function ease_ante(mod)
           mod = mod or 0
           local text = '+'
           local col = G.C.IMPORTANT
-          if to_big(mod) < to_big(0) then
+          if mod < 0 then
               text = '-'
               col = G.C.RED
           end
@@ -235,7 +235,7 @@ function ease_round(mod)
           mod = mod or 0
           local text = '+'
           local col = G.C.IMPORTANT
-          if to_big(mod) < to_big(0) then
+          if mod < 0 then
               text = ''
               col = G.C.RED
           end
@@ -405,6 +405,9 @@ function draw_card(from, to, percent, dir, sort, card, delay, mute, stay_flipped
             if card then 
                 if from then card = from:remove_card(card) end
                 if card then drawn = true end
+                if card and to == G.hand and not card.states.visible then
+                    card.states.visible = true
+                end
                 local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(to, card)
                 if G.GAME.modifiers.flipped_cards and to == G.hand then
                     if pseudorandom(pseudoseed('flipped_card')) < 1/G.GAME.modifiers.flipped_cards then
@@ -484,7 +487,7 @@ function level_up_hand(card, hand, instant, amount)
         G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].mult * (universum_mod)^amount, 1)
         G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].chips * (universum_mod)^amount, 1)
     end
-    if not instant and not Talisman.config_file.disable_anims then
+    if not instant then 
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2, func = function()
             play_sound('tarot1')
             if card and card.juice_up then card:juice_up(0.8, 0.5) end
@@ -574,8 +577,8 @@ function update_hand_text(config, vals)
                 G.GAME.current_round.current_hand.hand_level = vals.level
             else
                 G.GAME.current_round.current_hand.hand_level = ' '..localize('k_lvl')..tostring(vals.level)
-                if is_number(vals.level) then
-                    G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[to_big(math.min(vals.level, 7)):to_number()]
+                if type(vals.level) == 'number' then 
+                    G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[math.min(vals.level, 7)]
                 else
                     G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[1]
                 end
@@ -594,57 +597,39 @@ function update_hand_text(config, vals)
 end
 
 function eval_card(card, context)
-    if card.ability.set ~= 'Joker' and card.debuff then return {}, {} end
+    local enhancement_calculated = false
+    local center = card.config.center
     context = context or {}
     local ret = {}
 
     if context.repetition_only then
-        if card.ability.set == 'Enhanced' then 
-            local enhancement = card:calculate_enhancement(context)
-            if enhancement then
-                ret.enhancement = enhancement
-            end
+        if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+            center:calculate(card, context, ret)
+            enhancement_calculated = true
         end
-        if card.edition then
-            local edition = card:calculate_edition(context)
-            if edition then
-                ret.edition = edition
-            end
+        local seals = card:calculate_seal(context)
+        if seals then
+            ret.seals = seals
         end
-        if card.seal then
-            local seals = card:calculate_seal(context)
-            if seals then
-                ret.seals = seals
-            end
-        end
-        for k,v in pairs(SMODS.Stickers) do
-            local sticker = card:calculate_sticker(context, k)
-            if sticker then
-                ret[v] = sticker
-            end
-        end
-        
-        -- TARGET: evaluate your own repetition effects
         return ret
     end
     
-    if context.cardarea == G.play and context.main_scoring then
-        ret.playing_card = {}
+    if context.cardarea == G.play then
         local chips = card:get_chip_bonus()
-        if chips ~= 0 then 
-            ret.playing_card.chips = chips
+        if chips > 0 then 
+            ret.chips = chips
         end
-    
+
         local mult = card:get_chip_mult()
-        if mult ~= 0 then 
-            ret.playing_card.mult = mult
+        if mult > 0 then 
+            ret.mult = mult
         end
-    
+
         local x_mult = card:get_chip_x_mult(context)
         if x_mult > 0 then 
-            ret.playing_card.x_mult = x_mult
+            ret.x_mult = x_mult
         end
-    
+
         local x_chips = card:get_chip_x_bonus()
         if x_chips > 0 then
         	ret.x_chips = x_chips
@@ -691,95 +676,76 @@ function eval_card(card, context)
         end
         local p_dollars = card:get_p_dollars()
         if p_dollars > 0 then 
-            ret.playing_card.p_dollars = p_dollars
+            ret.p_dollars = p_dollars
         end
-    
-        -- TARGET: main scoring on played cards
-    
+
+        if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
+            center:calculate(card, context, ret)
+            enhancement_calculated = true
+        end
         local jokers = card:calculate_joker(context)
         if jokers then 
             ret.jokers = jokers
         end
-    
-        local edition = card:calculate_edition(context)
+
+        local edition = card:get_edition(context)
         if edition then 
             ret.edition = edition
         end
     end
-    if context.end_of_round and context.cardarea == G.hand and context.playing_card_end_of_round then
-        local end_of_round = card:get_end_of_round_effect(context)
-        if end_of_round then
-            ret.end_of_round = end_of_round
-        end
-    end
 
-    if context.cardarea == G.hand and context.main_scoring then
-        ret.playing_card = {}
+    if context.cardarea == G.hand then
         local h_mult = card:get_chip_h_mult()
-        if h_mult ~= 0 then 
-            ret.playing_card.h_mult = h_mult
+        if h_mult > 0 then 
+            ret.h_mult = h_mult
         end
-    
+
         local h_x_mult = card:get_chip_h_x_mult()
         if h_x_mult > 0 then 
-            ret.playing_card.x_mult = h_x_mult
+            ret.x_mult = h_x_mult
         end
-    
-        -- TARGET: main scoring on held cards
 
+        if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
+            center:calculate(card, context, ret)
+            enhancement_calculated = true
+        end
         local jokers = card:calculate_joker(context)
         if jokers then 
             ret.jokers = jokers
         end
     end
 
-    if card.ability.set == 'Enhanced' then 
-        local enhancement = card:calculate_enhancement(context)
-        if enhancement then
-            ret.enhancement = enhancement
+    if not card.ability.extra_enhancement and card.edition and card.edition.key then
+        local ed = SMODS.Centers[card.edition.key]
+        if ed.calculate and type(ed.calculate) == 'function' then
+            context.from_playing_card = true
+            ed:calculate(card, context)
+            context.from_playing_card = nil
         end
     end
-    if card.edition then
-        local edition = card:calculate_edition(context)
-        if edition then
-            ret.edition = edition
-        end
+    if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+        center:calculate(card, context, ret)
+        enhancement_calculated = true
     end
-    if card.seal and not card.ability.extra_enhancement then
-        local seals = card:calculate_seal(context)
-        if seals then
-            ret.seals = seals
-        end
+    local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
+    if seals then
+        ret.seals = seals
     end
-    for k,v in pairs(SMODS.Stickers) do
-        local sticker = card:calculate_sticker(context, k)
-        if sticker then
-            ret[v] = sticker
+    if context.cardarea == G.jokers or context.card == G.consumeables then
+        local jokers = nil
+        if context.edition then
+            jokers = card:get_edition(context)
+        elseif context.other_joker then
+            jokers = context.other_joker:calculate_joker(context)
+        else
+            jokers = card:calculate_joker(context)
         end
-    end
-    
-    -- TARGET: evaluate your own general effects
-    local post_trig = {}
-    local areas = SMODS.get_card_areas('jokers')
-    local area_set = {}
-    for _,v in ipairs(areas) do area_set[v] = true end
-    if card.area and area_set[card.area] then
-        local jokers, triggered = card:calculate_joker(context)
-        if jokers or triggered then 
+        if jokers then 
             ret.jokers = jokers
-            if not (context.retrigger_joker_check or context.retrigger_joker) then
-                local retriggers = SMODS.calculate_retriggers(card, context, ret)
-                if next(retriggers) then
-                    ret.retriggers = retriggers
-                end
-            end
-            if not context.post_trigger and not context.retrigger_joker_check and SMODS.optional_features.post_trigger then
-                SMODS.calculate_context({blueprint_card = context.blueprint_card, post_trigger = true, other_card = card, other_context = context, other_ret = ret}, post_trig)
-            end
         end
     end
-    
-    return ret, post_trig
+
+    return ret
 end
 
 function set_alerts()
@@ -919,14 +885,7 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
     local y_off = 0.15*G.CARD_H
     if card.area == G.jokers or card.area == G.consumeables then
         y_off = 0.05*card.T.h
-    elseif card == G.deck then
-        y_off = -0.05*G.CARD_H
-        card_aligned = 'tm'
-    elseif card.area == G.discard or card.area == G.vouchers then
-        y_off = card.area == G.discard and -0.35*G.CARD_H or -0.65*G.CARD_H
-        card = G.deck.cards[1] or G.deck
-        card_aligned = 'tm'
-    elseif card.area == G.hand or card.area == G.deck then
+    elseif card.area == G.hand then
         y_off = -0.05*G.CARD_H
         card_aligned = 'tm'
     elseif card.area == G.play then
@@ -951,35 +910,27 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
         sound = 'chips1'
         amt = amt
         colour = G.C.CHIPS
-        text = localize{type='variable',key='a_chips'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_chips',vars={amt}}
         delay = 0.6
     elseif eval_type == 'mult' then 
         sound = 'multhit1'--'other1'
         amt = amt
-        text = localize{type='variable',key='a_mult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_mult',vars={amt}}
         colour = G.C.MULT
         config.type = 'fade'
         config.scale = 0.7
-    elseif eval_type == 'x_chips' then 
-            sound = 'xchips'
-            volume = 0.7
-            amt = amt
-            text = localize{type='variable',key='a_xchips'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}
-            colour = G.C.BLUE
-            config.type = 'fade'
-            config.scale = 0.7
     elseif (eval_type == 'x_mult') or (eval_type == 'h_x_mult') then 
         sound = 'multhit2'
         volume = 0.7
         amt = amt
-        text = localize{type='variable',key='a_xmult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_xmult',vars={amt}}
         colour = G.C.XMULT
         config.type = 'fade'
         config.scale = 0.7
     elseif eval_type == 'h_mult' then 
         sound = 'multhit1'
         amt = amt
-        text = localize{type='variable',key='a_mult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_mult',vars={amt}}
         colour = G.C.MULT
         config.type = 'fade'
         config.scale = 0.7
@@ -1062,9 +1013,6 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
             colour = G.C.DARK_EDITION
         end
         volume = extra.edition and 0.3 or sound == 'multhit2' and 0.7 or 1
-        sound = extra.sound or sound
-        percent = extra.pitch or percent
-        volume = extra.volume or volume
         delay = extra.delay or 0.75
         amt = 1
         text = extra.message or text
@@ -1072,7 +1020,7 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
         if not extra.edition and (extra.mult_mod or extra.Xmult_mod)  then
             colour = G.C.MULT
         end
-        if extra.chip_mod or extra.Xchip_mod then
+        if extra.chip_mod then
             config.type = 'fall'
             colour = G.C.CHIPS
             config.scale = 0.7
@@ -1238,14 +1186,16 @@ function add_round_eval_row(config)
             end
         }))
         local dollar_row = 0
-        num_dollars = to_number(num_dollars); if math.abs(to_number(num_dollars)) > 60 then
+        if num_dollars > 60 or num_dollars < -60 then
+            local dollar_string
             if num_dollars < 0 then --if negative
+                dollar_string = '-'..localize('$')..(num_dollars*-1)
                 G.E_MANAGER:add_event(Event({
                     trigger = 'before',delay = 0.38,
                     func = function()
                         G.round_eval:add_child(
                             {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
-                                {n=G.UIT.O, config={object = DynaText({string = {'-'..localize('$')..format_ui_value(-num_dollars)}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
+                                {n=G.UIT.O, config={object = DynaText({string = {localize('$')..(num_dollars*-1)}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
                             }},
                             G.round_eval:get_UIE_by_ID('dollar_'..config.name))
                         play_sound('coin3', 0.9+0.2*math.random(), 0.7)
@@ -1254,6 +1204,7 @@ function add_round_eval_row(config)
                     end
                 }))
             else --if positive
+                dollar_string = localize('$')..num_dollars
             G.E_MANAGER:add_event(Event({
                 trigger = 'before',delay = 0.38,
                 func = function()
@@ -1342,7 +1293,7 @@ function change_shop_size(mod)
     if not G.GAME.shop then return end
     G.GAME.shop.joker_max = G.GAME.shop.joker_max + mod
     if G.shop_jokers and G.shop_jokers.cards then
-        if to_big(mod) < to_big(0) then
+        if mod < 0 then
             --Remove jokers in shop
             for i = #G.shop_jokers.cards, G.GAME.shop.joker_max+1, -1 do
                 if G.shop_jokers.cards[i] then
@@ -1474,7 +1425,7 @@ function check_for_unlock(args)
         end
     end
     if args.type == 'money' then
-        if to_big(G.GAME.dollars) >= to_big(400) then
+        if G.GAME.dollars >= 400 then
             unlock_achievement('nest_egg')
         end
     end
@@ -1511,7 +1462,7 @@ function check_for_unlock(args)
         end
     end
     if args.type == 'upgrade_hand' then
-        if to_big(args.level) >= to_big(10) then
+        if args.level >= 10 then
             unlock_achievement('retrograde')
         end
     end
@@ -1748,7 +1699,7 @@ function check_for_unlock(args)
                 end
             end
             if args.type == 'money' then
-                if to_big(card.unlock_condition.extra) <= to_big(G.GAME.dollars) then
+                if card.unlock_condition.extra <= G.GAME.dollars then
                     ret = true
                     unlock_card(card)   
                 end
@@ -1938,8 +1889,7 @@ function fetch_achievements()
                 G.ACHIEVEMENTS[kk].earned = true
             end
         end
-    end
-    if G.F_NO_ACHIEVEMENTS then return end
+    end    if G.F_NO_ACHIEVEMENTS then return end
 
     --|FROM LOCAL SETTINGS FILE
     --|-------------------------------------------------------
@@ -1974,32 +1924,15 @@ function fetch_achievements()
 end
 
 function unlock_achievement(achievement_name)
-    if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked and SMODS.config.achievements < 3) or (SMODS.config.achievements < 3 and (G.GAME.seeded or G.GAME.challenge)) then return true end
+    if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked and SMODS.config.achievements < 3) or (SMODS.config.achievements < 3 and (G.GAME.seeded or G.GAME.challenge)) then return end
     G.E_MANAGER:add_event(Event({
         no_delete = true,
         blockable = false,
         blocking = false,
         func = function()
             if G.STATE ~= G.STATES.HAND_PLAYED then 
-                if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked and SMODS.config.achievements < 3) or (SMODS.config.achievements < 3 and (G.GAME.seeded or G.GAME.challenge)) then return true end
+                if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked and SMODS.config.achievements < 3) or (SMODS.config.achievements < 3 and (G.GAME.seeded or G.GAME.challenge)) then return end
                 local achievement_set = false
-                if not G.ACHIEVEMENTS then fetch_achievements() end
-                G.SETTINGS.ACHIEVEMENTS_EARNED[achievement_name] = true
-                G:save_progress()
-                
-                if G.ACHIEVEMENTS[achievement_name] and G.ACHIEVEMENTS[achievement_name].mod then 
-                    if not G.ACHIEVEMENTS[achievement_name].earned then
-                        --|THIS IS THE FIRST TIME THIS ACHIEVEMENT HAS BEEN EARNED
-                        achievement_set = true
-                        G.FILE_HANDLER.force = true
-                    end
-                    G.ACHIEVEMENTS[achievement_name].earned = true
-                end
-                
-                if achievement_set then 
-                    notify_alert(achievement_name)
-                    return true
-                end
                 if G.F_NO_ACHIEVEMENTS and not (G.ACHIEVEMENTS[achievement_name] or {}).mod then return true end
 
                 --|LOCAL SETTINGS FILE
@@ -2253,7 +2186,6 @@ function get_current_pool(_type, _rarity, _legendary, _append)
     
         if _type == 'Joker' then 
 _rarity = (_legendary and 4) or (type(_rarity) == "number" and ((_rarity > 0.95 and 3) or (_rarity > 0.7 and 2) or 1)) or _rarity
-_rarity = ({Common = 1, Uncommon = 2, Rare = 3, Legendary = 4})[_rarity] or _rarity
 local rarity = _rarity or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_resets.ante..(_append or ''))
 
             _starting_pool, _pool_key = G.P_JOKER_RARITY_POOLS[rarity], 'Joker'..rarity..((not _legendary and _append) or '')
@@ -2353,6 +2285,7 @@ local rarity = _rarity or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_rese
 
             if v.no_pool_flag and G.GAME.pool_flags[v.no_pool_flag] then add = nil end
             if v.yes_pool_flag and not G.GAME.pool_flags[v.yes_pool_flag] then add = nil end
+            if v.key == 'j_cry_filler' and _append == 'rta' then add = nil end
             
             if v.in_pool and type(v.in_pool) == 'function' then
                 add = in_pool and (add or pool_opts.override_base_checks)
@@ -2531,15 +2464,6 @@ function copy_card(other, new_card, card_scale, playing_card, strip_edition)
     end
     check_for_unlock({type = 'have_edition'})
     new_card:set_seal(other.seal, true)
-    if other.seal then
-        for k, v in pairs(other.ability.seal or {}) do
-            if type(v) == 'table' then
-                new_card.ability.seal[k] = copy_table(v)
-            else
-                new_card.ability.seal[k] = v
-            end
-        end
-    end
     if other.params then
         new_card.params = other.params
         new_card.params.playing_card = playing_card
@@ -2892,13 +2816,10 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         else
             local res = {}
             if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
-                local _card = _c.create_fake_card and _c:create_fake_card()
-                res = _c:locked_loc_vars(info_queue, _card) or {}
+                res = _c:locked_loc_vars(info_queue) or {}
                 loc_vars = res.vars or {}
                 specific_vars = specific_vars or {}
                 specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
-                if res.main_start then desc_nodes[#desc_nodes+1] = res.main_start end
-                main_end = res.main_end or main_end
             elseif _c.name == 'Golden Ticket' then
             elseif _c.name == 'Mr. Bones' then loc_vars = {_c.unlock_condition.extra, G.PROFILES[G.SETTINGS.profile].career_stats.c_losses}
             elseif _c.name == 'Acrobat' then loc_vars = {_c.unlock_condition.extra, G.PROFILES[G.SETTINGS.profile].career_stats.c_hands_played}
@@ -2974,16 +2895,6 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     elseif specific_vars and specific_vars.debuffed then
         localize{type = 'other', key = 'debuffed_'..(specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes}
     elseif _c.set == 'Joker' then
-        if not card then
-            local ability = copy_table(cfg)
-            ability.set = 'Joker'
-            ability.name = _c.name
-            local ret = {Card.generate_UIBox_ability_table({ ability = ability, config = { center = _c }, bypass_lock = true}, true)}
-            specific_vars = ret[1]
-            if ret[2] then desc_nodes[#desc_nodes+1] = ret[2] end
-            main_end = ret[3]
-        end
-        
         if _c.name == 'Stone Joker' or _c.name == 'Marble Joker' then info_queue[#info_queue+1] = G.P_CENTERS.m_stone
         elseif _c.name == 'Steel Joker' then info_queue[#info_queue+1] = G.P_CENTERS.m_steel 
         elseif _c.name == 'Glass Joker' then info_queue[#info_queue+1] = G.P_CENTERS.m_glass 
@@ -3008,7 +2919,6 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end
         localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = specific_vars or {}}
     elseif _c.set == 'Tag' then
-    specific_vars = specific_vars or Tag.get_uibox_table({ name = _c.name, config = _c.config, ability = { orbital_hand = '['..localize('k_poker_hand')..']' }}, nil, true)
         if _c.name == 'Negative Tag' then info_queue[#info_queue+1] = G.P_CENTERS.e_negative
         elseif _c.name == 'Foil Tag' then info_queue[#info_queue+1] = G.P_CENTERS.e_foil 
         elseif _c.name == 'Holographic Tag' then info_queue[#info_queue+1] = G.P_CENTERS.e_holo
@@ -3036,10 +2946,10 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         elseif _c.name == "Telescope" or _c.name == "Observatory" then loc_vars = {cfg.extra}
         elseif _c.name == "Clearance Sale" or _c.name == "Liquidation" then loc_vars = {cfg.extra}
         end
-        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
     elseif _c.set == 'Edition' then
         loc_vars = {cfg.extra}
-        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
     elseif _c.set == 'Default' and specific_vars then 
         if specific_vars.nominal_chips then 
             localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
@@ -3053,13 +2963,13 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         end
         if _c.effect == 'Mult Card' then loc_vars = {cfg.mult}
         elseif _c.effect == 'Wild Card' then
-        elseif _c.effect == 'Glass Card' then loc_vars = {cfg.Xmult, G.GAME.probabilities.normal, cfg.extra}
+        elseif _c.effect == 'Glass Card' then loc_vars = {cfg.Xmult, cfg.cry_prob and cry_prob(cfg.cry_prob, cfg.extra, cfg.cry_rigged) or G.GAME.probabilities.normal, cfg.extra}
         elseif _c.effect == 'Steel Card' then loc_vars = {cfg.h_x_mult}
         elseif _c.effect == 'Stone Card' then loc_vars = {((specific_vars and specific_vars.bonus_chips) or cfg.bonus)}
         elseif _c.effect == 'Gold Card' then loc_vars = {cfg.h_dollars}
-        elseif _c.effect == 'Lucky Card' then loc_vars = {G.GAME.probabilities.normal, cfg.mult, 5, cfg.p_dollars, 15}
+        elseif _c.effect == 'Lucky Card' then loc_vars = {cfg.cry_prob and cry_prob(cfg.cry_prob, 15, cfg.cry_rigged) or G.GAME.probabilities.normal, cfg.mult, 5, cfg.p_dollars, 15}
         end
-        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
         if _c.name ~= 'Stone Card' and ((specific_vars and specific_vars.bonus_chips) or (cfg.bonus ~= 0 and cfg.bonus)) then
             localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {((specific_vars and specific_vars.bonus_chips) or cfg.bonus)}}
         end
@@ -3092,10 +3002,10 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         if _c.name == 'Familiar' or _c.name == 'Grim' or _c.name == 'Incantation' then loc_vars = {cfg.extra}
         elseif _c.name == 'Immolate' then loc_vars = {cfg.extra.destroy, cfg.extra.dollars}
         elseif _c.name == 'Hex' then info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome
-        elseif _c.name == 'Talisman' then info_queue[#info_queue+1] = G.P_SEALS['gold_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['gold_seal'] or '']
-        elseif _c.name == 'Deja Vu' then info_queue[#info_queue+1] = G.P_SEALS['red_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['red_seal'] or '']
-        elseif _c.name == 'Trance' then info_queue[#info_queue+1] = G.P_SEALS['blue_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['blue_seal'] or '']
-        elseif _c.name == 'Medium' then info_queue[#info_queue+1] = G.P_SEALS['purple_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['purple_seal'] or '']
+        elseif _c.name == 'Talisman' then info_queue[#info_queue+1] = {key = 'gold_seal', set = 'Other'}
+        elseif _c.name == 'Deja Vu' then info_queue[#info_queue+1] = {key = 'red_seal', set = 'Other'}
+        elseif _c.name == 'Trance' then info_queue[#info_queue+1] = {key = 'blue_seal', set = 'Other'}
+        elseif _c.name == 'Medium' then info_queue[#info_queue+1] = {key = 'purple_seal', set = 'Other'}
         elseif _c.name == 'Ankh' then
             if G.jokers and G.jokers.cards then
                 for k, v in ipairs(G.jokers.cards) do
@@ -3116,13 +3026,13 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
             info_queue[#info_queue+1] = G.P_CENTERS.e_holo
             info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome
         end
-        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
     elseif _c.set == 'Planet' then
         loc_vars = {
             G.GAME.hands[cfg.hand_type].level,localize(cfg.hand_type, 'poker_hands'), G.GAME.hands[cfg.hand_type].l_mult, G.GAME.hands[cfg.hand_type].l_chips,
-            colours = {(to_big(G.GAME.hands[cfg.hand_type].level)==to_big(1) and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[to_big(math.min(7, G.GAME.hands[cfg.hand_type].level)):to_number()])}
+            colours = {(G.GAME.hands[cfg.hand_type].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[cfg.hand_type].level)])}
         }
-        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+        localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
     elseif _c.set == 'Tarot' then
        if _c.name == "The Fool" then
             local fool_c = G.GAME.last_tarot_planet and G.P_CENTERS[G.GAME.last_tarot_planet] or nil
@@ -3148,7 +3058,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
        elseif _c.name == "The Chariot" then loc_vars = {cfg.max_highlighted, localize{type = 'name_text', set = 'Enhanced', key = cfg.mod_conv}}; info_queue[#info_queue+1] = G.P_CENTERS[cfg.mod_conv]
        elseif _c.name == "Justice" then loc_vars = {cfg.max_highlighted, localize{type = 'name_text', set = 'Enhanced', key = cfg.mod_conv}}; info_queue[#info_queue+1] = G.P_CENTERS[cfg.mod_conv]
        elseif _c.name == "The Hermit" then loc_vars = {cfg.extra}
-       elseif _c.name == "The Wheel of Fortune" then loc_vars = {G.GAME.probabilities.normal, cfg.extra};  info_queue[#info_queue+1] = G.P_CENTERS.e_foil; info_queue[#info_queue+1] = G.P_CENTERS.e_holo; info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome; 
+       elseif _c.name == "The Wheel of Fortune" then loc_vars = {cfg.cry_prob and cry_prob(cfg.cry_prob, cfg.extra, cfg.cry_rigged) or G.GAME.probabilities.normal, cfg.extra};  info_queue[#info_queue+1] = G.P_CENTERS.e_foil; info_queue[#info_queue+1] = G.P_CENTERS.e_holo; info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome;
        elseif _c.name == "Strength" then loc_vars = {cfg.max_highlighted}
        elseif _c.name == "The Hanged Man" then loc_vars = {cfg.max_highlighted}
        elseif _c.name == "Death" then loc_vars = {cfg.max_highlighted}
@@ -3170,7 +3080,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
        elseif _c.name == "Judgement" then
        elseif _c.name == "The World" then loc_vars = {cfg.max_highlighted, localize(cfg.suit_conv, 'suits_plural'), colours = {G.C.SUITS[cfg.suit_conv]}}
        end
-       localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
+       localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
    end
 
     if main_end then 
@@ -3212,23 +3122,23 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
                 info_queue[#info_queue + 1] = G.P_CENTERS[v]
             end
             if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
-                local t = {key = 'e_'..v, set = 'Edition', config = {}}
-                info_queue[#info_queue + 1] = t
-                if G.P_CENTERS['e_'..v].loc_vars and type(G.P_CENTERS['e_'..v].loc_vars) == 'function' then
-                    local res = G.P_CENTERS['e_'..v]:loc_vars(info_queue, card) or {}
-                    t.vars = res.vars
-                    t.key = res.key or t.key
-                    t.set = res.set or t.set
-                end
+                info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
             end
-            local seal = G.P_SEALS[v] or G.P_SEALS[SMODS.Seal.badge_to_key[v] or '']
-            if seal then
-            	info_queue[#info_queue+1] = seal
+            local seal = SMODS.Seals[v] or SMODS.Seal.badge_to_key[v] and SMODS.Seals[SMODS.Seal.badge_to_key[v]]
+            if seal and seal.generate_ui ~= 0 then
+            	local t = { key = v, set = 'Other' }
+            	info_queue[#info_queue+1] = t
+            	if seal.loc_vars and type(seal.loc_vars) == 'function' then
+            		local res = seal:loc_vars(info_queue, card) or {}
+            		t.vars = res.vars
+            		t.key = res.key or t.key
+                    t.set = res.set or t.set
+            	end
             else
-            if v == 'gold_seal' then info_queue[#info_queue+1] = G.P_SEALS['gold_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['gold_seal'] or ''] end
-            if v == 'blue_seal' then info_queue[#info_queue+1] = G.P_SEALS['blue_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['blue_seal'] or ''] end
-            if v == 'red_seal' then info_queue[#info_queue+1] = G.P_SEALS['red_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['red_seal'] or ''] end
-            if v == 'purple_seal' then info_queue[#info_queue+1] = G.P_SEALS['purple_seal'] or G.P_SEALS[SMODS.Seal.badge_to_key['purple_seal'] or ''] end
+            if v == 'gold_seal' then info_queue[#info_queue+1] = {key = 'gold_seal', set = 'Other'} end
+            if v == 'blue_seal' then info_queue[#info_queue+1] = {key = 'blue_seal', set = 'Other'} end
+            if v == 'red_seal' then info_queue[#info_queue+1] = {key = 'red_seal', set = 'Other'} end
+            if v == 'purple_seal' then info_queue[#info_queue+1] = {key = 'purple_seal', set = 'Other'} end
             end
             local sticker = SMODS.Stickers[v]
             if sticker then

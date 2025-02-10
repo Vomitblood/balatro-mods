@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'ed73ce7b68b17bbbc04af6cf80e1577d8c38357ce87c6952cf5f2319cb9a578d'
+LOVELY_INTEGRITY = '435a9e8ef1b3d548ef4488606196332b7d61c0a33e2dd2225ca6c7f97e3ec32b'
 
 --Class
 UIBox = Moveable:extend()
@@ -990,6 +990,7 @@ function UIElement:click()
         G.NO_MOD_CURSOR_STACK = nil
 
         if self.config.choice then
+            local chosen_temp = self.config.chosen
             local chosen_temp = self.config.chosen
             local choices = self.UIBox:get_group(nil, self.config.group)
             for k, v in pairs(choices) do

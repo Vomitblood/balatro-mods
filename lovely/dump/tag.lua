@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '1051baf1f570241c507e107aff5fffefe3df969645f0fe53ec0856cd5ac0a760'
+LOVELY_INTEGRITY = '28c37f9c0f5cf94954059dedc38a88cb0f1dbceb28b6a40c9df225d84bb10fe5'
 
 --Class
 Tag = Object:extend()
@@ -203,6 +203,14 @@ function Tag:apply_to_run(_context)
                 return true
             end
             if self.name == 'Orbital Tag' then
+                if (not self.ability.orbital_hand) or (not G.GAME.hands[self.ability.orbital_hand]) then 
+                	local _poker_hands = {}
+                	for k, v in pairs(G.GAME.hands) do
+                		if v.visible then _poker_hands[#_poker_hands+1] = k end
+                	end
+                
+                	self.ability.orbital_hand = pseudorandom_element(_poker_hands, pseudoseed('orbital'))
+                end
                 update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {
                     handname= self.ability.orbital_hand,
                     chips = G.GAME.hands[self.ability.orbital_hand].chips,
@@ -723,7 +731,7 @@ function Tag:generate_UI(_size)
     return tag_sprite_tab, tag_sprite
 end
 
-function Tag:get_uibox_table(tag_sprite, vars_only)
+function Tag:get_uibox_table(tag_sprite)
     tag_sprite = tag_sprite or self.tag_sprite
     local name_to_check, loc_vars = self.name, {}
     if name_to_check == 'Uncommon Tag' then
@@ -742,7 +750,6 @@ function Tag:get_uibox_table(tag_sprite, vars_only)
             }
     elseif name_to_check == "cry-Cat Tag" then loc_vars = {self.ability.level or 1}
     end
-    if vars_only then return loc_vars end
     tag_sprite.ability_UIBox_table = generate_card_ui(G.P_TAGS[self.key], nil, loc_vars, (self.hide_ability) and 'Undiscovered' or 'Tag', nil, (self.hide_ability), nil, nil, self)
     return tag_sprite
 end
