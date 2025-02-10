@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '72872b3b4770af870f29bca0a9c04f8e62103c150ae3d5e6600706da63ac8e0b'
+LOVELY_INTEGRITY = 'a89ca7b9273fee523938c932a6467dfa383c8e44b527c8da74869b0ae75efe92'
 
 require "love.audio"
 require "love.sound"
@@ -111,12 +111,12 @@ function SET_SFX(s, args)
   end
   
   function MODULATE(args)
-  	if args.desired_track ~= '' then
-  		local sound = ((SOURCES[current_track or {}] or {})[1] or {}).sound
-  		if not sound or not sound:isPlaying() then
-  			RESTART_MUSIC(args)
-  		end
-  	end
+      if args.desired_track ~= '' then
+          local sound = ((SOURCES[current_track or {}] or {})[1] or {}).sound
+          if not sound or not sound:isPlaying() then
+              RESTART_MUSIC(args)
+          end
+      end
 
     for k, v in pairs(SOURCES) do
       local i=1
@@ -196,14 +196,14 @@ function SET_SFX(s, args)
         if false then elseif request.type == 'sound' then 
             PLAY_SOUND(request)
         elseif request.type == 'sound_source' then
-        	SMODS_Sounds[request.sound_code] = {
-        		sound_code = request.sound_code,
-        		data = request.data,
-        		sound = sound,
-        		per = request.per,
-        		vol = request.vol,
-        	}
-        	SOURCES[request.sound_code] = {}
+            SMODS_Sounds[request.sound_code] = {
+                sound_code = request.sound_code,
+                data = request.data,
+                sound = sound,
+                per = request.per,
+                vol = request.vol,
+            }
+            SOURCES[request.sound_code] = {}
         elseif request.type == 'stop' then
             STOP_AUDIO()
         elseif request.type == 'modulate' then 

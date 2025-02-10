@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '2550ee40d7ac8df7273f766f9ca41eae9c54302c74f10249ada15b3fe2d6121c'
+LOVELY_INTEGRITY = 'd36e3953c2739cd4ea15794fb5e4031a2dac09fc33baadd0a2820e4726891304'
 
 ---@class Controller
 Controller = Object:extend()
@@ -815,7 +815,7 @@ function Controller:key_press_update(key, dt)
 
 
     for _, keybind in pairs(SMODS.Keybinds) do
-        if keybind.action and keybind.key_pressed == key then
+        if keybind.action and keybind.key_pressed == key and keybind.event == 'pressed' then
             local execute = true
             for _, other_key in pairs(keybind.held_keys) do
                 if not self.held_keys[other_key] then
@@ -824,7 +824,7 @@ function Controller:key_press_update(key, dt)
                 end
             end
             if execute then
-                keybind.action(self)
+                keybind:action()
             end
         end
     end
@@ -931,14 +931,26 @@ function Controller:key_hold_update(key, dt)
     if ((self.locked) and not G.SETTINGS.paused) or (self.locks.frame) or (self.frame_buttonpress) then return end
     --self.frame_buttonpress = true
     if self.held_key_times[key] then
-        if key == 'm' then
-	if self.held_key_times[key] > 1.1 then
-		SMODS.save_all_config()
-		SMODS.restart_game()
-	else
-		self.held_key_times[key] = self.held_key_times[key] + dt
-	end
-elseif key == "r" and not G.SETTINGS.paused and not (G.GAME and G.GAME.USING_CODE) then
+        for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.key_pressed == key and keybind.event == 'held' and keybind.held_duration then
+        if self.held_key_times[key] > keybind.held_duration then
+            local execute = true
+            for _, other_key in pairs(keybind.held_keys) do
+                if not self.held_keys[other_key] then
+                    execute = false
+                    break
+                end
+            end
+            if execute then
+                keybind:action()
+                self.held_key_times[key] = nil
+            end
+        else
+            self.held_key_times[key] = self.held_key_times[key] + dt
+        end
+    end
+end
+if key == "r" and not G.SETTINGS.paused and not (G.GAME and G.GAME.USING_CODE) then
             if self.held_key_times[key] > 0.7 then
                 if not G.GAME.won and not G.GAME.seeded and not G.GAME.challenge then 
                     G.PROFILES[G.SETTINGS.profile].high_scores.current_streak.amt = 0
@@ -964,6 +976,20 @@ elseif key == "r" and not G.SETTINGS.paused and not (G.GAME and G.GAME.USING_COD
 end
 
 function Controller:key_release_update(key, dt)
+for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.action and keybind.key_pressed == key and keybind.event == 'released' then
+        local execute = true
+        for _, other_key in pairs(keybind.held_keys) do
+            if not self.held_keys[other_key] then
+                execute = false
+                break
+            end
+        end
+        if execute then
+            keybind:action()
+        end
+    end
+end
     if ((self.locked) and not G.SETTINGS.paused) or (self.locks.frame) or (self.frame_buttonpress) then return end
     self.frame_buttonpress = true
     if key == "a" and self.held_keys["g"] and not _RELEASE_MODE then

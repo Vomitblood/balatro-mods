@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'e8cd6ceef85971448b1b28bb95d2a4b68928ef66a2261cc19c1e9c7de9c6d3b8'
+LOVELY_INTEGRITY = 'ceaf7d365cb8eac62c7dcf3be1ef07cc6b0dac3977bde52960496d7f844a668d'
 
 --class
 Blind = Moveable:extend()
@@ -58,12 +58,14 @@ function Blind:set_text()
             if self.name == 'The Ox' then
                 loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
             end
+            local target = {type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}
             local obj = self.config.blind
             if obj.loc_vars and type(obj.loc_vars) == 'function' then
-            	local res = obj:loc_vars() or {}
-            	loc_vars = res.vars or {}
+                local res = obj:loc_vars() or {}
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
             end
-            local loc_target = localize{type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}
+            local loc_target = localize(target)
             if loc_target then 
                 self.loc_name = self.name == '' and self.name or localize{type ='name_text', key = self.config.blind.key, set = 'Blind'}
                 self.loc_debuff_text = ''
@@ -218,10 +220,10 @@ function Blind:set_blind(blind, reset, silent)
         if blind then
             self.in_blind = true
         end
-    	local obj = self.config.blind
-    	if obj.set_blind and type(obj.set_blind) == 'function' then
-    		obj:set_blind()
-    	end
+        local obj = self.config.blind
+        if obj.set_blind and type(obj.set_blind) == 'function' then
+            obj:set_blind()
+        end
     end
     --add new debuffs
     for _, v in ipairs(G.playing_cards) do
@@ -287,10 +289,10 @@ function Blind:alert_debuff(first)
 end
 
 function Blind:get_loc_debuff_text()
-	local obj = self.config.blind
-	if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
-		return obj:get_loc_debuff_text()
-	end
+    local obj = self.config.blind
+    if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
+        return obj:get_loc_debuff_text()
+    end
     local disp_text = (self.config.blind.name == 'The Wheel' and G.GAME.probabilities.normal or '')..self.loc_debuff_text
     if (self.config.blind.name == 'The Mouth') and self.only_hand then disp_text = disp_text..' ['..localize(self.only_hand, 'poker_hands')..']' end
     return disp_text
@@ -363,7 +365,7 @@ function Blind:defeat(silent)
     end
     local obj = self.config.blind
     if obj.defeat and type(obj.defeat) == 'function' then
-    	obj:defeat()
+        obj:defeat()
     end
     if self.name == 'Crimson Heart' then
         for _, v in ipairs(G.jokers.cards) do
@@ -392,7 +394,7 @@ function Blind:disable()
     end
     local obj = self.config.blind
     if obj.disable and type(obj.disable) == 'function' then
-    	obj:disable()
+        obj:disable()
     end
     if self.name == 'Crimson Heart' then
         for _, v in ipairs(G.jokers.cards) do
@@ -504,7 +506,7 @@ function Blind:press_play()
     if self.disabled then return end
     local obj = self.config.blind
     if obj.press_play and type(obj.press_play) == 'function' then
-    	return obj:press_play()
+        return obj:press_play()
     end
     if self.name == "The Hook" then
         G.E_MANAGER:add_event(Event({ func = function()
@@ -554,7 +556,7 @@ function Blind:modify_hand(cards, poker_hands, text, mult, hand_chips)
     if self.disabled then return mult, hand_chips, false end
     local obj = self.config.blind
     if obj.modify_hand and type(obj.modify_hand) == 'function' then
-    	return obj:modify_hand(cards, poker_hands, text, mult, hand_chips)
+        return obj:modify_hand(cards, poker_hands, text, mult, hand_chips)
     end
     if self.name == "The Flint" then
         self.triggered = true
@@ -567,7 +569,7 @@ function Blind:debuff_hand(cards, hand, handname, check)
     if self.disabled then return end
     local obj = self.config.blind
     if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
-    	return obj:debuff_hand(cards, hand, handname, check)
+        return obj:debuff_hand(cards, hand, handname, check)
     end
     if self.debuff then
         self.triggered = false
@@ -628,7 +630,7 @@ function Blind:drawn_to_hand()
     if not self.disabled then
         local obj = self.config.blind
         if obj.drawn_to_hand and type(obj.drawn_to_hand) == 'function' then
-        	obj:drawn_to_hand()
+            obj:drawn_to_hand()
         end        if self.name == 'Cerulean Bell' then
             local any_forced = nil
             for k, v in ipairs(G.hand.cards) do
@@ -679,7 +681,7 @@ function Blind:stay_flipped(area, card)
     if not self.disabled then
         local obj = self.config.blind
         if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
-        	return obj:stay_flipped(area, card)
+            return obj:stay_flipped(area, card)
         end
         if area == G.hand then
             if self.name == 'The Wheel' and pseudorandom(pseudoseed('wheel')) < G.GAME.probabilities.normal/7 then
@@ -701,22 +703,22 @@ end
 function Blind:debuff_card(card, from_blind)
     local obj = self.config.blind
     if not self.disabled and obj.recalc_debuff and type(obj.recalc_debuff) == 'function' then
-    	if obj:recalc_debuff(card, from_blind) then 
-    		card:set_debuff(true)
-    		if card.debuff then card.debuffed_by_blind = true end
-    	else
-    		card:set_debuff(false)
-    	end
-    	return
+        if obj:recalc_debuff(card, from_blind) then 
+            card:set_debuff(true)
+            if card.debuff then card.debuffed_by_blind = true end
+        else
+            card:set_debuff(false)
+        end
+        return
     elseif not self.disabled and obj.debuff_card and type(obj.debuff_card) == 'function' then
-    	sendWarnMessage(("Blind object %s has debuff_card function, recalc_debuff is preferred"):format(obj.key), obj.set)
-    	if obj:debuff_card(card, from_blind) then 
-    		card:set_debuff(true)
-    		if card.debuff then card.debuffed_by_blind = true end
-    	else
-    		card:set_debuff(false)
-    	end
-    	return
+        sendWarnMessage(("Blind object %s has debuff_card function, recalc_debuff is preferred"):format(obj.key), obj.set)
+        if obj:debuff_card(card, from_blind) then 
+            card:set_debuff(true)
+            if card.debuff then card.debuffed_by_blind = true end
+        else
+            card:set_debuff(false)
+        end
+        return
     end
     if self.debuff and not self.disabled and card.area ~= G.jokers then
         if self.debuff.suit and card:is_suit(self.debuff.suit, true) then
@@ -838,7 +840,7 @@ function Blind:load(blindTable)
 
     if G.P_BLINDS[blindTable.config_blind] then
     if self.config.blind.atlas then
-    	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
+        self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
     end
         self.blind_set = true
         self.children.animatedSprite.states.visible = true

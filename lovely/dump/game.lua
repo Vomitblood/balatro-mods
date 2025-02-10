@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '1f28fb4cd208cf3d7ee40ad59534c6cc25dbf6d4335f376d30f1e4b080e388b7'
+LOVELY_INTEGRITY = '4af0a05e5998e1bbb1bd6610b6f3d87c6fea5c42d526b7d7d6bd3d6bf983044e'
 
 --Class
 Game = Object:extend()
@@ -1114,7 +1114,7 @@ function Game:set_language()
         end
     end
 
-    self.LANG = self.LANGUAGES[self.SETTINGS.language] or self.LANGUAGES['en-us']
+    self.LANG = self.LANGUAGES[self.SETTINGS.real_language or self.SETTINGS.language] or self.LANGUAGES['en-us']
 
     local localization = love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua') or love.filesystem.getInfo('localization/en-us.lua')
     if localization ~= nil then
@@ -2013,10 +2013,10 @@ function Game:demo_cta() --True if main menu is accessed from the splash screen,
 end
 
 function Game:init_game_object()
-	local cards_played = {}
-	for _,v in ipairs(SMODS.Rank.obj_buffer) do
-		cards_played[v] = { suits = {}, total = 0 }
-	end
+    local cards_played = {}
+    for _,v in ipairs(SMODS.Rank.obj_buffer) do
+        cards_played[v] = { suits = {}, total = 0 }
+    end
     local bosses_used = {}
     for k, v in pairs(G.P_BLINDS) do 
         if v.boss then bosses_used[k] = 0 end
@@ -2151,9 +2151,9 @@ function Game:init_game_object()
         shop = {
             joker_max = 2,
         },
-        	cards_played = cards_played,
-        	disabled_suits = {},
-        	disabled_ranks = {},
+            cards_played = cards_played,
+            disabled_suits = {},
+            disabled_ranks = {},
         hands = {
             ["Flush Five"] =        {visible = false,   order = 1, mult = 16,  chips = 160, s_mult = 16,  s_chips = 160, level = 1, l_mult = 3, l_chips = 50, played = 0, played_this_round = 0, example = {{'S_A', true},{'S_A', true},{'S_A', true},{'S_A', true},{'S_A', true}}},
             ["Flush House"] =       {visible = false,   order = 2, mult = 14,  chips = 140, s_mult = 14,  s_chips = 140, level = 1, l_mult = 4, l_chips = 40, played = 0, played_this_round = 0, example = {{'D_7', true},{'D_7', true},{'D_7', true},{'D_4', true},{'D_4', true}}},
@@ -2451,6 +2451,11 @@ function Game:start_run(args)
         0, 0,
         CAI.discard_W,CAI.discard_H,
         {card_limit = 1e308, type = 'discard'})
+    self.vouchers = CardArea(
+        G.discard.T.x, G.discard.T.y,
+        G.discard.T.w, G.discard.T.h,
+        { type = "discard", card_limit = 1e308 }
+    )
     self.deck = CardArea(
         0, 0,
         CAI.deck_W,CAI.deck_H, 
@@ -2541,9 +2546,9 @@ function Game:start_run(args)
         if not card_protos then 
             card_protos = {}
             for k, v in pairs(self.P_CARDS) do
-                if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true})
-                or type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
-                	goto continue
+                if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true, suit = v.suit})
+                or type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true, rank = v.value}) then
+                    goto continue
                 end
                 local _ = nil
                 if self.GAME.starting_params.erratic_suits_and_ranks then
@@ -3575,13 +3580,9 @@ end
 
                 if G.GAME.current_round.hands_played == 0 and
                     G.GAME.current_round.discards_used == 0 and G.GAME.facing_blind then
-                    for i = 1, #G.hand.cards do
-                        eval_card(G.hand.cards[i], {first_hand_drawn = true})
+                        SMODS.calculate_context({first_hand_drawn = true})
                     end
-                    for i = 1, #G.jokers.cards do
-                        G.jokers.cards[i]:calculate_joker({first_hand_drawn = true})
-                    end
-                end
+                    SMODS.calculate_context({hand_drawn = true})
 
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',

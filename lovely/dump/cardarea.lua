@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'a7d11253f7999a0561fd7f99f774f750e8b3702d5f496f16eaf5274a4813bd49'
+LOVELY_INTEGRITY = 'e8693aca875516bf9cb3c84fcb6f392131135da095f221f2ef0e6ac727b926df'
 
 --Class
 CardArea = Moveable:extend()
@@ -490,7 +490,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end  
     if self.config.type == 'hand' and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
 
@@ -506,7 +506,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end  
     if self.config.type == 'title' or (self.config.type == 'voucher' and #self.cards == 1) then
         for k, card in ipairs(self.cards) do
@@ -520,7 +520,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end  
     if self.config.type == 'voucher' and #self.cards > 1 then
         local self_w = math.max(self.T.w, 3.2)
@@ -549,7 +549,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end 
     if self == G.jokers and G.jokers.cart_jokers_expanded then
         local align_cards = Cartomancer.expand_G_jokers()
@@ -581,7 +581,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        if not G.GAME.modifiers.cry_conveyor then table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end) end
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
     end   
     if self.config.type == 'consumeable'then
         for k, card in ipairs(self.cards) do
@@ -597,7 +597,7 @@ function CardArea:align_cards()
                 card.T.x = card.T.x + card.shadow_parrallax.x/30
             end
         end
-        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)
+        table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end   
     for k, card in ipairs(self.cards) do
         card.rank = k

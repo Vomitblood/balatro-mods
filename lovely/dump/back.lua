@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'd3c881055f5938773f6b44e7c8b207117963612b2eaf889f5b7ef8b61e1143cd'
+LOVELY_INTEGRITY = 'cd00b45ad63b1eaa00d4924a1eed9a6a330e531d1440767ad8b6703f1eec6dbf'
 
 --Class
 Back = Object:extend()
@@ -130,9 +130,16 @@ end
 function Back:trigger_effect(args)
     if not args then return end
     	local obj = self.effect.center
-    	if obj.trigger_effect and type(obj.trigger_effect) == 'function' then
+    	if type(obj.calculate) == 'function' then
+    		local o = {obj:calculate(self, args)}
+    		if next(o) ~= nil then return unpack(o) end
+    	elseif type(obj.trigger_effect) == 'function' then
+    		-- kept for compatibility
     		local o = {obj:trigger_effect(args)}
-    		if o then return unpack(o) end
+    		if next(o) ~= nil then
+    			sendWarnMessage(('Found `trigger_effect` function on SMODS.Back object "%s". This field is deprecated; please use `calculate` instead.'):format(obj.key), 'Back')
+    			return unpack(o)
+    		end
     	end
     
     if self.name == 'Anaglyph Deck' and args.context == 'eval' and G.GAME.last_blind and G.GAME.last_blind.boss then
@@ -201,14 +208,33 @@ end
 function Back:apply_to_run()
 	local obj = self.effect.center
 	if obj.apply and type(obj.apply) == 'function' then
-		obj:apply()
+		obj:apply(self)
 	end
 
+    if self.effect.config.jokers then
+            delay(0.4)
+            G.E_MANAGER:add_event(Event({
+                func = function()
+                    for k, v in ipairs(self.effect.config.jokers) do
+                        local card = create_card('Joker', G.jokers, nil, nil, nil, nil, v, 'deck')
+                        card:add_to_deck()
+                        G.jokers:emplace(card)
+    					card:start_materialize()
+                    end
+                return true
+                end
+            }))
+        end
     if self.effect.config.voucher then
         G.GAME.used_vouchers[self.effect.config.voucher] = true
         G.GAME.cry_owned_vouchers[self.effect.config.voucher] = true
         G.GAME.starting_voucher_count = (G.GAME.starting_voucher_count or 0) + 1
-        Card.apply_to_run(nil, G.P_CENTERS[self.effect.config.voucher])
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                Card.apply_to_run(nil, G.P_CENTERS[self.effect.config.voucher])
+                return true
+            end
+        }))
     end
     if self.effect.config.hands then 
         G.GAME.starting_params.hands = G.GAME.starting_params.hands + self.effect.config.hands
@@ -266,7 +292,12 @@ function Back:apply_to_run()
             G.GAME.used_vouchers[v ] = true
             G.GAME.cry_owned_vouchers[v ] = true
             G.GAME.starting_voucher_count = (G.GAME.starting_voucher_count or 0) + 1
-            Card.apply_to_run(nil, G.P_CENTERS[v])
+            G.E_MANAGER:add_event(Event({
+                func = function()
+                    Card.apply_to_run(nil, G.P_CENTERS[v])
+                    return true
+                end
+            }))
         end
     end
     if self.name == 'Checkered Deck' then

@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '68c2ebd87be76547897e6d6962d4d584197f285bae1b2b46c4916611b072fcd7'
+LOVELY_INTEGRITY = 'af84d6c3467720a23ecaec33b0418eba5566291929fca3634893138f120ee811'
 
 --class
 Card = Moveable:extend()
@@ -46,9 +46,9 @@ function Card:init(X, Y, W, H, card, center, params)
     self:set_base(card, true)
 
     self.discard_pos = {
-        r = 3.6*(math.random()-0.5),
-        x = math.random(),
-        y = math.random()
+        r = 0, 
+        x = 0, 
+        y = 0,
     }
  
     self.facing = 'front'
@@ -178,8 +178,8 @@ function Card:set_sprites(_center, _front)
                     self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Tarot"], G.c_locked.pos)
                 elseif not self.params.bypass_discovery_center and (_center.set == 'Edition' or _center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher' or _center.set == 'Booster') and not _center.discovered then 
                     self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[(_center.undiscovered and (_center.undiscovered[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.undiscovered.atlas))
-	or (SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas))
-	or _center.set] or G.ASSET_ATLAS["Joker"], 
+    or (SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas))
+    or _center.set] or G.ASSET_ATLAS["Joker"], 
                     (_center.undiscovered and _center.undiscovered.pos) or (SMODS.UndiscoveredSprites[_center.set] and SMODS.UndiscoveredSprites[_center.set].pos) or
                     (_center.set == 'Joker' and G.j_undiscovered.pos) or 
                     (_center.set == 'Edition' and G.j_undiscovered.pos) or 
@@ -227,6 +227,12 @@ function Card:set_sprites(_center, _front)
             if _center.name == 'Square Joker' and (_center.discovered or self.bypass_discovery_center) then 
                 self.children.center.scale.y = self.children.center.scale.x
             end
+            if _center.pixel_size and _center.pixel_size.h and (_center.discovered or self.bypass_discovery_center) then
+                self.children.center.scale.y = self.children.center.scale.y*(_center.pixel_size.h/95)
+            end
+            if _center.pixel_size and _center.pixel_size.w and (_center.discovered or self.bypass_discovery_center) then
+                self.children.center.scale.x = self.children.center.scale.x*(_center.pixel_size.w/71)
+            end
         end
 
         if _center.soul_pos then 
@@ -237,7 +243,7 @@ function Card:set_sprites(_center, _front)
         end
 
         if _center.set_sprites and type(_center.set_sprites) == 'function' then
-        	_center:set_sprites(self, _front)
+            _center:set_sprites(self, _front)
         end
         if true then
             self.children.back = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GAME.viewed_back or G.GAME.selected_back)[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or (G.GAME.viewed_back or G.GAME.selected_back).atlas) or 'centers'], self.params.bypass_back or (self.playing_card and G.GAME[self.back].pos or G.P_CENTERS['b_red'].pos))
@@ -341,6 +347,20 @@ function Card:set_ability(center, initial, delay_sprites)
         self.T.h = H
         self.T.w = W
     end
+    if center.display_size and center.display_size.h and (center.discovered or self.bypass_discovery_center) then
+        H = H*(center.display_size.h/95)
+        self.T.h = H
+    elseif center.pixel_size and center.pixel_size.h and (center.discovered or self.bypass_discovery_center) then
+        H = H*(center.pixel_size.h/95)
+        self.T.h = H
+    end
+    if center.display_size and center.display_size.w and (center.discovered or self.bypass_discovery_center) then
+        W = W*(center.display_size.w/71)
+        self.T.w = W
+    elseif center.pixel_size and center.pixel_size.w and (center.discovered or self.bypass_discovery_center) then
+        W = W*(center.pixel_size.w/71)
+        self.T.w = W
+    end
 
     if delay_sprites then 
         G.E_MANAGER:add_event(Event({
@@ -414,13 +434,13 @@ function Card:set_ability(center, initial, delay_sprites)
     self.ability.bonus = (self.ability.bonus or 0) + (center.config.bonus or 0)
     if not self.ability.name then self.ability.name = center.key end
     for k, v in pairs(center.config) do
-    	if k ~= 'bonus' then
-    		if type(v) == 'table' then
-    			self.ability[k] = copy_table(v)
-    		else
-    			self.ability[k] = v
-    		end
-    	end
+        if k ~= 'bonus' then
+            if type(v) == 'table' then
+                self.ability[k] = copy_table(v)
+            else
+                self.ability[k] = v
+            end
+        end
     end
 
     if center.consumeable then 
@@ -473,12 +493,12 @@ function Card:set_ability(center, initial, delay_sprites)
 
     local obj = self.config.center
     if obj.set_ability and type(obj.set_ability) == 'function' then
-    	obj:set_ability(self, initial, delay_sprites)
+        obj:set_ability(self, initial, delay_sprites)
     end
     
     if not G.OVERLAY_MENU then 
         if self.config.center.key then
-        	G.GAME.used_jokers[self.config.center.key] = true
+            G.GAME.used_jokers[self.config.center.key] = true
         end
 
     end
@@ -608,6 +628,14 @@ function Card:set_seal(_seal, silent, immediate)
     self.seal = nil
     if _seal then
         self.seal = _seal
+        self.ability.seal = {}
+        for k, v in pairs(G.P_SEALS[_seal].config or {}) do
+            if type(v) == 'table' then
+                self.ability.seal[k] = copy_table(v)
+            else
+                self.ability.seal[k] = v
+            end
+        end
         if not silent then 
         G.CONTROLLER.locks.seal = true
         local sound = G.P_SEALS[_seal].sound or {sound = 'gold_seal', per = 1.2, vol = 0.4}
@@ -750,7 +778,7 @@ function Card:add_to_deck(from_debuff)
         end
         local obj = self.config.center
         if obj and obj.add_to_deck and type(obj.add_to_deck) == 'function' then
-        	obj:add_to_deck(self, from_debuff)
+            obj:add_to_deck(self, from_debuff)
         end        if self.ability.h_size ~= 0 then
             G.hand:change_size(self.ability.h_size)
         end
@@ -817,7 +845,7 @@ function Card:remove_from_deck(from_debuff)
         self.added_to_deck = false
         local obj = self.config.center
         if obj and obj.remove_from_deck and type(obj.remove_from_deck) == 'function' then
-        	obj:remove_from_deck(self, from_debuff)
+            obj:remove_from_deck(self, from_debuff)
         end        if self.ability.h_size ~= 0 then
             G.hand:change_size(-self.ability.h_size)
         end
@@ -880,7 +908,7 @@ function Card:generate_UIBox_unlock_table(hidden)
     return generate_card_ui(self.config.center, nil, loc_vars, 'Locked')
 end
 
-function Card:generate_UIBox_ability_table()
+function Card:generate_UIBox_ability_table(vars_only)
     local card_type, hide_desc = self.ability.set or "None", nil
     local loc_vars = nil
     local main_start, main_end = nil,nil
@@ -1118,6 +1146,7 @@ function Card:generate_UIBox_ability_table()
         elseif self.ability.name == 'Perkeo' then loc_vars = {self.ability.extra}
         end
     end
+    if vars_only then return loc_vars, main_start, main_end end
     local badges = {}
     if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
         badges.card_type = card_type
@@ -1164,21 +1193,21 @@ end
 end
 
 function Card:get_nominal(mod)
-	local mult = 1
-	local rank_mult = 1
-	if mod == 'suit' then mult = 10000 end
-	if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
-		mult = -10000
-	elseif self.config.center.no_suit then
-		mult = 0
-	elseif self.config.center.no_rank then
-		rank_mult = 0
-	end
-	return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
+    local mult = 1
+    local rank_mult = 1
+    if mod == 'suit' then mult = 10000 end
+    if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
+        mult = -10000
+    elseif self.config.center.no_suit then
+        mult = 0
+    elseif self.config.center.no_rank then
+        rank_mult = 0
+    end
+    return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
 end
 
 function Card:get_id()
-    if (self.ability.effect == 'Stone Card' or self.config.center.no_rank) and not self.vampired then
+    if SMODS.has_no_rank(self) and not self.vampired then
         return -math.random(100, 1000000)
     end
     return self.base.id
@@ -1242,9 +1271,6 @@ function Card:get_edition()
     if self.debuff then return end
     if self.edition then
         local ret = {card = self}
-        if self.edition.p_dollars then
-            ret.p_dollars_mod = self.edition.p_dollars
-        end
         if self.edition.x_mult then 
             ret.x_mult_mod = self.edition.x_mult
         end
@@ -1265,7 +1291,7 @@ function Card:get_end_of_round_effect(context)
         ret.h_dollars = self.ability.h_dollars
         ret.card = self
     end
-    if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
+    if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit and not self.ability.extra_enhancement then
         local card_type = 'Planet'
         G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
         G.E_MANAGER:add_event(Event({
@@ -1369,8 +1395,8 @@ function Card:use_consumeable(area, copier)
 
     local obj = self.config.center
     if obj.use and type(obj.use) == 'function' then
-    	obj:use(self, area, copier)
-    	return
+        obj:use(self, area, copier)
+        return
     end    if self.ability.consumeable.mod_conv or self.ability.consumeable.suit_conv then
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
             play_sound('tarot1')
@@ -1572,7 +1598,7 @@ function Card:use_consumeable(area, copier)
                 func = function() 
                     for i=#G.hand.highlighted, 1, -1 do
                         local card = G.hand.highlighted[i]
-                        if card.ability.name == 'Glass Card' then 
+                        if SMODS.has_enhancement(card, 'm_glass') then
                             card:shatter()
                         else
                             card:start_dissolve(nil, i == #G.hand.highlighted)
@@ -1591,7 +1617,7 @@ function Card:use_consumeable(area, copier)
                 func = function() 
                     for i=#destroyed_cards, 1, -1 do
                         local card = destroyed_cards[i]
-                        if card.ability.name == 'Glass Card' then 
+                        if SMODS.has_enhancement(card, 'm_glass') then
                             card:shatter()
                         else
                             card:start_dissolve(nil, i ~= #destroyed_cards)
@@ -1649,7 +1675,7 @@ function Card:use_consumeable(area, copier)
                 func = function() 
                     for i=#destroyed_cards, 1, -1 do
                         local card = destroyed_cards[i]
-                        if card.ability.name == 'Glass Card' then 
+                        if SMODS.has_enhancement(card, 'm_glass') then
                             card:shatter()
                         else
                             card:start_dissolve(nil, i == #destroyed_cards)
@@ -1660,9 +1686,7 @@ function Card:use_consumeable(area, copier)
             ease_dollars(self.ability.extra.dollars)
         end
         delay(0.3)
-        for i = 1, #G.jokers.cards do
-            G.jokers.cards[i]:calculate_joker({remove_playing_cards = true, removed = destroyed_cards})
-        end
+        SMODS.calculate_context({ remove_playing_cards = true, removed = destroyed_cards })
     end
     if self.ability.name == 'The Fool' then
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
@@ -1826,19 +1850,9 @@ function Card:can_use_consumeable(any_state, skip_check)
     end
     if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or any_state then
 
-        if self.ability.name == "The Hanged Man" then
-            for i = 1, #G.hand.highlighted do
-                if G.hand.highlighted[i].ability.eternal then return false end
-            end
-        end
-        if self.ability.name == "Death" then
-            local rightmost = G.hand.highlighted[1]
-            for i=1, #G.hand.highlighted-1 do if G.hand.highlighted[i].T.x > rightmost.T.x then rightmost = G.hand.highlighted[i] end end
-            for i=1, #G.hand.highlighted do if G.hand.highlighted[i].ability.eternal and rightmost ~= G.hand.highlighted[i] then return false end end
-        end
         local obj = self.config.center
         if obj.can_use and type(obj.can_use) == 'function' then
-        	return obj:can_use(self)
+            return obj:can_use(self)
         end        if self.ability.name == 'The Hermit' or self.ability.consumeable.hand_type or self.ability.name == 'Temperance' or self.ability.name == 'Black Hole' then
             return true
         end
@@ -1917,18 +1931,8 @@ function Card:sell_card()
     if self.children.use_button then self.children.use_button:remove(); self.children.use_button = nil end
     if self.children.sell_button then self.children.sell_button:remove(); self.children.sell_button = nil end
     
-    if self.config.center.set == 'Joker' then
-    	if G.GAME.jokers_sold then
-    		local contained = false
-    		for i = 1, #G.GAME.jokers_sold do
-    			if self.config.center.key == G.GAME.jokers_sold[i] then contained = true end
-    		end
-    		if not contained then table.insert(G.GAME.jokers_sold, self.config.center.key) end
-    	else
-    		G.GAME.jokers_sold = {self.config.center.key}
-    	end
-    end
-    self:calculate_joker{selling_self = true}
+    local eval, post = eval_card(self, {selling_self = true})
+    SMODS.trigger_effects({eval, post}, self)
 
     G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function()
         if not G.GAME.modifiers.cry_no_sell_value then play_sound('coin2') end
@@ -1986,14 +1990,13 @@ end
 
 function Card:calculate_dollar_bonus()
     if self.debuff then return end
+    local obj = self.config.center
+    if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
+        return obj:calc_dollar_bonus(self)
+    end
     if self.ability.set == "Joker" then
         if self.ability.name == 'Golden Joker' then
             return self.ability.extra
-        end
-        --asdf
-        local obj = self.config.center
-        if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
-            return obj:calc_dollar_bonus(self)
         end
         if self.ability.name == 'Cloud 9' and self.ability.nine_tally and self.ability.nine_tally > 0 then
             return self.ability.extra*(self.ability.nine_tally)
@@ -2026,7 +2029,6 @@ function Card:open()
         end
         self.states.hover.can = false
 
-        if self.ability.extra < 1 then self.ability.extra = 1 end
         booster_obj = self.config.center
         if booster_obj and SMODS.Centers[booster_obj.key] then
             G.STATE = G.STATES.SMODS_BOOSTER_OPENED
@@ -2088,7 +2090,6 @@ function Card:open()
                 
                 for i = 1, _size do
                     local card = nil
-                    if self.ability.extra < 1 then self.ability.extra = 1 end
                     if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
                         local _card_to_spawn = booster_obj:create_card(self, i)
                         if type((_card_to_spawn or {}).is) == 'function' and _card_to_spawn:is(Card) then
@@ -2186,9 +2187,7 @@ end
                 end
             end}))
 
-            for i = 1, #G.jokers.cards do
-                G.jokers.cards[i]:calculate_joker({open_booster = true, card = self})
-            end
+            SMODS.calculate_context({open_booster = true, card = self})
 
             if G.GAME.modifiers.inflation then 
                 G.GAME.inflation = G.GAME.inflation + 1
@@ -2252,9 +2251,7 @@ function Card:redeem()
         self:apply_to_run()
 
         delay(0.6)
-        for i = 1, #G.jokers.cards do
-            G.jokers.cards[i]:calculate_joker({buying_card = true, card = self})
-        end
+        SMODS.calculate_context({buying_card = true, card = self})
         if G.GAME.modifiers.inflation then 
             G.GAME.inflation = G.GAME.inflation + 1
             G.E_MANAGER:add_event(Event({func = function()
@@ -2278,50 +2275,17 @@ function Card:redeem()
 end
 
 function Card:apply_to_run(center)
+local card_to_save = self and copy_card(self) or Card(0, 0, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+card_to_save.VT.x, card_to_save.VT.y = G.vouchers.T.x, G.vouchers.T.y
+G.vouchers:emplace(card_to_save)
     local center_table = {
         name = center and center.name or self and self.ability.name,
         extra = self and self.config and self.config.center_key and G.GAME and G.GAME.cry_voucher_centers and G.GAME.cry_voucher_centers[self.config.center_key] and G.GAME.cry_voucher_centers[self.config.center_key].config.extra
     }
-    if not G.GAME.voucher_edition_index then G.GAME.voucher_edition_index = {} end
-    if self and self.edition then
-    	G.GAME.voucher_edition_index[center_table.name] = self.edition.type
-    end
-    if not G.GAME.voucher_sticker_index then G.GAME.voucher_sticker_index = {eternal = {}, perishable = {}, rental = {}, pinned = {}, banana = {}} end
-    if self and self.ability and self.ability.eternal and self.ability.eternal == true then
-     	G.GAME.voucher_sticker_index.eternal[center_table.name] = true
-    end
-    if self and self.ability and self.ability.perishable and self.ability.perishable == true then
-     	G.GAME.voucher_sticker_index.perishable[center_table.name] = G.GAME.cry_voucher_perishable_rounds
-    end
-    if self and self.ability and self.ability.rental and self.ability.rental == true then
-     	G.GAME.voucher_sticker_index.rental[center_table.name] = true
-    end
-    if self and self.pinned and self.pinned == true then
-     	G.GAME.voucher_sticker_index.pinned[center_table.name] = true
-    end
-    if self and self.ability and self.ability.banana and self.ability.banana == true then
-     	G.GAME.voucher_sticker_index.banana[center_table.name] = true
-    end
-    if not center_table.extra then center_table.extra = center and center.config.extra end	-- catch
-    if self and self.ability and self.ability.extra_disp then
-    	local up = false
-    	if center_table.name == 'Tarot Tycoon' or center_table.name == 'Planet Tycoon' then
-    		up = true
-    	end
-    	local og_extra = 9.6/4
-    	local og_disp = 2
-    	if up == true then
-    		og_extra = 32/4
-    		og_disp = 4
-    	end
-    	local misprint_diff = self.ability.extra_disp / og_disp
-    	G.GAME.cry_voucher_centers[self.config.center_key].config.extra = og_extra*misprint_diff
-    	center_table.extra = og_extra*misprint_diff
-    end
     local obj = center or self.config.center
     if obj.redeem and type(obj.redeem) == 'function' then
-    	obj:redeem(self)
-    	return
+        obj:redeem(card_to_save)
+        return
     end    if center_table.name == 'Overstock' or center_table.name == 'Overstock Plus' then
         G.E_MANAGER:add_event(Event({func = function()
             change_shop_size(center_table.extra)
@@ -2685,7 +2649,10 @@ function Card:calculate_seal(context)
     if self.debuff then return nil end    local obj = G.P_SEALS[self.seal] or {}
     if obj.calculate and type(obj.calculate) == 'function' then
     	local o = obj:calculate(self, context)
-    	if o then return o end
+    	if o then
+            if not o.card then o.card = self end
+            return o
+        end
     end
     if context.repetition then
         if self.seal == 'Red' then
@@ -2696,7 +2663,7 @@ function Card:calculate_seal(context)
                 }
         end
     end
-    if context.discard then
+    if context.discard and context.other_card == self then
         if self.seal == 'Purple' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
             G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
             G.E_MANAGER:add_event(Event({
@@ -2710,6 +2677,7 @@ function Card:calculate_seal(context)
                     return true
                 end)}))
             card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+            return nil, true
         end
     end
 end
@@ -2736,48 +2704,29 @@ function Card:calculate_perishable()
 end
 
 function Card:calculate_joker(context)
-for k, v in pairs(SMODS.Stickers) do
-    if self.ability[v.key] then
-        if v.calculate and type(v.calculate) == 'function' then
-            local override_card = v:calculate(self, context)
-            if override_card then return override_card end
-        end
-    end
-end
     if self.debuff then return nil end
     local obj = self.config.center
     if self.ability.set ~= "Enhanced" and obj.calculate and type(obj.calculate) == 'function' then
-    	local o, t = obj:calculate(self, context)
-    	if o or t then return o, t end
+        local o, t = obj:calculate(self, context)
+        if o or t then return o, t end
     end
-    if self.ability.set == "Planet" and not self.debuff then
-        if context.joker_main then
-            if G.GAME.used_vouchers.v_observatory and self.ability.consumeable.hand_type == context.scoring_name then
-                return {
-                                        message = localize{type = 'variable', key = 'a_xmult', vars = {G.GAME.cry_voucher_centers['v_observatory'].config.extra}},
-                    Xmult_mod = G.GAME.cry_voucher_centers['v_observatory'].config.extra
 
-                }
-            end
-        end
-    end
     if self.ability.set == "Joker" and not self.debuff then
         if self.ability.name == "Blueprint" then
             local other_joker = nil
             for i = 1, #G.jokers.cards do
                 if G.jokers.cards[i] == self then other_joker = G.jokers.cards[i+1] end
             end
-            if other_joker and other_joker ~= self then
+            if other_joker and other_joker ~= self and not context.no_blueprint then
                 context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
-                context.copy_depth = (context.copy_depth and (context.copy_depth + 1)) or 1
                 context.blueprint_card = context.blueprint_card or self
                 if context.blueprint > #G.jokers.cards + 1 then return end
-                context.no_callback = true
-                local other_joker_ret, trig = other_joker:calculate_joker(context)
+                local other_joker_ret = other_joker:calculate_joker(context)
+                context.blueprint = nil
+                local eff_card = context.blueprint_card or self
+                context.blueprint_card = nil
                 if other_joker_ret then 
-                    other_joker_ret.card = context.blueprint_card or self
-                    context.no_callback = not (context.copy_depth <= 1)
-                    context.copy_depth = context.copy_depth - 1;
+                    other_joker_ret.card = eff_card
                     other_joker_ret.colour = G.C.BLUE
                     return other_joker_ret
                 end
@@ -2785,17 +2734,16 @@ end
         end
         if self.ability.name == "Brainstorm" then
             local other_joker = G.jokers.cards[1]
-            if other_joker and other_joker ~= self then
+            if other_joker and other_joker ~= self and not context.no_blueprint then
                 context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1
-                context.copy_depth = (context.copy_depth and (context.copy_depth + 1)) or 1
                 context.blueprint_card = context.blueprint_card or self
                 if context.blueprint > #G.jokers.cards + 1 then return end
-                context.no_callback = true
-                local other_joker_ret, trig = other_joker:calculate_joker(context)
+                local other_joker_ret = other_joker:calculate_joker(context)
+                context.blueprint = nil
+                local eff_card = context.blueprint_card or self
+                context.blueprint_card = nil
                 if other_joker_ret then 
-                    other_joker_ret.card = context.blueprint_card or self
-                    context.no_callback = not (context.copy_depth <= 1)
-                    context.copy_depth = context.copy_depth - 1;
+                    other_joker_ret.card = eff_card
                     other_joker_ret.colour = G.C.RED
                     return other_joker_ret
                 end
@@ -2816,6 +2764,7 @@ end
                             return true
                         end)}))
                     card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+                    return nil, true
                 end
             end
         elseif context.buying_card then
@@ -3184,7 +3133,7 @@ end
             if self.ability.name == 'Glass Joker' and not context.blueprint and context.consumeable.ability.name == 'The Hanged Man'  then
                 local shattered_glass = 0
                 for k, val in ipairs(G.hand.highlighted) do
-                    if val.ability.name == 'Glass Card' then shattered_glass = shattered_glass + 1 end
+                    if SMODS.has_enhancement(val, 'm_glass') then shattered_glass = shattered_glass + 1 end
                 end
                 if shattered_glass > 0 then
                     self.ability.x_mult = self.ability.x_mult + self.ability.extra*shattered_glass
@@ -3215,7 +3164,6 @@ end
                     if not Talisman.config_file.disable_anims then G.E_MANAGER:add_event(Event({func = (function() G.GAME.dollar_buffer = 0; return true end)})) else G.GAME.dollar_buffer = 0 end
                     return {
                         message = localize('$')..self.ability.extra,
-                        dollars = self.ability.extra,
                         colour = G.C.MONEY
                     }
                 end
@@ -3248,6 +3196,7 @@ end
                         end
                     })) 
                     return {
+                        card = self,
                         message = localize('k_eaten_ex'),
                         colour = G.C.FILTER
                     }
@@ -3255,6 +3204,7 @@ end
                     self.ability.x_mult = self.ability.x_mult - self.ability.extra
                     return {
                         delay = 0.2,
+                        card = self,
                         message = localize{type='variable',key='a_xmult_minus',vars={self.ability.extra}},
                         colour = G.C.RED
                     }
@@ -3265,6 +3215,7 @@ end
                     self.ability.yorick_discards = self.ability.extra.discards
                     self.ability.x_mult = self.ability.x_mult + self.ability.extra.xmult
                     return {
+                        card = self,
                         delay = 0.2,
                         message = localize{type='variable',key='a_xmult',vars={self.ability.x_mult}},
                         colour = G.C.RED
@@ -3395,6 +3346,7 @@ end
                             end
                         })) 
                         return {
+                            card = self,
                             message = localize('k_eaten_ex'),
                             colour = G.C.FILTER
                         }
@@ -3624,7 +3576,7 @@ end
                         }
                     end
                 if self.ability.name == 'Golden Ticket' and
-                    context.other_card.ability.name == 'Gold Card' then
+                    SMODS.has_enhancement(context.other_card, 'm_gold') then
                         G.GAME.dollar_buffer = (G.GAME.dollar_buffer or 0) + self.ability.extra
                         if not Talisman.config_file.disable_anims then G.E_MANAGER:add_event(Event({func = (function() G.GAME.dollar_buffer = 0; return true end)})) else G.GAME.dollar_buffer = 0 end
                         return {
@@ -3797,7 +3749,7 @@ end
                         local temp_Mult, temp_ID = 15, 15
                         local raised_card = nil
                         for i=1, #G.hand.cards do
-                            if temp_ID >= G.hand.cards[i].base.id and (G.hand.cards[i].ability.effect ~= 'Stone Card' and not G.hand.cards[i].config.center.no_rank) then 
+                            if temp_ID >= G.hand.cards[i].base.id and not SMODS.has_no_rank(G.hand.cards[i]) then 
                                 temp_Mult = G.hand.cards[i].base.nominal
                                 temp_ID = G.hand.cards[i].base.id
                                 raised_card = G.hand.cards[i]
@@ -3974,7 +3926,6 @@ end
                         if not Talisman.config_file.disable_anims then G.E_MANAGER:add_event(Event({func = (function() G.GAME.dollar_buffer = 0; return true end)})) else G.GAME.dollar_buffer = 0 end
                         return {
                             message = localize('$')..self.ability.extra.dollars,
-                            dollars = self.ability.extra.dollars,
                             colour = G.C.MONEY
                         }
                     end
@@ -4203,7 +4154,6 @@ end
                                 if not Talisman.config_file.disable_anims then G.E_MANAGER:add_event(Event({func = (function() G.GAME.dollar_buffer = 0; return true end)})) else G.GAME.dollar_buffer = 0 end
                                 return {
                                     message = localize('$')..self.ability.extra,
-                                    dollars = self.ability.extra,
                                     colour = G.C.MONEY
                                 }
                             end
@@ -4292,7 +4242,7 @@ end
                                 ['Clubs'] = 0
                             }
                             for i = 1, #context.scoring_hand do
-                                if context.scoring_hand[i].ability.name ~= 'Wild Card' and not context.scoring_hand[i].config.center.any_suit then
+                                if not SMODS.has_any_suit(context.scoring_hand[i]) then
                                     if context.scoring_hand[i]:is_suit('Hearts', true) and suits["Hearts"] == 0 then suits["Hearts"] = suits["Hearts"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Diamonds', true) and suits["Diamonds"] == 0  then suits["Diamonds"] = suits["Diamonds"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Spades', true) and suits["Spades"] == 0  then suits["Spades"] = suits["Spades"] + 1
@@ -4300,7 +4250,7 @@ end
                                 end
                             end
                             for i = 1, #context.scoring_hand do
-                                if context.scoring_hand[i].ability.name == 'Wild Card' or context.scoring_hand[i].config.center.any_suit then
+                                if SMODS.has_any_suit(context.scoring_hand[i]) then
                                     if context.scoring_hand[i]:is_suit('Hearts') and suits["Hearts"] == 0 then suits["Hearts"] = suits["Hearts"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Diamonds') and suits["Diamonds"] == 0  then suits["Diamonds"] = suits["Diamonds"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Spades') and suits["Spades"] == 0  then suits["Spades"] = suits["Spades"] + 1
@@ -4325,7 +4275,7 @@ end
                                 ['Clubs'] = 0
                             }
                             for i = 1, #context.scoring_hand do
-                                if context.scoring_hand[i].ability.name ~= 'Wild Card' and not context.scoring_hand[i].config.center.any_suit then
+                                if not SMODS.has_any_suit(context.scoring_hand[i]) then
                                     if context.scoring_hand[i]:is_suit('Hearts') then suits["Hearts"] = suits["Hearts"] + 1 end
                                     if context.scoring_hand[i]:is_suit('Diamonds') then suits["Diamonds"] = suits["Diamonds"] + 1 end
                                     if context.scoring_hand[i]:is_suit('Spades') then suits["Spades"] = suits["Spades"] + 1 end
@@ -4333,7 +4283,7 @@ end
                                 end
                             end
                             for i = 1, #context.scoring_hand do
-                                if context.scoring_hand[i].ability.name == 'Wild Card' or context.scoring_hand[i].config.center.any_suit then
+                                if SMODS.has_any_suit(context.scoring_hand[i]) then
                                     if context.scoring_hand[i]:is_suit('Clubs') and suits["Clubs"] == 0 then suits["Clubs"] = suits["Clubs"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Diamonds') and suits["Diamonds"] == 0  then suits["Diamonds"] = suits["Diamonds"] + 1
                                     elseif context.scoring_hand[i]:is_suit('Spades') and suits["Spades"] == 0  then suits["Spades"] = suits["Spades"] + 1
@@ -4543,10 +4493,10 @@ end
 
 function Card:is_suit(suit, bypass_debuff, flush_calc)
     if flush_calc then
-        if self.ability.effect == 'Stone Card' or self.config.center.no_suit then
+        if SMODS.has_no_suit(self) then
             return false
         end
-        if (self.ability.name == 'Wild Card' or self.config.center.any_suit) and not self.debuff then
+        if SMODS.has_any_suit(self) and not self.debuff then
             return true
         end
         if next(find_joker('Smeared Joker')) and (self.base.suit == 'Hearts' or self.base.suit == 'Diamonds') == (suit == 'Hearts' or suit == 'Diamonds') then
@@ -4555,10 +4505,10 @@ function Card:is_suit(suit, bypass_debuff, flush_calc)
         return self.base.suit == suit
     else
         if self.debuff and not bypass_debuff then return end
-        if self.ability.effect == 'Stone Card' or self.config.center.no_suit then
+        if SMODS.has_no_suit(self) then
             return false
         end
-        if self.ability.name == 'Wild Card' or self.config.center.any_suit then
+        if SMODS.has_any_suit(self) then
             return true
         end
         if next(find_joker('Smeared Joker')) and (self.base.suit == 'Hearts' or self.base.suit == 'Diamonds') == (suit == 'Hearts' or suit == 'Diamonds') then
@@ -4636,7 +4586,7 @@ function Card:update(dt)
     end
     local obj = self.config.center
     if obj.update and type(obj.update) == 'function' then
-    	obj:update(self, dt)
+        obj:update(self, dt)
     end
     local obj = G.P_SEALS[self.seal] or {}
     if obj.update and type(obj.update) == 'function' then
@@ -4670,13 +4620,13 @@ function Card:update(dt)
         if self.ability.name == "Driver's License" then 
             self.ability.driver_tally = 0
             for k, v in pairs(G.playing_cards) do
-                if v.config.center ~= G.P_CENTERS.c_base then self.ability.driver_tally = self.ability.driver_tally+1 end
+                if next(SMODS.get_enhancements(v)) then self.ability.driver_tally = self.ability.driver_tally+1 end
             end
         end
         if self.ability.name == "Steel Joker" then 
             self.ability.steel_tally = 0
             for k, v in pairs(G.playing_cards) do
-                if v.config.center == G.P_CENTERS.m_steel then self.ability.steel_tally = self.ability.steel_tally+1 end
+                if SMODS.has_enhancement(v, 'm_steel') then self.ability.steel_tally = self.ability.steel_tally+1 end
             end
         end
         if self.ability.name == "Cloud 9" then 
@@ -4688,7 +4638,7 @@ function Card:update(dt)
         if self.ability.name == "Stone Joker" then 
             self.ability.stone_tally = 0
             for k, v in pairs(G.playing_cards) do
-                if v.config.center == G.P_CENTERS.m_stone then self.ability.stone_tally = self.ability.stone_tally+1 end
+                if SMODS.has_enhancement(v, 'm_stone') then self.ability.stone_tally = self.ability.stone_tally+1 end
             end
         end
         if self.ability.name == "Joker Stencil" then 
@@ -4942,6 +4892,9 @@ function Card:draw(layer)
                 if (self.config.center.undiscovered and not self.config.center.undiscovered.no_overlay) or not( SMODS.UndiscoveredSprites[self.ability.set] and SMODS.UndiscoveredSprites[self.ability.set].no_overlay) then 
                     shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
                 else
+                    if SMODS.UndiscoveredSprites[self.ability.set] and SMODS.UndiscoveredSprites[self.ability.set].overlay_sprite then
+                        SMODS.UndiscoveredSprites[self.ability.set].overlay_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+                    end
                 end
             end
 
@@ -4953,21 +4906,21 @@ function Card:draw(layer)
 
             local center = self.config.center
             if center.draw and type(center.draw) == 'function' then
-            	center:draw(self, layer)
+                center:draw(self, layer)
             end
             if center.set == 'Default' or center.set == 'Enhanced' and not center.replace_base_card then
-            	if not center.no_suit then
-            		local suit = SMODS.Suits[self.base.suit] or {}
-            		if suit.draw and type(suit.draw) == 'function' then
-            			suit:draw(self, layer)
-            		end
-            	end
-            	if not center.no_rank then
-            		local rank = SMODS.Ranks[self.base.value] or {}
-            		if rank.draw and type(rank.draw) == 'function' then
-            			rank:draw(self, layer)
-            		end
-            	end
+                if not center.no_suit then
+                    local suit = SMODS.Suits[self.base.suit] or {}
+                    if suit.draw and type(suit.draw) == 'function' then
+                        suit:draw(self, layer)
+                    end
+                end
+                if not center.no_rank then
+                    local rank = SMODS.Ranks[self.base.value] or {}
+                    if rank.draw and type(rank.draw) == 'function' then
+                        rank:draw(self, layer)
+                    end
+                end
             end
             --If the card has any edition/seal, add that here
             if true then
@@ -4999,7 +4952,7 @@ function Card:draw(layer)
                 end
                 local seal = G.P_SEALS[self.seal or {}] or {}
                 if type(seal.draw) == 'function' then
-                	seal:draw(self, layer)
+                    seal:draw(self, layer)
                 elseif self.seal then
                     G.shared_seals[self.seal].role.draw_major = self
                     G.shared_seals[self.seal]:draw_shader('dissolve', nil, nil, nil, self.children.center)
@@ -5030,6 +4983,17 @@ function Card:draw(layer)
                     G.shared_stickers[self.sticker_run]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
                 end
 
+                for k, v in pairs(SMODS.Stickers) do
+                    if self.ability[v.key] then
+                        if v and v.draw and type(v.draw) == 'function' then
+                            v:draw(self, layer)
+                        else
+                            G.shared_stickers[v.key].role.draw_major = self
+                            G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
+                            G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
+                        end
+                    end
+                end
                 if self.ability.name == 'The Soul' and (self.config.center.discovered or self.bypass_discovery_center) then
                     local scale_mod = 0.05 + 0.05*math.sin(1.8*G.TIMERS.REAL) + 0.07*math.sin((G.TIMERS.REAL - math.floor(G.TIMERS.REAL))*math.pi*14)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^3
                     local rotate_mod = 0.1*math.sin(1.219*G.TIMERS.REAL) + 0.07*math.sin((G.TIMERS.REAL)*math.pi*5)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^2
@@ -5051,15 +5015,6 @@ function Card:draw(layer)
                     self.children.floating_sprite.role.draw_major = self
                     self.children.floating_sprite:draw_shader('dissolve',0, nil, nil, self.children.center,scale_mod, rotate_mod,nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL),nil, 0.6)
                     self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
-                    if self.edition then 
-                        for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                            if v.apply_to_float then
-                                if self.edition[v.key:sub(3)] then
-                                    self.children.floating_sprite:draw_shader(v.shader, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
-                                end
-                            end
-                        end
-                    end
                     
                 end
                 if self.config.center.soul_pos and (self.config.center.discovered or self.bypass_discovery_center) then
@@ -5108,17 +5063,6 @@ function Card:draw(layer)
             G.shared_stickers['pinned'].role.draw_major = self
             G.shared_stickers['pinned']:draw_shader('dissolve', nil, nil, nil, self.children.center)
             G.shared_stickers['pinned']:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
-        end
-        for k, v in pairs(SMODS.Stickers) do
-            if self.ability[v.key] then
-                if v and v.draw and type(v.draw) == 'function' then
-                    v:draw(self, layer)
-                else
-                    G.shared_stickers[v.key].role.draw_major = self
-                    G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
-                    G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
-                end
-            end
         end
         elseif self.sprite_facing == 'back' then
             local overlay = G.C.WHITE
@@ -5180,7 +5124,7 @@ function Card:draw(layer)
         end
 
         for k, v in pairs(self.children) do
-            if k ~= 'focused_ui' and k ~= "front" and k ~= "back" and k ~= "soul_parts" and k ~= "center" and k ~= 'floating_sprite' and k ~= 'floating_sprite2' and k~= "shadow" and k~= "use_button" and k ~= 'buy_button' and k ~= 'buy_and_use_button' and k~= "debuff" and k ~= 'price' and k~= 'particles' and k ~= 'h_popup' then v:draw() end
+            if not v.custom_draw and k ~= 'focused_ui' and k ~= "front" and k ~= "back" and k ~= "soul_parts" and k ~= "center" and k ~= 'floating_sprite' and k~= "shadow" and k~= "use_button" and k ~= 'buy_button' and k ~= 'buy_and_use_button' and k~= "debuff" and k ~= 'price' and k~= 'particles' and k ~= 'h_popup' then v:draw() end
         end
 
         if (layer == 'card' or layer == 'both') and self.area == G.hand then 
@@ -5293,7 +5237,7 @@ function Card:load(cardTable, other_card)
     local W = G.CARD_W
     local obj = self.config.center
     if obj.load and type(obj.load) == 'function' then
-    	obj:load(self, cardTable, other_card)
+        obj:load(self, cardTable, other_card)
     elseif self.config.center.name == "Half Joker" then
         self.T.h = H*scale/1.7*scale
         self.T.w = W*scale
@@ -5337,6 +5281,16 @@ function Card:load(cardTable, other_card)
     else
         self.T.h = H*scale
         self.T.w = W*scale
+    end
+    if self.config.center.display_size and self.config.center.display_size.h then
+        self.T.h = H*(self.config.center.display_size.h/95)
+    elseif self.config.center.pixel_size and self.config.center.pixel_size.h then
+        self.T.h = H*(self.config.center.pixel_size.h/95)
+    end
+    if self.config.center.display_size and self.config.center.display_size.w then
+        self.T.w = W*(self.config.center.display_size.w/71)
+    elseif self.config.center.pixel_size and self.config.center.pixel_size.w then
+        self.T.w = W*(self.config.center.pixel_size.w/71)
     end
     self.VT.h = self.T.H
     self.VT.w = self.T.w
@@ -5389,9 +5343,6 @@ function Card:remove()
     if self.area then self.area:remove_card(self) end
 
     self:remove_from_deck()
-    if self.ability.consumeable and self.pinned and (G.GAME.cry_pinned_consumeables > 0) then
-    	G.GAME.cry_pinned_consumeables = G.GAME.cry_pinned_consumeables - 1
-    end
     if self.ability.joker_added_to_deck_but_debuffed then
         if self.edition and self.edition.card_limit then
             if self.ability.consumeable then

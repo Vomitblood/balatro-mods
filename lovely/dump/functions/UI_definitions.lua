@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '6dc6391935253a5dba5a3febb135e71775ed356629edd2463e2d01e436702ddd'
+LOVELY_INTEGRITY = '6732b4a403b7b8feb5e2decf7325ea96cac23686fd99e992f1aa1c26a7881bbe'
 
 --Create a global UIDEF that contains all UI definition functions\
 --As a rule, these contain functions that return a table T representing the definition for a UIBox
@@ -187,10 +187,10 @@ function create_UIBox_notify_alert(_achievement, _type)
     _type == 'Voucher' and G.ASSET_ATLAS["Voucher"] or
     _type == 'Back' and G.ASSET_ATLAS["centers"] or
     G.ASSET_ATLAS["icons"]
-	local _smods_atlas = _c and ((G.SETTINGS.colourblind_option and _c.hc_atlas or _c.lc_atlas) or _c.atlas)
-	if _smods_atlas then
-		_atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
-	end
+    local _smods_atlas = _c and ((G.SETTINGS.colourblind_option and _c.hc_atlas or _c.lc_atlas) or _c.atlas)
+    if _smods_atlas then
+        _atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
+    end
 
   if SMODS.Achievements[_achievement] then _c = SMODS.Achievements[_achievement]; _atlas = G.ASSET_ATLAS[_c.atlas] end
   local t_s = Sprite(0,0,1.5*(_atlas.px/_atlas.py),1.5,_atlas, _c and _c.pos or {x=3, y=0})
@@ -298,6 +298,15 @@ function G.UIDEF.use_and_sell_buttons(card)
         }}
       }},
     }}
+  end
+  if card.ability.consumeable and booster_obj and booster_obj.select_card then
+      if (card.area == G.pack_cards and G.pack_cards) then
+          return {n=G.UIT.ROOT, config = {padding = 0, colour = G.C.CLEAR}, nodes={
+                  {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.1, align = "bm", minw = 0.5*card.T.w - 0.15, maxw = 0.9*card.T.w - 0.15, minh = 0.3*card.T.h, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'use_card', func = 'can_select_from_booster'}, nodes={
+                  {n=G.UIT.T, config={text = localize('b_select'),colour = G.C.UI.TEXT_LIGHT, scale = 0.45, shadow = true}}
+                  }},
+              }}
+      end
   end
   if card.ability.consumeable then
     if (card.area == G.pack_cards and G.pack_cards) then
@@ -809,7 +818,7 @@ end
           G.GAME.spectral_rate = G.GAME.spectral_rate or 0
           local total_rate = G.GAME.joker_rate + G.GAME.playing_card_rate
           for _,v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-          	total_rate = total_rate + G.GAME[v:lower()..'_rate']
+              total_rate = total_rate + G.GAME[v:lower()..'_rate']
           end
           local polled_rate = pseudorandom(pseudoseed('cdt'..G.GAME.round_resets.ante))*total_rate
           local check_rate = 0
@@ -822,9 +831,9 @@ end
             {type = 'Spectral', val = G.GAME.spectral_rate},
           }
           for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-          	if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
-          		table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
-          	end
+              if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
+                  table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
+              end
           end
           for _, v in ipairs(rates) do
             if polled_rate > check_rate and polled_rate <= check_rate + v.val then
@@ -1158,19 +1167,19 @@ end
 
       local obj = card.config.center
       if AUT.badges.card_type or AUT.badges.force_rarity then
-      	if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
-      		if obj.type and type(obj.type.set_card_type_badge) == 'function' then
-      			obj.type:set_card_type_badge(obj, card, badges)
-      		end
-      		if type(obj.set_card_type_badge) == 'function' then
-      			obj:set_card_type_badge(card, badges)
-      		end
-      	else
-      		badges[#badges + 1] = create_badge(((card.ability.name == 'Pluto' or card.ability.name == 'Ceres' or card.ability.name == 'Eris') and localize('k_dwarf_planet')) or (card.ability.name == 'Planet X' and localize('k_planet_q') or card_type),card_type_colour, nil, 1.2)
-      	end
+          if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
+              if obj.type and type(obj.type.set_card_type_badge) == 'function' then
+                  obj.type:set_card_type_badge(obj, card, badges)
+              end
+              if type(obj.set_card_type_badge) == 'function' then
+                  obj:set_card_type_badge(card, badges)
+              end
+          else
+              badges[#badges + 1] = create_badge(((card.ability.name == 'Pluto' or card.ability.name == 'Ceres' or card.ability.name == 'Eris') and localize('k_dwarf_planet')) or (card.ability.name == 'Planet X' and localize('k_planet_q') or card_type),card_type_colour, nil, 1.2)
+          end
       end
       if obj and obj.set_badges and type(obj.set_badges) == 'function' then
-      	obj:set_badges(card, badges)
+          obj:set_badges(card, badges)
       end
       local function is_bad_badge(string)
       	local bad_badges = {'cry_pinned_booster', 'cry_pinned_voucher', 'cry_pinned_consumeable'}
@@ -1185,15 +1194,15 @@ end
           if not is_bad_badge(v) then badges[#badges + 1] = create_badge(localize(v, "labels"), get_badge_colour(v)) end
         end
       end      if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
-      	SMODS.create_mod_badges(card.config.center, badges)
-      	if card.base then
-      		SMODS.create_mod_badges(SMODS.Ranks[card.base.value], badges)
-      		SMODS.create_mod_badges(SMODS.Suits[card.base.suit], badges)
-      	end
-      	if card.config and card.config.tag then
-      		SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
-      	end
-      	badges.mod_set = nil
+          SMODS.create_mod_badges(card.config.center, badges)
+          if card.base then
+              SMODS.create_mod_badges(SMODS.Ranks[card.base.value], badges)
+              SMODS.create_mod_badges(SMODS.Suits[card.base.suit], badges)
+          end
+          if card.config and card.config.tag then
+              SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
+          end
+          badges.mod_set = nil
       end
 
       -- if AUT.badges then
@@ -1530,7 +1539,7 @@ function create_UIBox_HUD()
         {n=G.UIT.R, config={align = "cm", colour = G.C.DYN_UI.BOSS_DARK, r=0.1, minh = 30, padding = 0.08}, nodes={
           {n=G.UIT.R, config={align = "cm", minh = 0.3}, nodes={}},
           {n=G.UIT.R, config={align = "cm", id = 'row_blind', minw = 1, minh = 3.75}, nodes={
-            {n=G.UIT.B, config={w=0, h=3.64, id = 'row_blind_bottom'}, nodes={}}
+              {n=G.UIT.B, config={w=0, h=3.64, id = 'row_blind_bottom'}, nodes={}}
           }},
           contents.dollars_chips,
           contents.hand,
@@ -1670,16 +1679,17 @@ function create_UIBox_blind_choice(type, run_info)
       }}
   end
   G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante or G.GAME.round_resets.ante
-  local loc_vars = nil
+  local target = {type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = {}}
   if blind_choice.config.name == 'The Ox' then
-     	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
+         target.vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
   end
   local obj = blind_choice.config
   if obj.loc_vars and _G['type'](obj.loc_vars) == 'function' then
-  	local res = obj:loc_vars() or {}
-  	loc_vars = res.vars or {}
+      local res = obj:loc_vars() or {}
+      target.vars = res.vars or target.vars
+      target.key = res.key or target.key
   end
-  local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}
+  local loc_target = localize(target)
   local loc_name = localize{type = 'name_text', key = blind_choice.config.key, set = 'Blind'}
   local text_table = loc_target
   local blind_col = get_blind_main_colour(type)
@@ -2701,27 +2711,46 @@ function G.UIDEF.custom_deck_tab(_suit)
 
   local rankCount = 0
 local lookup = {}
-local options = G.COLLABS.options[_suit]
-for i = 2, #options do
-    local skin = SMODS.DeckSkins[options[i]]
-    for j = 1, #skin.ranks do
-        if not lookup[skin.ranks[j]] then
-            lookup[skin.ranks[j]] = true
-            rankCount = rankCount + 1
+for i, s in ipairs(SMODS.Suit:obj_list(true)) do
+    local options = G.COLLABS.options[s.key]
+    for i = 1, #options do
+        local skin = SMODS.DeckSkins[options[i]]
+        if skin.palettes and not (skin.display_ranks or skin.ranks) then
+            for _, p in ipairs(skin.palettes) do
+                local p_ranks = p.display_ranks or p.ranks
+                for j = 1, #p_ranks do
+                    if not lookup[p_ranks[j]] then
+                        lookup[p_ranks[j]] = true
+                        rankCount = rankCount + 1
+                    end
+                end
+            end
+        elseif not skin.palettes and (skin.display_ranks or skin.ranks) then
+            local ranks = skin.display_ranks or skin.ranks
+            for j = 1, #ranks do
+                if not lookup[skin.ranks[j]] then
+                    lookup[skin.ranks[j]] = true
+                    rankCount = rankCount + 1
+                end
+            end
         end
+
     end
 end
 
-local face_cards = CardArea(
+G.cdds_cards = CardArea(
     0,0,
     math.min(math.max(rankCount*G.CARD_W*0.6, 4*G.CARD_W), 10*G.CARD_W),
-    1.4*G.CARD_H, 
+    1.4*G.CARD_H,
     {card_limit = rankCount, type = 'title', highlight_limit = 0})
+
+G.cdds_cards.rankCount = rankCount
+
 
 
   table.insert(t, 
     {n=G.UIT.R, config={align = "cm", colour = G.C.BLACK, r = 0.1, padding = 0.07, no_fill = true}, nodes={
-      {n=G.UIT.O, config={object = face_cards}}
+      {n=G.UIT.O, config={object = G.cdds_cards}}
     }}
   )
 
@@ -2743,26 +2772,25 @@ local face_cards = CardArea(
       create_option_cycle({options = loc_options, w = 5.5, cycle_shoulders = true, curr_suit = _suit, opt_callback = 'change_collab', current_option = current_option, colour = G.C.RED, focus_args = {snap_to = true, nav = 'wide'}}),
     }}
   )
-  table.insert(t, create_toggle({label = localize('b_high_contrast_cards'), ref_table = G.SETTINGS, ref_value = 'colourblind_option', callback = G.FUNCS.refresh_contrast_mode}))
+  local deckskin_key = G.COLLABS.options[_suit][current_option]
+  
+  local palette_loc_options = SMODS.DeckSkin.get_palette_loc_options(deckskin_key, _suit)
+  
+  local selected_palette = 1
+  for i, v in ipairs(G.COLLABS.colour_palettes[deckskin_key]) do
+      if G.SETTINGS.colour_palettes[_suit] == v then
+          selected_palette = i
+      end
+  end
+  
+  table.insert(t,
+      {n=G.UIT.R, config={align = "cm", id = 'palette_selector'}, nodes={
+        create_option_cycle({options = palette_loc_options, w = 5.5, cycle_shoulders = false, curr_suit = _suit, curr_skin = deckskin_key, opt_callback = 'change_colour_palette', current_option = selected_palette, colour = G.C.ORANGE, focus_args = {snap_to = true, nav = 'wide'}}),
+      }}
+    )
 
   local faces = {'K','Q','J'}
-  local rank = SMODS.Ranks['2']
-local cards = {}
-local smodSuit = SMODS.Suits[_suit]
-repeat
-    if lookup[rank.key] then
-        local card_code = smodSuit.card_key .. '_' .. rank.card_key
-        local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
-        card.no_ui = true
-        
-        cards[#cards + 1] = card
-    end
-    rank = SMODS.Ranks[rank.next[1]]
-until rank == SMODS.Ranks['2']
-
-for i = #cards, 1, -1 do
-    face_cards:emplace(cards[i])
-end
+  G.FUNCS.update_collab_cards(current_option, _suit, true)
 
 
   return {n=G.UIT.ROOT, config={align = "cm", padding = 0, colour = G.C.CLEAR, r = 0.1, minw = 7, minh = 4.2}, nodes=t}
@@ -3746,12 +3774,12 @@ function create_UIBox_your_collection()
   }))
   local consumable_nodes = {}
   if #SMODS.ConsumableType.ctype_buffer <= 3 then
-  	for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
-  		local id = 'your_collection_'..key:lower()..'s'
-  		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
-  	end
+      for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
+          local id = 'your_collection_'..key:lower()..'s'
+          consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+      end
   else
-  	consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.ctype_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
+      consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.ctype_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
   end
   local t = create_UIBox_generic_options({ back_func = G.STAGE == G.STAGES.RUN and 'options' or 'exit_overlay_menu', contents = {
     {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
@@ -3795,16 +3823,14 @@ function create_UIBox_your_collection_jokers()
     )
   end
 
-  local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)
   local joker_options = {}
-  for i = 1, math.ceil(#joker_pool/(5*#G.your_collection)) do
-      table.insert(joker_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#joker_pool/(5*#G.your_collection))))
+  for i = 1, math.ceil(#G.P_CENTER_POOLS.Joker/(5*#G.your_collection)) do
+    table.insert(joker_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS.Joker/(5*#G.your_collection))))
   end
 
   for i = 1, 5 do
     for j = 1, #G.your_collection do
-      local center = joker_pool[i+(j-1)*5]
-      if not center then break end
+      local center = G.P_CENTER_POOLS["Joker"][i+(j-1)*5]
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, center)
       card.sticker = get_joker_win_sticker(center)
       G.your_collection[j]:emplace(card)
@@ -3813,7 +3839,7 @@ function create_UIBox_your_collection_jokers()
 
   INIT_COLLECTION_CARD_ALERTS()
   
-  local t =  create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {
+  local t =  create_UIBox_generic_options({ back_func = 'your_collection', contents = {
         {n=G.UIT.R, config={align = "cm", r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables}, 
         {n=G.UIT.R, config={align = "cm"}, nodes={
           create_option_cycle({options = joker_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_joker_page', current_option = 1, colour = G.C.RED, no_pips = true, focus_args = {snap_to = true, nav = 'wide'}})
@@ -3881,16 +3907,14 @@ function create_UIBox_your_collection_boosters()
     )
   end
 
-  local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)
   local booster_options = {}
-  for i = 1, math.ceil(#booster_pool/8) do
-      table.insert(booster_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#booster_pool/8)))
+  for i = 1, math.ceil(#G.P_CENTER_POOLS.Booster/8) do
+    table.insert(booster_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS.Booster/8)))
   end
 
     for j = 1, #G.your_collection do
       for i = 1, 4 do
-      local center = booster_pool[i+(j-1)*4]
-      if not center then break end
+      local center = G.P_CENTER_POOLS["Booster"][i+(j-1)*4]
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W*1.27, G.CARD_H*1.27, nil, center)
       card:start_materialize(nil, i>1 or j>1)
       G.your_collection[j]:emplace(card)
@@ -4003,16 +4027,14 @@ function create_UIBox_your_collection_vouchers(exit)
     )
   end
 
-  local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)
   local voucher_options = {}
-    for i = 1, math.ceil(#voucher_pool/(4*#G.your_collection)) do
-      table.insert(voucher_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#voucher_pool/(4*#G.your_collection))))
+  for i = 1, math.ceil(#G.P_CENTER_POOLS.Voucher/(4*#G.your_collection)) do
+    table.insert(voucher_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS.Voucher/(4*#G.your_collection))))
   end
 
   for i = 1, 4 do
     for j = 1, #G.your_collection do
-      local center = voucher_pool[i+(j-1)*4]
-      if not center then break end
+      local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4]
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, center)
       card.ability.order = i+(j-1)*4
       card:start_materialize(nil, i>1 or j>1)
@@ -4022,7 +4044,7 @@ function create_UIBox_your_collection_vouchers(exit)
 
   INIT_COLLECTION_CARD_ALERTS()
   
-  local t = create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection', contents = {
+  local t = create_UIBox_generic_options({ back_func = exit or 'your_collection', contents = {
             {n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables},
             {n=G.UIT.R, config={align = "cm"}, nodes={
               create_option_cycle({options = voucher_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_voucher_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = 1, colour = G.C.RED, no_pips = true})
@@ -4175,11 +4197,11 @@ function create_UIBox_your_collection_tags()
       tag_pool = G.P_TAGS
   end
   for k, v in pairs(tag_pool) do
-  	counter = counter + 1
-  	tag_tab[#tag_tab+1] = v
+      counter = counter + 1
+      tag_tab[#tag_tab+1] = v
   end
   for i = 1, math.ceil(counter / 6) do
-  	table.insert(tag_matrix, {})
+      table.insert(tag_matrix, {})
   end
 
   table.sort(tag_tab, function (a, b) return a.order < b.order end)
@@ -4215,7 +4237,7 @@ function create_UIBox_your_collection_tags()
 
           local table_nodes = {}
           for i = 1, math.ceil(counter / 6) do
-          	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
+              table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
           end  local t = create_UIBox_generic_options({ back_func = 'your_collection', contents = {
     {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05}, nodes={
       {n=G.UIT.C, config={align = "cm"}, nodes={
@@ -4243,7 +4265,7 @@ function create_UIBox_your_collection_blinds(exit)
     
     local s = 1.3
     if math.ceil(#blind_tab/6) > 6 then
-    	s = s * 6/math.ceil(#blind_tab/6)
+        s = s * 6/math.ceil(#blind_tab/6)
     end
     local temp_blind = AnimatedSprite(0,0,s,s, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'], discovered and v.pos or G.b_undiscovered.pos)
     temp_blind:define_draw_steps({
@@ -4290,13 +4312,13 @@ function create_UIBox_your_collection_blinds(exit)
     local blinds_per_row = math.ceil(#blind_tab / 6)
     local row = math.ceil((k - 1) / blinds_per_row + 0.001)
     table.insert(blind_matrix[row], {
-    	n = G.UIT.C,
-    	config = { align = "cm", padding = 0.1 },
-    	nodes = {
-    		((k - blinds_per_row) % (2 * blinds_per_row) == 1) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
-    		{ n = G.UIT.O, config = { object = temp_blind, focus_with_object = true } },
-    		((k - blinds_per_row) % (2 * blinds_per_row) == 0) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
-    	}
+        n = G.UIT.C,
+        config = { align = "cm", padding = 0.1 },
+        nodes = {
+            ((k - blinds_per_row) % (2 * blinds_per_row) == 1) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+            { n = G.UIT.O, config = { object = temp_blind, focus_with_object = true } },
+            ((k - blinds_per_row) % (2 * blinds_per_row) == 0) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+        }
     })
 
   end
@@ -4347,7 +4369,7 @@ function create_UIBox_your_collection_blinds(exit)
   end
   
   local extras = nil
-  local t = create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection', contents = {
+  local t = create_UIBox_generic_options({ back_func = exit or 'your_collection', contents = {
     {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05}, nodes={
       {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.L_BLACK, padding = 0.1, force_focus = true, focus_args = {nav = 'tall'}}, nodes={
         {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
@@ -4379,12 +4401,13 @@ function create_UIBox_blind_popup(blind, discovered, vars)
   local blind_text = {}
   
   local _dollars = blind.dollars
-  local loc_vars = nil
+  local target = {type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = vars or blind.vars}
   if blind.collection_loc_vars and type(blind.collection_loc_vars) == 'function' then
-  	local res = blind:collection_loc_vars() or {}
-  	loc_vars = res.vars
+      local res = blind:collection_loc_vars() or {}
+      target.vars = res.vars or target.vars
+      target.key = res.key or target.key
   end
-  local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = loc_vars or vars or blind.vars}
+  local loc_target = localize(target)
   local loc_name = localize{type = 'name_text', key = blind.key, set = 'Blind'}
 
   if discovered then 
@@ -5923,9 +5946,9 @@ function G.UIDEF.challenge_description_tab(args)
     local SUITS = {}
     local suit_map = {}
     for i = #SMODS.Suit.obj_buffer, 1, -1 do
-    	local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
-    	SUITS[suit.card_key] = {}
-    	suit_map[#suit_map+1] = suit.card_key
+        local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
+        SUITS[suit.card_key] = {}
+        suit_map[#suit_map+1] = suit.card_key
     end
     local card_protos = nil
     local _de = nil
@@ -5942,11 +5965,11 @@ function G.UIDEF.challenge_description_tab(args)
         for k, v in pairs(G.P_CARDS) do
             local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key
             local keep, _e, _d, _g = true, nil, nil, nil
-            if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true}) then
-            	keep = false
+            if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true, suit = v.suit}) then
+                keep = false
             end
-            if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
-            	keep = false
+            if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true, rank = v.value}) then
+                keep = false
             end
             if _de then
                 if _de.yes_ranks and not _de.yes_ranks[_r] then keep = false end
@@ -5970,15 +5993,15 @@ function G.UIDEF.challenge_description_tab(args)
 
   local num_suits = 0
   for j = 1, #suit_map do
-  	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+      if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
   end
   for j = 1, #suit_map do
-  	if SUITS[suit_map[j]][1] then
+      if SUITS[suit_map[j]][1] then
       table.sort(SUITS[suit_map[j]], function(a,b) return a:get_nominal() > b:get_nominal() end )
       local view_deck = CardArea(
         0,0,
         5.5*G.CARD_W,			
-  			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,
+              (0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,
         {card_limit = #SUITS[suit_map[j]], type = 'title_2', view_deck = true, highlight_limit = 0, card_w = G.CARD_W*0.5, draw_layers = {'card'}})
       table.insert(deck_tables, 
       {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={

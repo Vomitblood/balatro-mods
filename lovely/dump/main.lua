@@ -1,4 +1,148 @@
-LOVELY_INTEGRITY = '99fc88fd391f4645cfa6f1f6b39e3ef72258ab69c56792fe9d6f119d8aab9a88'
+LOVELY_INTEGRITY = 'bb0f108ed0f5fea2a65f1d93362d3d1e1561e17a19a8c7e0d07c0cc4747d3696'
+
+
+local Cartomancer_replacements = {
+    {
+        find = [[
+	for k, v in ipairs%(G%.playing_cards%) do
+		if v%.base%.suit then table%.insert%(SUITS%[v%.base%.suit%], v%) end]],
+    -- Steamodded<0917b
+        find_alt = [[
+	for k, v in ipairs%(G%.playing_cards%) do
+		table%.insert%(SUITS%[v%.base%.suit%], v%)]],
+        place = [[
+local SUITS_SORTED = Cartomancer.tablecopy(SUITS)
+for k, v in ipairs(G.playing_cards) do
+  if v.base.suit then
+  local greyed
+  if unplayed_only and not ((v.area and v.area == G.deck) or v.ability.wheel_flipped) then
+    greyed = true
+  end
+  local card_string = v:cart_to_string()
+  if greyed then
+    card_string = card_string .. "Greyed" -- for some reason format doesn't work and final string is `sGreyed`
+  end
+  if greyed and Cartomancer.SETTINGS.deck_view_hide_drawn_cards then
+  -- Ignore this card.
+  elseif not Cartomancer.SETTINGS.deck_view_stack_enabled then
+    -- Don't stack cards    
+    local _scale = 0.7
+    local copy = copy_card(v, nil, _scale)
+    
+    copy.greyed = greyed
+    copy.stacked_quantity = 1
+    table.insert(SUITS_SORTED[v.base.suit], copy)
+
+  elseif not SUITS[v.base.suit][card_string] then
+    -- Initiate stack
+    table.insert(SUITS_SORTED[v.base.suit], card_string)
+
+    local _scale = 0.7
+    local copy = copy_card(v, nil, _scale)
+
+    copy.greyed = greyed
+    copy.stacked_quantity = 1
+
+    SUITS[v.base.suit][card_string] = copy
+  else
+    -- Stack cards
+    local stacked_card = SUITS[v.base.suit][card_string]
+    stacked_card.stacked_quantity = stacked_card.stacked_quantity + 1
+  end
+  end]]
+    },
+
+    {
+        find = "card_limit = #SUITS%[suit_map%[j%]%],",
+        place = "card_limit = #SUITS_SORTED[suit_map[j]],"
+    },
+
+    {
+        find = [[
+for i = 1%, %#SUITS%[suit_map%[j%]%] do
+				if SUITS%[suit_map%[j%]%]%[i%] then
+					local greyed%, _scale = nil%, 0%.7
+					if unplayed_only and not %(%(SUITS%[suit_map%[j%]%]%[i%]%.area and SUITS%[suit_map%[j%]%]%[i%]%.area == G%.deck%) or SUITS%[suit_map%[j%]%]%[i%]%.ability%.wheel_flipped%) then
+						greyed = true
+					end
+					local copy = copy_card%(SUITS%[suit_map%[j%]%]%[i%]%, nil%, _scale%)
+					copy%.greyed = greyed
+					copy%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w %/ 2
+					copy%.T%.y = view_deck%.T%.y
+
+					copy:hard_set_T%(%)
+					view_deck:emplace%(copy%)
+				end
+			end]],
+        place = [[
+for i = 1%, %#SUITS_SORTED%[suit_map%[j%]%] do
+  local card
+  if not Cartomancer.SETTINGS.deck_view_stack_enabled then
+    card = SUITS_SORTED%[suit_map%[j%]%]%[i%]
+  else
+    local card_string = SUITS_SORTED%[suit_map%[j%]%]%[i%]
+    card = SUITS%[suit_map%[j%]%]%[card_string%]
+  end
+
+  card%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w%/2
+  card%.T%.y = view_deck%.T%.y
+  card:create_quantity_display%(%)
+
+  card:hard_set_T%(%)
+  view_deck:emplace%(card%)
+end]]
+    },
+    
+    {
+      find = '			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {',
+      place = [=[
+      not unplayed_only and Cartomancer.add_unique_count() or nil,
+			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {]=]
+  },
+
+}
+
+
+--  Mom, can we have lovely patches for overrides.lua?
+--  No, we have lovely patches at home
+
+--  Lovely patches at home:
+
+local Cartomancer_nfs_read
+local Cartomancer_nfs_read_override = function (containerOrName, nameOrSize, sizeOrNil)
+    local data, size = Cartomancer_nfs_read(containerOrName, nameOrSize, sizeOrNil)
+
+    if type(containerOrName) ~= "string" then
+        return data, size
+    end
+    local overrides = '/overrides.lua'
+    if containerOrName:sub(-#overrides) ~= overrides then
+        return data, size
+    end
+
+    local replaced = 0
+    local total_replaced = 0
+    for _, v in ipairs(Cartomancer_replacements) do
+        data, replaced = string.gsub(data, v.find, v.place)
+
+        if replaced == 0 and v.find_alt then
+          data, replaced = string.gsub(data, v.find_alt, v.place)
+        end
+
+        if replaced == 0 then
+          print("Failed to replace " .. v.find .. " for overrides.lua")
+        else
+          total_replaced = total_replaced + 1
+        end
+    end
+
+    print("Totally applied " .. total_replaced .. " replacements to overrides.lua")
+
+    -- We no longer need this override
+    NFS.read = Cartomancer_nfs_read
+    
+    return data, size
+end
 
 --- STEAMODDED CORE
 --- MODULE STACKTRACE
@@ -500,7 +644,7 @@ function getDebugInfoForCrash()
         local versionFile = love.filesystem.read("version.jkr")
         if versionFile then
             version = versionFile:match("[^\n]*") .. " (best guess)"
-        else 
+        else
             version = "???"
         end
     end
@@ -511,18 +655,18 @@ function getDebugInfoForCrash()
             modded_version = reqVersion
         else
             modded_version = "???"
-        end        
+        end
     end
-    
+
     local info = "Additional Context:\nBalatro Version: " .. version .. "\nModded Version: " ..
                      (modded_version)
     local major, minor, revision, codename = love.getVersion()
     info = info .. string.format("\nLÖVE Version: %d.%d.%d", major, minor, revision)
-
     local lovely_success, lovely = pcall(require, "lovely")
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
     end
+	info = info .. "\nPlatform: " .. (love.system.getOS() or "???")
     if SMODS and SMODS.Mods then
         local mod_strings = ""
         local lovely_strings = ""
@@ -856,150 +1000,6 @@ injectStackTrace()
 -- ----------------------------------------------
 -- --------MOD CORE API STACKTRACE END-----------
 
-
-local Cartomancer_replacements = {
-    {
-        find = [[
-	for k, v in ipairs%(G%.playing_cards%) do
-		if v%.base%.suit then table%.insert%(SUITS%[v%.base%.suit%], v%) end]],
-    -- Steamodded<0917b
-        find_alt = [[
-	for k, v in ipairs%(G%.playing_cards%) do
-		table%.insert%(SUITS%[v%.base%.suit%], v%)]],
-        place = [[
-local SUITS_SORTED = Cartomancer.tablecopy(SUITS)
-for k, v in ipairs(G.playing_cards) do
-  if v.base.suit then
-  local greyed
-  if unplayed_only and not ((v.area and v.area == G.deck) or v.ability.wheel_flipped) then
-    greyed = true
-  end
-  local card_string = v:cart_to_string()
-  if greyed then
-    card_string = card_string .. "Greyed" -- for some reason format doesn't work and final string is `sGreyed`
-  end
-  if greyed and Cartomancer.SETTINGS.deck_view_hide_drawn_cards then
-  -- Ignore this card.
-  elseif not Cartomancer.SETTINGS.deck_view_stack_enabled then
-    -- Don't stack cards    
-    local _scale = 0.7
-    local copy = copy_card(v, nil, _scale)
-    
-    copy.greyed = greyed
-    copy.stacked_quantity = 1
-    table.insert(SUITS_SORTED[v.base.suit], copy)
-
-  elseif not SUITS[v.base.suit][card_string] then
-    -- Initiate stack
-    table.insert(SUITS_SORTED[v.base.suit], card_string)
-
-    local _scale = 0.7
-    local copy = copy_card(v, nil, _scale)
-
-    copy.greyed = greyed
-    copy.stacked_quantity = 1
-
-    SUITS[v.base.suit][card_string] = copy
-  else
-    -- Stack cards
-    local stacked_card = SUITS[v.base.suit][card_string]
-    stacked_card.stacked_quantity = stacked_card.stacked_quantity + 1
-  end
-  end]]
-    },
-
-    {
-        find = "card_limit = #SUITS%[suit_map%[j%]%],",
-        place = "card_limit = #SUITS_SORTED[suit_map[j]],"
-    },
-
-    {
-        find = [[
-for i = 1%, %#SUITS%[suit_map%[j%]%] do
-				if SUITS%[suit_map%[j%]%]%[i%] then
-					local greyed%, _scale = nil%, 0%.7
-					if unplayed_only and not %(%(SUITS%[suit_map%[j%]%]%[i%]%.area and SUITS%[suit_map%[j%]%]%[i%]%.area == G%.deck%) or SUITS%[suit_map%[j%]%]%[i%]%.ability%.wheel_flipped%) then
-						greyed = true
-					end
-					local copy = copy_card%(SUITS%[suit_map%[j%]%]%[i%]%, nil%, _scale%)
-					copy%.greyed = greyed
-					copy%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w %/ 2
-					copy%.T%.y = view_deck%.T%.y
-
-					copy:hard_set_T%(%)
-					view_deck:emplace%(copy%)
-				end
-			end]],
-        place = [[
-for i = 1%, %#SUITS_SORTED%[suit_map%[j%]%] do
-  local card
-  if not Cartomancer.SETTINGS.deck_view_stack_enabled then
-    card = SUITS_SORTED%[suit_map%[j%]%]%[i%]
-  else
-    local card_string = SUITS_SORTED%[suit_map%[j%]%]%[i%]
-    card = SUITS%[suit_map%[j%]%]%[card_string%]
-  end
-
-  card%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w%/2
-  card%.T%.y = view_deck%.T%.y
-  card:create_quantity_display%(%)
-
-  card:hard_set_T%(%)
-  view_deck:emplace%(card%)
-end]]
-    },
-    
-    {
-      find = '			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {',
-      place = [=[
-      not unplayed_only and Cartomancer.add_unique_count() or nil,
-			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {]=]
-  },
-
-}
-
-
---  Mom, can we have lovely patches for overrides.lua?
---  No, we have lovely patches at home
-
---  Lovely patches at home:
-
-local Cartomancer_nfs_read
-local Cartomancer_nfs_read_override = function (containerOrName, nameOrSize, sizeOrNil)
-    local data, size = Cartomancer_nfs_read(containerOrName, nameOrSize, sizeOrNil)
-
-    if type(containerOrName) ~= "string" then
-        return data, size
-    end
-    local overrides = '/overrides.lua'
-    if containerOrName:sub(-#overrides) ~= overrides then
-        return data, size
-    end
-
-    local replaced = 0
-    local total_replaced = 0
-    for _, v in ipairs(Cartomancer_replacements) do
-        data, replaced = string.gsub(data, v.find, v.place)
-
-        if replaced == 0 and v.find_alt then
-          data, replaced = string.gsub(data, v.find_alt, v.place)
-        end
-
-        if replaced == 0 then
-          print("Failed to replace " .. v.find .. " for overrides.lua")
-        else
-          total_replaced = total_replaced + 1
-        end
-    end
-
-    print("Totally applied " .. total_replaced .. " replacements to overrides.lua")
-
-    -- We no longer need this override
-    NFS.read = Cartomancer_nfs_read
-    
-    return data, size
-end
-
 if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
 do
     local logger = require("debugplus.logger")
@@ -1099,17 +1099,21 @@ function love.load()
 	G:start_up()
 	--Steam integration
 	local os = love.system.getOS()
-	if os == 'OS X' or os == 'Windows' then 
+	if os == 'OS X' or os == 'Windows' or os == 'Linux' then
 		local st = nil
 		--To control when steam communication happens, make sure to send updates to steam as little as possible
-		if os == 'OS X' then
+		local cwd = NFS.getWorkingDirectory()
+		NFS.setWorkingDirectory(love.filesystem.getSourceBaseDirectory())
+		if os == 'OS X' or os == 'Linux' then
 			local dir = love.filesystem.getSourceBaseDirectory()
 			local old_cpath = package.cpath
 			package.cpath = package.cpath .. ';' .. dir .. '/?.so'
-			st = require 'luasteam'
+			local success, _st = pcall(require, 'luasteam')
+			if success then st = _st else sendWarnMessage(_st); st = {} end
 			package.cpath = old_cpath
 		else
-			st = require 'luasteam'
+			local success, _st = pcall(require, 'luasteam')
+			if success then st = _st else sendWarnMessage(_st); st = {} end
 		end
 
 		st.send_control = {
@@ -1120,6 +1124,7 @@ function love.load()
 		if not (st.init and st:init()) then
 			st = nil
 		end
+		NFS.setWorkingDirectory(cwd)
 		--Set up the render window and the stage for the splash screen, then enter the gameloop with :update
 		G.STEAM = st
 	else
@@ -1409,6 +1414,88 @@ function love.resize(w, h)
 	G.CANVAS = love.graphics.newCanvas(w*G.CANV_SCALE, h*G.CANV_SCALE, {type = '2d', readable = true})
 	G.CANVAS:setFilter('linear', 'linear')
 end 
+
+--- STEAMODDED CORE
+--- MODULE CORE
+
+SMODS = {}
+MODDED_VERSION = require'SMODS.version'
+SMODS.id = 'Steamodded'
+SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
+SMODS.can_load = true
+SMODS.meta_mod = true
+SMODS.config_file = 'config.lua'
+
+-- Include lovely and nativefs modules
+local nativefs = require "nativefs"
+local lovely = require "lovely"
+local json = require "json"
+
+local lovely_mod_dir = lovely.mod_dir:gsub("/$", "")
+NFS = nativefs
+-- make lovely_mod_dir an absolute path.
+-- respects symlink/.. combos
+NFS.setWorkingDirectory(lovely_mod_dir)
+lovely_mod_dir = NFS.getWorkingDirectory()
+-- make sure NFS behaves the same as love.filesystem
+NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
+
+JSON = json
+
+local function set_mods_dir()
+    local love_dirs = {
+        love.filesystem.getSaveDirectory(),
+        love.filesystem.getSourceBaseDirectory()
+    }
+    for _, love_dir in ipairs(love_dirs) do
+        if lovely_mod_dir:sub(1, #love_dir) == love_dir then
+            -- relative path from love_dir
+            SMODS.MODS_DIR = lovely_mod_dir:sub(#love_dir+2)
+            NFS.setWorkingDirectory(love_dir)
+            return
+        end
+    end
+    SMODS.MODS_DIR = lovely_mod_dir
+end
+set_mods_dir()
+
+local function find_self(directory, target_filename, target_line, depth)
+    depth = depth or 1
+    if depth > 3 then return end
+    for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
+        local file_path = directory .. "/" .. filename
+        local file_type = NFS.getInfo(file_path).type
+        if file_type == 'directory' or file_type == 'symlink' then
+            local f = find_self(file_path, target_filename, target_line, depth+1)
+            if f then return f end
+        elseif filename == target_filename then
+            local first_line = NFS.read(file_path):match('^(.-)\n')
+            if first_line == target_line then
+                -- use parent directory
+                return directory:match('^(.+/)')
+            end
+        end
+    end
+end
+
+SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
+
+Cartomancer_nfs_read = NFS.read
+NFS.read = Cartomancer_nfs_read_override
+
+
+for _, path in ipairs {
+    "src/ui.lua",
+    "src/index.lua",
+    "src/utils.lua",
+    "src/overrides.lua",
+    "src/game_object.lua",
+    "src/logging.lua",
+    "src/compat_0_9_8.lua",
+    "src/loader.lua",
+} do
+    assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
+end
 
 Handy = setmetatable({
 	last_clicked_area = nil,
@@ -3583,92 +3670,6 @@ Handy.UI.get_config_tab = function(_tab)
 		result.nodes = Handy.UI.get_config_tab_keybinds_2()
 	end
 	return result
-end
-
---- STEAMODDED CORE
---- MODULE CORE
-
-SMODS = {}
-MODDED_VERSION = require'SMODS.version'
-SMODS.id = 'Steamodded'
-SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
-SMODS.can_load = true
-SMODS.meta_mod = true
-
--- Include lovely and nativefs modules
-local nativefs = require "nativefs"
-local lovely = require "lovely"
-local json = require "json"
-
-local lovely_mod_dir = lovely.mod_dir:gsub("/$", "")
-NFS = nativefs
--- make lovely_mod_dir an absolute path.
--- respects symlink/.. combos
-NFS.setWorkingDirectory(lovely_mod_dir)
-lovely_mod_dir = NFS.getWorkingDirectory()
--- make sure NFS behaves the same as love.filesystem
-NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
-
-JSON = json
-
-local function set_mods_dir()
-    local love_dirs = {
-        love.filesystem.getSaveDirectory(),
-        love.filesystem.getSourceBaseDirectory()
-    }
-    for _, love_dir in ipairs(love_dirs) do
-        if lovely_mod_dir:sub(1, #love_dir) == love_dir then
-            -- relative path from love_dir
-            SMODS.MODS_DIR = lovely_mod_dir:sub(#love_dir+2)
-            if nfs_success then
-                -- make sure NFS behaves the same as love.filesystem.
-                -- not perfect: NFS won't read from both getSaveDirectory()
-                -- and getSourceBaseDirectory()
-                NFS.setWorkingDirectory(love_dir)
-            end
-            return
-        end
-    end
-    SMODS.MODS_DIR = lovely_mod_dir
-end
-set_mods_dir()
-
-local function find_self(directory, target_filename, target_line, depth)
-	depth = depth or 1
-	if depth > 3 then return end
-	for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
-		local file_path = directory .. "/" .. filename
-		local file_type = NFS.getInfo(file_path).type
-		if file_type == 'directory' or file_type == 'symlink' then
-			local f = find_self(file_path, target_filename, target_line, depth+1)
-			if f then return f end
-		elseif filename == target_filename then
-			local first_line = NFS.read(file_path):match('^(.-)\n')
-			if first_line == target_line then
-				-- use parent directory
-				return directory:match('^(.+/)')
-			end
-		end
-	end
-end
-
-SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
-
-Cartomancer_nfs_read = NFS.read
-NFS.read = Cartomancer_nfs_read_override
-
-
-for _, path in ipairs {
-	"src/ui.lua",
-	"src/index.lua",
-	"src/utils.lua",
-	"src/overrides.lua",
-	"src/game_object.lua",
-	"src/logging.lua",
-	"src/compat_0_9_8.lua",
-	"src/loader.lua",
-} do
-	assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
 end
 
 local lovely = require("lovely")

@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'd16a678af46c656e33c88a0349859985655ad1ef28db3eae950262607bda3372'
+LOVELY_INTEGRITY = '1051baf1f570241c507e107aff5fffefe3df969645f0fe53ec0856cd5ac0a760'
 
 --Class
 Tag = Object:extend()
@@ -103,11 +103,11 @@ function Tag:yep(message, _colour, func)
 end
 
 function Tag:set_ability()
-	local obj = SMODS.Tags[self.key]
-	local res
-	if obj and obj.set_ability and type(obj.set_ability) == 'function' then
-		obj:set_ability(self)
-	end
+    local obj = SMODS.Tags[self.key]
+    local res
+    if obj and obj.set_ability and type(obj.set_ability) == 'function' then
+        obj:set_ability(self)
+    end
     if self.name == 'Orbital Tag' then
         if G.orbital_hand then 
             self.ability.orbital_hand = G.orbital_hand
@@ -120,13 +120,13 @@ function Tag:set_ability()
 end
 
 function Tag:apply_to_run(_context)
-	if self.triggered then return end
-	local obj = SMODS.Tags[self.key]
-	local res
-	if obj and obj.apply and type(obj.apply) == 'function' then
-		res = obj:apply(self, _context)
-	end
-	if res then return res end
+    if self.triggered then return end
+    local obj = SMODS.Tags[self.key]
+    local res
+    if obj and obj.apply and type(obj.apply) == 'function' then
+        res = obj:apply(self, _context)
+    end
+    if res then return res end
     if not self.triggered and self.config.type == _context.type then
         if _context.type == 'eval' then 
             if self.name == 'Investment Tag' and
@@ -723,7 +723,7 @@ function Tag:generate_UI(_size)
     return tag_sprite_tab, tag_sprite
 end
 
-function Tag:get_uibox_table(tag_sprite)
+function Tag:get_uibox_table(tag_sprite, vars_only)
     tag_sprite = tag_sprite or self.tag_sprite
     local name_to_check, loc_vars = self.name, {}
     if name_to_check == 'Uncommon Tag' then
@@ -742,6 +742,7 @@ function Tag:get_uibox_table(tag_sprite)
             }
     elseif name_to_check == "cry-Cat Tag" then loc_vars = {self.ability.level or 1}
     end
+    if vars_only then return loc_vars end
     tag_sprite.ability_UIBox_table = generate_card_ui(G.P_TAGS[self.key], nil, loc_vars, (self.hide_ability) and 'Undiscovered' or 'Tag', nil, (self.hide_ability), nil, nil, self)
     return tag_sprite
 end

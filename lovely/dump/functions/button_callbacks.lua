@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '8857de192c196c2108ac03f2ec1ec6974c1d8c7ef54d7b5fbb92ce6db79734e0'
+LOVELY_INTEGRITY = 'd7f48a66f05694a22b7aae4c15c27e443dc398089f32ae2891b595f051091e07'
 
 --Moves the tutorial to the next step in queue
 --
@@ -615,10 +615,9 @@ G.FUNCS.your_collection_joker_page = function(args)
       c = nil
     end
   end
-  local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)
   for i = 1, 5 do
     for j = 1, #G.your_collection do
-      local center = joker_pool[i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]
+      local center = G.P_CENTER_POOLS["Joker"][i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]
       if not center then break end
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
       card.sticker = get_joker_win_sticker(center)
@@ -681,7 +680,6 @@ end
 ---@param args {cycle_config: table}
 --**cycle_config** Is the config table from the original option cycle UIE
 G.FUNCS.your_collection_booster_page = function(args)
-local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)
   if not args or not args.cycle_config then return end
   for j = 1, #G.your_collection do
     for i = #G.your_collection[j].cards,1, -1 do
@@ -693,7 +691,7 @@ local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)
   
   for j = 1, #G.your_collection do
     for i = 1, 4 do
-      local center = booster_pool[i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]
+      local center = G.P_CENTER_POOLS["Booster"][i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]
       if not center then break end
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W*1.27, G.CARD_H*1.27, nil, center)
       card:start_materialize(nil, i>1 or j>1)
@@ -708,7 +706,6 @@ end
 ---@param args {cycle_config: table}
 --**cycle_config** Is the config table from the original option cycle UIE
 G.FUNCS.your_collection_voucher_page = function(args)
-local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)
   if not args or not args.cycle_config then return end
   for j = 1, #G.your_collection do
     for i = #G.your_collection[j].cards,1, -1 do
@@ -719,7 +716,7 @@ local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)
   end
   for i = 1, 4 do
     for j = 1, #G.your_collection do
-      local center = voucher_pool[i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]
+      local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]
       if not center then break end
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
       card:start_materialize(nil, i>1 or j>1)
@@ -1797,7 +1794,8 @@ G.FUNCS.change_lang = function(e)
   if not lang or lang == G.LANG then 
     G.FUNCS.exit_overlay_menu()
   else
-    G.SETTINGS.language = lang.key
+    G.SETTINGS.language = lang.loc_key or lang.key
+    G.SETTINGS.real_language = lang.key
     G:set_language()
     G.E_MANAGER:clear_queue()
     G.FUNCS.wipe_on()
@@ -2136,8 +2134,8 @@ end
   end
 
   G.FUNCS.can_skip_booster = function(e)
-    if G.pack_cards and (G.pack_cards.cards[1]) and 
-(G.STATE == G.STATES.SMODS_BOOSTER_OPENED or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.STANDARD_PACK or G.STATE == G.STATES.BUFFOON_PACK or (G.hand and (G.hand.cards[1] or (G.hand.config.card_limit <= 0)))) then 
+    if G.pack_cards and (not (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) and
+(G.STATE == G.STATES.SMODS_BOOSTER_OPENED or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.STANDARD_PACK or G.STATE == G.STATES.BUFFOON_PACK or (G.hand  )) then 
         e.config.colour = G.C.GREY
         e.config.button = 'skip_booster'
     else
@@ -2218,33 +2216,33 @@ end
     local nc
     if card.ability.consumeable then
         local obj = card.config.center
-    	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
-    		nc = obj:keep_on_use(card)
-    	end
+        if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
+            nc = obj:keep_on_use(card)
+        end
     end
-    if not nc and card.area then card.area:remove_card(card) end
+    if card.area and (not nc or card.area == G.pack_cards) then card.area:remove_card(card) end
     
-    if card.ability.consumeable then
-      if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED then
+    if booster_obj and booster_obj.select_card then
+        local area = type(booster_obj.select_card) == 'table' and (booster_obj.select_card[e.config.ref_table.ability.set] or nil) or booster_obj.select_card
+        G[area]:emplace(card)
+        play_sound('card1', 0.8, 0.6)
+        play_sound('generic1')
+        dont_dissolve = true
+        delay_fac = 0.2
+    elseif card.ability.consumeable then
+          if nc then
+          if area then area:remove_from_highlighted(card) end
+          play_sound('cardSlide2', nil, 0.3)
+          dont_dissolve = true
+      end
+      if (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         card.T.x = G.hand.T.x + G.hand.T.w/2 - card.T.w/2
         card.T.y = G.hand.T.y + G.hand.T.h/2 - card.T.h/2 - 0.5
         discover_card(card.config.center)
-      elseif nc then
-          area:remove_from_highlighted(card)
-          play_sound('cardSlide2', nil, 0.3)
-          dont_dissolve = true
-      else draw_card(G.hand, G.play, 1, 'up', true, card, nil, mute) end
+      elseif not nc then draw_card(G.hand, G.play, 1, 'up', true, card, nil, mute) end
       delay(0.2)
       e.config.ref_table:use_consumeable(area)
-      if card.edition and card.edition.key then
-          local ed = SMODS.Centers[card.edition.key]
-          if ed.calculate and type(ed.calculate) == 'function' then
-              ed:calculate(card, {from_consumable = true})
-          end
-      end
-      for i = 1, #G.jokers.cards do
-        G.jokers.cards[i]:calculate_joker({using_consumeable = true, consumeable = card})
-      end
+      SMODS.calculate_context({using_consumeable = true, consumeable = card, area = card.from_area})
     elseif card.ability.set == 'Enhanced' or card.ability.set == 'Default' then 
       G.playing_card = (G.playing_card and G.playing_card + 1) or 1
       G.deck:emplace(card)
@@ -2295,6 +2293,8 @@ end
                   prev_state == G.STATES.SPECTRAL_PACK or prev_state == G.STATES.STANDARD_PACK or
                   prev_state == G.STATES.SMODS_BOOSTER_OPENED or
                   prev_state == G.STATES.BUFFOON_PACK) and G.booster_pack then
+                  if nc and area == G.pack_cards then G.pack_cards:remove_card(card); G.consumeables:emplace(card) end
+                  booster_obj = nil
                   if area == G.consumeables or area == G.hand then
                     G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
                     G.booster_pack.alignment.offset.py = nil
@@ -2346,11 +2346,7 @@ end
   G.FUNCS.sell_card = function(e)
     local card = e.config.ref_table
     card:sell_card()
-    for i = 1, #G.jokers.cards do
-      if G.jokers.cards[i] ~= card then 
-        G.jokers.cards[i]:calculate_joker({selling_card = true, card = card})
-      end
-    end
+    SMODS.calculate_context({selling_card = true, card = card})
   end
 
   G.FUNCS.can_confirm_contest_name = function(e)
@@ -2442,6 +2438,7 @@ G.FUNCS.buy_from_shop = function(e)
         trigger = 'after',
         delay = 0.1,
         func = function()
+          c1.from_area = c1.area
           c1.area:remove_card(c1)
           c1:add_to_deck()
           if c1.children.price then c1.children.price:remove() end
@@ -2462,7 +2459,11 @@ G.FUNCS.buy_from_shop = function(e)
             else
               G.jokers:emplace(c1)
             end
-            G.E_MANAGER:add_event(Event({func = function() c1:calculate_joker({buying_card = true, card = c1}) return true end}))
+            G.E_MANAGER:add_event(Event({func = function()
+                local eval, post = eval_card(c1, {buying_card = true, card = c1})
+                SMODS.trigger_effects({eval, post}, c1)
+                return true
+                end}))
           end
           --Tallies for unlocks
           G.GAME.round_scores.cards_purchased.amt = G.GAME.round_scores.cards_purchased.amt + 1
@@ -2476,9 +2477,7 @@ G.FUNCS.buy_from_shop = function(e)
             G.GAME.current_round.jokers_purchased = G.GAME.current_round.jokers_purchased + 1
           end
 
-          for i = 1, #G.jokers.cards do
-            G.jokers.cards[i]:calculate_joker({buying_card = true, card = c1})
-          end
+          SMODS.calculate_context({buying_card = true, card = c1})
 
           if G.GAME.modifiers.inflation then 
             G.GAME.inflation = G.GAME.inflation + 1
@@ -2510,9 +2509,7 @@ end
     stop_use()
     G.CONTROLLER.locks.toggle_shop = true
     if G.shop then 
-      for i = 1, #G.jokers.cards do
-        G.jokers.cards[i]:calculate_joker({ending_shop = true})
-      end
+      SMODS.calculate_context({ending_shop = true})
       G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -2585,9 +2582,8 @@ end
   end
 
   G.FUNCS.skip_booster = function(e)
-    for i = 1, #G.jokers.cards do
-      G.jokers.cards[i]:calculate_joker({skipping_booster = true})
-    end
+  booster_obj = nil
+    SMODS.calculate_context({skipping_booster = true})
     G.FUNCS.end_consumeable(e)
   end
 
@@ -2795,9 +2791,7 @@ end
         trigger = 'immediate',
         func = function()
           delay(0.3)
-          for i = 1, #G.jokers.cards do
-            G.jokers.cards[i]:calculate_joker({skip_blind = true})
-          end
+          SMODS.calculate_context({skip_blind = true})
           save_run()
           for i = 1, #G.GAME.tags do
             G.GAME.tags[i]:apply_to_run({type = 'immediate'})
@@ -2828,6 +2822,16 @@ end
   end
 
   G.FUNCS.reroll_boss = function(e) 
+  if not G.blind_select_opts then
+      G.GAME.round_resets.boss_rerolled = true
+      if not G.from_boss_tag then ease_dollars(-cry_cheapest_boss_reroll()) end
+      G.from_boss_tag = nil
+      G.GAME.round_resets.blind_choices.Boss = get_new_boss()
+      for i = 1, #G.GAME.tags do
+          if G.GAME.tags[i]:apply_to_run({type = 'new_blind_choice'}) then break end
+      end
+      return true
+  end
     stop_use()
     G.GAME.round_resets.boss_rerolled = true
     if not G.from_boss_tag then ease_dollars(-cry_cheapest_boss_reroll()) end
@@ -2927,9 +2931,7 @@ end
             G.CONTROLLER.interrupt.focus = false
             G.CONTROLLER.locks.shop_reroll = false
             G.CONTROLLER:recall_cardarea_focus('shop_jokers')
-            for i = 1, #G.jokers.cards do
-              G.jokers.cards[i]:calculate_joker({reroll_shop = true})
-            end
+            SMODS.calculate_context({reroll_shop = true})
             return true
           end
         }))

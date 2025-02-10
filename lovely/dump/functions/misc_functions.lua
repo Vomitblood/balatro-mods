@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '3b2e5120d569763446e3bfe099ac89fa7ef4750a6936e9b65da90e4121f5aa22'
+LOVELY_INTEGRITY = '7af2e0e0690a3e982bc378e0f2810cf02634e614841ab27a2036b576c0fdc825'
 
 --Updates all display information for all displays for a given screenmode. Returns the key for the resolution option cycle
 --
@@ -254,30 +254,30 @@ end
 
 function pseudorandom_element(_t, seed, args)
     -- TODO special cases for now
-	-- Preserves reverse nominal order for Suits, nominal+face_nominal order for Ranks
-	-- for vanilla RNG
-	if _t == SMODS.Suits then
-		_t = SMODS.Suit:obj_list(true)
-	end
-	if _t == SMODS.Ranks then
-		_t = SMODS.Rank:obj_list()
-	end
+    -- Preserves reverse nominal order for Suits, nominal+face_nominal order for Ranks
+    -- for vanilla RNG
+    if _t == SMODS.Suits then
+        _t = SMODS.Suit:obj_list(true)
+    end
+    if _t == SMODS.Ranks then
+        _t = SMODS.Rank:obj_list()
+    end
   if seed then math.randomseed(seed) end
   local keys = {}
   for k, v in pairs(_t) do
       local keep = true
       local in_pool_func = 
-      	args and args.in_pool
-      	or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
-      	or _t == G.P_CARDS and function(c)
-      			--Handles special case for Erratic Deck
-      			local initial_deck = args and args.starting_deck or false
-      			
-      			return not (
-      				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck})
-      				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck})
-      			)
-      		end
+          args and args.in_pool
+          or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
+          or _t == G.P_CARDS and function(c)
+                  --Handles special case for Erratic Deck
+                  local initial_deck = args and args.starting_deck or false
+                  
+                  return not (
+                      type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck, suit = c.suit})
+                      or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck, rank = c.value})
+                  )
+              end
       if in_pool_func then
           keep = in_pool_func(v, args)
       end
@@ -422,7 +422,7 @@ function evaluate_poker_hand(hand)
   }
 
   for _,v in ipairs(SMODS.PokerHand.obj_buffer) do
-  	results[v] = {}
+      results[v] = {}
   end
   local parts = {
     _5 = get_X_same(5,hand),
@@ -435,9 +435,9 @@ function evaluate_poker_hand(hand)
   }
 
   for _,_hand in pairs(SMODS.PokerHands) do
-  	if _hand.atomic_part and type(_hand.atomic_part) == 'function' then
-  		parts[_hand.key] = _hand.atomic_part(hand)
-  	end
+      if _hand.atomic_part and type(_hand.atomic_part) == 'function' then
+          parts[_hand.key] = _hand.atomic_part(hand)
+      end
   end
   if next(parts._5) and next(parts._flush) then
     results["Flush Five"] = parts._5
@@ -555,25 +555,25 @@ function evaluate_poker_hand(hand)
   end
 
   for _,_hand in pairs(SMODS.PokerHands) do
-  	if _hand.composite and type(_hand.composite) == 'function' then
-  		local other_hands
-  		results[_hand.key], other_hands = _hand.composite(parts)
-  		results[_hand.key] = results[_hand.key] or {}
-  		if other_hands and type(other_hands) == 'table' then
-  			for k, v in pairs(other_hands) do
-  				results[k] = v
-  			end
-  		end
-  	else
-  		results[_hand.key] = parts[_hand.key]
-  	end
+      if _hand.composite and type(_hand.composite) == 'function' then
+          local other_hands
+          results[_hand.key], other_hands = _hand.composite(parts)
+          results[_hand.key] = results[_hand.key] or {}
+          if other_hands and type(other_hands) == 'table' then
+              for k, v in pairs(other_hands) do
+                  results[k] = v
+              end
+          end
+      else
+          results[_hand.key] = parts[_hand.key]
+      end
   end
   results.top = nil
   for _, v in ipairs(G.handlist) do
-  	if not results.top and results[v] then
-  		results.top = results[v]
-  		break
-  	end
+      if not results.top and results[v] then
+          results.top = results[v]
+          break
+      end
   end
   return results
 end
@@ -646,7 +646,7 @@ end
 function get_X_same(num, hand, or_more)
   local vals = {}
   for i = 1, SMODS.Rank.max_id.value do
-  	vals[i] = {}
+      vals[i] = {}
   end
   for i=#hand, 1, -1 do
     local curr = {}
@@ -833,25 +833,25 @@ function modulate_sound(dt)
   G.ARGS.push.overlay_menu = not (not G.OVERLAY_MENU)
   G.ARGS.push.ambient_control = G.SETTINGS.ambient_control
   if SMODS.remove_replace_sound and SMODS.remove_replace_sound ~= desired_track then
-  	SMODS.Sound.replace_sounds[SMODS.remove_replace_sound] = nil
-  	SMODS.remove_replace_sound = nil
+      SMODS.Sound.replace_sounds[SMODS.remove_replace_sound] = nil
+      SMODS.remove_replace_sound = nil
   end
   local replace_sound = SMODS.Sound.replace_sounds[desired_track]
   if replace_sound then
-  	local replaced_track = desired_track
-  	desired_track = replace_sound.key
-  	G.ARGS.push.desired_track = desired_track
-  	if SMODS.previous_track ~= desired_track then
-  		if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
-  		if replace_sound.times == 0 then SMODS.remove_replace_sound = replaced_track end
-  	end
+      local replaced_track = desired_track
+      desired_track = replace_sound.key
+      G.ARGS.push.desired_track = desired_track
+      if SMODS.previous_track ~= desired_track then
+          if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
+          if replace_sound.times == 0 then SMODS.remove_replace_sound = replaced_track end
+      end
   end
   local stop_sound = SMODS.Sound.stop_sounds[desired_track]
   if SMODS.Sound.stop_sounds[desired_track] then
-  	if SMODS.previous_track ~= '' and stop_sound > 0 then stop_sound = stop_sound - 1 end
-  	SMODS.Sound.stop_sounds[desired_track] = stop_sound ~= 0 and stop_sound or nil
-  	SMODS.previous_track = ''
-  	return
+      if SMODS.previous_track ~= '' and stop_sound > 0 then stop_sound = stop_sound - 1 end
+      SMODS.Sound.stop_sounds[desired_track] = stop_sound ~= 0 and stop_sound or nil
+      SMODS.previous_track = ''
+      return
   end
 
   if G.F_SOUND_THREAD then
@@ -863,11 +863,11 @@ function modulate_sound(dt)
     if (type(in_sync) == 'table' and not in_sync[SMODS.previous_track]) or in_sync == false then should_sync = false end
     if (type(out_sync) == 'table' and not out_sync[desired_track]) or out_sync == false then should_sync = false end
     if 
-    	SMODS.previous_track and SMODS.previous_track ~= desired_track and
-    	not should_sync
+        SMODS.previous_track and SMODS.previous_track ~= desired_track and
+        not should_sync
     then
-    	G.ARGS.push.type = 'restart_music'
-    	G.SOUND_MANAGER.channel:push(G.ARGS.push)
+        G.ARGS.push.type = 'restart_music'
+        G.SOUND_MANAGER.channel:push(G.ARGS.push)
     end
     SMODS.previous_track = desired_track
   else
@@ -1070,21 +1070,21 @@ function number_format(num, e_switch_point)
     
     local mantissa = round_number(x/(10^fac), 3)
     if mantissa >= 10 then
-      mantissa = mantissa / 10
-      fac = fac + 1
+        mantissa = mantissa / 10
+        fac = fac + 1
     end
     return sign..(string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac))
   end
   local formatted
   if num ~= math.floor(num) and num < 100 then
-    formatted = string.format(num >= 10 and "%.1f" or "%.2f", num)
-    if formatted:sub(-1) == "0" then
-      formatted = formatted:gsub("%.?0+$", "")
-    end
-    -- Return already to avoid comas being added
-    if num < 0.01 then return tostring(num) end
+      formatted = string.format(num >= 10 and "%.1f" or "%.2f", num)
+      if formatted:sub(-1) == "0" then
+          formatted = formatted:gsub("%.?0+$", "")
+      end
+      -- Return already to avoid comas being added
+      if num < 0.01 then return tostring(num) end
   else 
-    formatted = string.format("%.0f", num)
+      formatted = string.format("%.0f", num)
   end
   return sign..(formatted:reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse())
 end
@@ -1435,14 +1435,14 @@ function set_discover_tallies()
       total = {tally = 0, of = 0},
     }
   for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-  	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
+      G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
   end  for _, v in pairs(G.DISCOVER_TALLIES) do
       v.tally = 0
       v.of = 0
   end
   
   for _, v in pairs(G.P_CENTERS) do
-    if not v.omit then 
+    if not v.omit and not v.no_collection then
       if v.set and ((v.set == 'Joker') or v.consumeable or (v.set == 'Edition') or (v.set == 'Voucher') or (v.set == 'Back') or (v.set == 'Booster')) then
         G.DISCOVER_TALLIES.total.of = G.DISCOVER_TALLIES.total.of+1
         if v.discovered then 
@@ -1468,10 +1468,10 @@ function set_discover_tallies()
         end
         local tally = G.DISCOVER_TALLIES[v.set:lower()..'s']
         if tally then
-        	tally.of = tally.of + 1
-        	if v.discovered then
-        		tally.tally = tally.tally + 1
-        	end
+            tally.of = tally.of + 1
+            if v.discovered then
+                tally.tally = tally.tally + 1
+            end
         end
       end
       if v.set and v.set == 'Voucher' then
@@ -1495,6 +1495,8 @@ function set_discover_tallies()
     end
   end
   for _, v in pairs(G.P_BLINDS) do
+      if not v.no_collection then
+      
       G.DISCOVER_TALLIES.total.of = G.DISCOVER_TALLIES.total.of+1
       G.DISCOVER_TALLIES.blinds.of = G.DISCOVER_TALLIES.blinds.of+1
       if v.discovered then 
@@ -1502,7 +1504,11 @@ function set_discover_tallies()
           G.DISCOVER_TALLIES.total.tally = G.DISCOVER_TALLIES.total.tally+1
       end
   end
+  end
+
   for _, v in pairs(G.P_TAGS) do
+      if not v.no_collection then
+      
     G.DISCOVER_TALLIES.total.of = G.DISCOVER_TALLIES.total.of+1
     G.DISCOVER_TALLIES.tags.of = G.DISCOVER_TALLIES.tags.of+1
     if v.discovered then 
@@ -1510,6 +1516,8 @@ function set_discover_tallies()
         G.DISCOVER_TALLIES.total.tally = G.DISCOVER_TALLIES.total.tally+1
     end
   end
+  end
+
   G.PROFILES[G.SETTINGS.profile].high_scores.collection.amt = G.DISCOVER_TALLIES.total.tally
   G.PROFILES[G.SETTINGS.profile].high_scores.collection.tot = G.DISCOVER_TALLIES.total.of
   G.PROFILES[G.SETTINGS.profile].progress.discovered = copy_table(G.DISCOVER_TALLIES.total)
@@ -1635,15 +1643,15 @@ function loc_colour(_c, _default)
     legendary = G.C.RARITY[4],
     enhanced = G.C.SECONDARY_SET.Enhanced
   }
-  	for _, v in ipairs(SMODS.Rarity.obj_buffer) do
-  		G.ARGS.LOC_COLOURS[v:lower()] = G.C.RARITY[v]
-  	end
-  	for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-  		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
-  	end
-  	for _, v in ipairs(SMODS.Suit.obj_buffer) do
-  		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
-  	end
+      for _, v in ipairs(SMODS.Rarity.obj_buffer) do
+          G.ARGS.LOC_COLOURS[v:lower()] = G.C.RARITY[v]
+      end
+      for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
+          G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
+      end
+      for _, v in ipairs(SMODS.Suit.obj_buffer) do
+          G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
+      end
   return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK
 end
 
@@ -1976,24 +1984,73 @@ end
 function get_front_spriteinfo(_front)
   if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.Collabs then
     local collab = G.SETTINGS.CUSTOM_DECK.Collabs[_front.suit]
-    if collab and collab ~= 'default' then
+    if collab then
         local deckSkin = SMODS.DeckSkins[collab]
         if deckSkin then
-            local hasRank = false
-            for i = 1, #deckSkin.ranks do
-                if deckSkin.ranks[i] == _front.value then hasRank = true break end
-            end
-            if hasRank then
-                local atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and deckSkin.hc_atlas or deckSkin.lc_atlas]
-                if atlas then
-                    if  deckSkin.posStyle == 'collab' then
-                        return atlas, G.COLLABS.pos[_front.value]
-                    elseif deckSkin.posStyle == 'suit' then
-                        return atlas, { x = _front.pos.x, y = 0}
-                    elseif deckSkin.posStyle == 'deck' then
-                        return atlas, _front.pos
+            if deckSkin.outdated then
+                local hasRank = false
+                for i = 1, #deckSkin.ranks do
+                    if deckSkin.ranks[i] == _front.value then hasRank = true break end
+                end
+                if hasRank then
+                    local atlas = G.ASSET_ATLAS[G.SETTINGS.colour_palettes[_front.suit] == 'hc' and deckSkin.hc_atlas or deckSkin.lc_atlas]
+                    if atlas then
+                        if deckSkin.pos_style == 'collab' then
+                            return atlas, G.COLLABS.pos[_front.value]
+                        elseif deckSkin.pos_style == 'suit' then
+                            return atlas, { x = _front.pos.x, y = 0}
+                        elseif deckSkin.pos_style == 'deck' then
+                            return atlas, _front.pos
+                        elseif deckSkin.pos_style == 'ranks' or nil then
+                            for i, rank in ipairs(deckSkin.ranks) do
+                                if rank == _front.value then
+                                    return atlas, { x = i - 1, y = 0}
+                                end
+                            end
+                        end
                     end
                 end
+                return G.ASSET_ATLAS[G.SETTINGS.colour_palettes[_front.suit] == 'hc' and _front.hc_atlas or _front.lc_atlas or {}] or G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(G.SETTINGS.colour_palettes[_front.suit] == 'hc' and 2 or 1)], _front.pos
+            else
+                local palette = deckSkin.palette_map and deckSkin.palette_map[G.SETTINGS.colour_palettes[_front.suit] or ''] or (deckSkin.palettes or {})[1]
+                local hasRank = false
+                for i = 1, #palette.ranks do
+                    if palette.ranks[i] == _front.value then hasRank = true break end
+                end
+                if hasRank then
+                    local atlas = G.ASSET_ATLAS[palette.atlas]
+                    if type(palette.pos_style) == "table" then
+                        if palette.pos_style[_front.value] then
+                            if palette.pos_style[_front.value].atlas then
+                                atlas = G.ASSET_ATLAS[palette.pos_style[_front.value].atlas]
+                            end
+                            if palette.pos_style[_front.value].pos then
+                                return atlas, palette.pos_style[_front.value].pos
+                            end
+                        elseif palette.pos_style.fallback_style then
+                            if palette.pos_style.fallback_style == 'collab' then
+                                return atlas, G.COLLABS.pos[_front.value]
+                            elseif palette.pos_style.fallback_style == 'suit' then
+                                return atlas, { x = _front.pos.x, y = 0}
+                            elseif palette.pos_style.fallback_style == 'deck' then
+                                return atlas, _front.pos
+                            end
+                        end
+                    elseif palette.pos_style == 'collab' then
+                        return atlas, G.COLLABS.pos[_front.value]
+                    elseif palette.pos_style == 'suit' then
+                        return atlas, { x = _front.pos.x, y = 0}
+                    elseif palette.pos_style == 'deck' then
+                        return atlas, _front.pos
+                    elseif palette.pos_style == 'ranks' or nil then
+                        for i, rank in ipairs(palette.ranks) do
+                            if rank == _front.value then
+                                return atlas, { x = i - 1, y = 0}
+                            end
+                        end
+                    end
+                end
+                return G.ASSET_ATLAS[palette.hc_default and _front.hc_atlas or _front.lc_atlas or {}] or G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(palette.hc_default and 2 or 1)], _front.pos
             end
         end
     end
