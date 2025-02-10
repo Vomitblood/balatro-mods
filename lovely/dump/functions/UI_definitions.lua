@@ -1,12 +1,10 @@
-LOVELY_INTEGRITY = '6732b4a403b7b8feb5e2decf7325ea96cac23686fd99e992f1aa1c26a7881bbe'
+LOVELY_INTEGRITY = 'c4606c194e720d427e9e0e1b2181bd1cd60d72f540c2377514fa195a2271958b'
 
 --Create a global UIDEF that contains all UI definition functions\
 --As a rule, these contain functions that return a table T representing the definition for a UIBox
 G.UIDEF = {}
 
 function create_UIBox_debug_tools()
-local debugplus = require("debugplus.core")
-debugplus.registerButtons()
   G.debug_tool_config = G.debug_tool_config or {}
   G.FUNCS.DT_add_money = function() if G.STAGE == G.STAGES.RUN then ease_dollars(10) end end
   G.FUNCS.DT_add_round = function() if G.STAGE == G.STAGES.RUN then  ease_round(1) end end
@@ -96,40 +94,7 @@ debugplus.registerButtons()
           {n=G.UIT.T, config={text = "Hover over any Joker/Playing card", scale = 0.25, colour = G.C.WHITE, shadow = true}}
         }},
         {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "hold [" .. require("debugplus.util").ctrlText .. "] (togglable in config)", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "and press [Q] to cycle Edition", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }}, 
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [W] to cycle Enhancement", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [E] to cycle Seal", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [A/S/D] to toggle Eternal/Perishable/Rental", scale = 0.2, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [F] to toggle Coupon (make free)", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [R/C] to destroy/copy card", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [M] to reload atlases", scale = 0.25, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [UP/DOWN] to cycle rank", scale = 0.2, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.00}, nodes={
-              {n=G.UIT.T, config={text = "press [RIGHT/LEFT] to cycle suit", scale = 0.2, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
-              {n=G.UIT.T, config={text = "press [z] plus [1-3] to save a save state", scale = 0.2, colour = G.C.WHITE, shadow = true}}
-          }},
-          {n=G.UIT.R, config={align = "cm", padding = 0.00}, nodes={
-              {n=G.UIT.T, config={text = "press [x] plus [1-3] to load a save state", scale = 0.2, colour = G.C.WHITE, shadow = true}}
+          {n=G.UIT.T, config={text = "and press [Q] to cycle Edition", scale = 0.25, colour = G.C.WHITE, shadow = true}}
         }},
       }},
       {n=G.UIT.R, config={align = "cm", padding = 0.05}, nodes={
@@ -161,8 +126,6 @@ debugplus.registerButtons()
           UIBox_button{ label = {"+1 Discard"}, button = "DT_add_discard", minw = 1.7, minh = 0.4, scale = 0.35},
           UIBox_button{ label = {"Boss Reroll"}, button = "DT_reroll_boss", minw = 1.7, minh = 0.4, scale = 0.35},
           UIBox_button{ label = {"Background"}, button = "DT_toggle_background", minw = 1.7, minh = 0.4, scale = 0.35},
-          UIBox_button{ label = {"Win Blind"}, button = "DT_win_blind", minw = 1.7, minh = 0.4, scale = 0.35},
-          UIBox_button{ label = {"Double Tag"}, button = "DT_double_tag", minw = 1.7, minh = 0.4, scale = 0.35},
         }},
         {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
           UIBox_button{ label = {"+10 chips"}, button = "DT_add_chips", minw = 1.7, minh = 0.4, scale = 0.35},
@@ -556,7 +519,6 @@ function G.UIDEF.deck_preview(args)
   end
 
   local suit_map = {'Spades', 'Hearts', 'Clubs', 'Diamonds'}
-  local SUITS_SORTED = Cartomancer.tablecopy(SUITS)
   local stones = nil
   local rank_name_mapping = {'A','K','Q','J','10',9,8,7,6,5,4,3,2}
 
@@ -1048,7 +1010,6 @@ end
   end
 
   function create_UIBox_buttons()
-    if G.hand and G.hand.cart_sorting == nil then G.hand.cart_sorting = true end
     local text_scale = 0.45
     local button_height = 1.3
     local play_button = {n=G.UIT.C, config={id = 'play_button', align = "tm", minw = 2.5, padding = 0.3, r = 0.1, hover = true, colour = G.C.BLUE, button = "play_cards_from_highlighted", one_press = true, shadow = true, func = 'can_play'}, nodes={
@@ -1070,9 +1031,6 @@ end
           {n=G.UIT.C, config={align = "cm", padding = 0.1, r = 0.1, colour =G.C.UI.TRANSPARENT_DARK, outline = 1.5, outline_colour = mix_colours(G.C.WHITE,G.C.JOKER_GREY, 0.7), line_emboss = 1}, nodes={
             {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
               {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
-                Cartomancer.SETTINGS.improved_hand_sorting and
-                create_toggle{ col = true, label = localize('b_sort_hand'), label_scale = text_scale*0.8, scale = 0.30, w = 0, shadow = true, ref_table = G.hand, ref_value = 'cart_sorting', callback = function () G.FUNCS.cartomancer_sort_hand_off() end }
-                or
                 {n=G.UIT.T, config={text = localize('b_sort_hand'), scale = text_scale*0.8, colour = G.C.UI.TEXT_LIGHT}}
               }},
               {n=G.UIT.R, config={align = "cm", padding = 0.1}, nodes={
@@ -2027,11 +1985,11 @@ function create_slider(args)
   local t = 
         {n=G.UIT.C, config={align = "cm", minw = args.w, min_h = args.h, padding = 0.1, r = 0.1, colour = G.C.CLEAR, focus_args = {type = 'slider'}}, nodes={
           {n=G.UIT.C, config={align = "cl", minw = args.w, r = 0.1,min_h = args.h,collideable = true, hover = true, colour = G.C.BLACK,emboss = 0.05,func = 'slider', refresh_movement = true}, nodes={
-            {n=G.UIT.B, config={id = args.id, w=startval,h=args.h, r = 0.1, colour = args.colour, ref_table = args, refresh_movement = true}},
+            {n=G.UIT.B, config={w=startval,h=args.h, r = 0.1, colour = args.colour, ref_table = args, refresh_movement = true}},
           }},
-          not args.hide_val and {n=G.UIT.C, config={align = "cm", minh = args.h,r = 0.1, minw = 0.8, colour = args.colour,shadow = true}, nodes={
+          {n=G.UIT.C, config={align = "cm", minh = args.h,r = 0.1, minw = 0.8, colour = args.colour,shadow = true}, nodes={
             {n=G.UIT.T, config={ref_table = args, ref_value = 'text', scale = args.text_scale, colour = G.C.UI.TEXT_LIGHT, decimal_places = args.decimal_places}}
-          }} or nil
+          }},
         }}
   if args.label then 
     t = {n=G.UIT.R, config={align = "cm", minh = 1, minw = 1, padding = 0.1*args.label_scale, colour = G.C.CLEAR}, nodes={
@@ -2437,21 +2395,6 @@ function create_UIBox_settings()
     tab_definition_function_args = 'Audio'
   }
 
-  if not require("debugplus.config").SMODSLoaded then
-      tabs[#tabs+1] = {
-          label = "DebugPlus",
-          tab_definition_function = require("debugplus.config").fakeConfigTab,
-      }
-  end
-  local settings_icon = Cartomancer.add_settings_icon()
-  if settings_icon then
-      tabs[#tabs+1] = {
-      colour = G.C.MONEY,
-      custom_button = {settings_icon},
-      tab_definition_function = Cartomancer.config_tab,
-      tab_definition_function_args = ''
-    }
-  end
   local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs(
     {tabs = tabs,
     tab_h = 7.05,
@@ -3252,8 +3195,8 @@ function create_UIBox_current_hand_row(handname, simple)
   (not simple and
     {n=G.UIT.R, config={align = "cm", padding = 0.05, r = 0.1, colour = darken(G.C.JOKER_GREY, 0.1), emboss = 0.05, hover = true, force_focus = true, on_demand_tooltip = {text = localize(handname, 'poker_hand_descriptions'), filler = {func = create_UIBox_hand_tip, args = handname}}}, nodes={
       {n=G.UIT.C, config={align = "cl", padding = 0, minw = 5}, nodes={
-        {n=G.UIT.C, config={align = "cm", padding = 0.01, r = 0.1, colour = G.C.HAND_LEVELS[math.min(7, G.GAME.hands[handname].level)], minw = 1.5, outline = 0.8, outline_colour = G.C.WHITE}, nodes={
-          {n=G.UIT.T, config={text = localize('k_level_prefix')..G.GAME.hands[handname].level, scale = 0.5, colour = G.C.UI.TEXT_DARK}}
+        {n=G.UIT.C, config={align = "cm", padding = 0.01, r = 0.1, colour = G.C.HAND_LEVELS[to_big(math.min(7, G.GAME.hands[handname].level)):to_number()], minw = 1.5, outline = 0.8, outline_colour = G.C.WHITE}, nodes={
+          {n=G.UIT.T, config={text = localize('k_level_prefix')..number_format(G.GAME.hands[handname].level), scale = 0.5, colour = G.C.UI.TEXT_DARK}}
         }},
         {n=G.UIT.C, config={align = "cm", minw = 4.5, maxw = 4.5}, nodes={
           {n=G.UIT.T, config={text = ' '..localize(handname,'poker_hands'), scale = 0.45, colour = G.C.UI.TEXT_LIGHT, shadow = true}}
@@ -3452,59 +3395,37 @@ function G.UIDEF.view_deck(unplayed_only)
     Diamonds = {},
   }
   local suit_map = {'Spades', 'Hearts', 'Clubs', 'Diamonds'}
-  local SUITS_SORTED = Cartomancer.tablecopy(SUITS)
   for k, v in ipairs(G.playing_cards) do
-    local greyed
-    if unplayed_only and not ((v.area and v.area == G.deck) or v.ability.wheel_flipped) then
-      greyed = true
-    end
-    local card_string = v:cart_to_string()
-    if greyed then
-        card_string = card_string .. "Greyed"
-    end
-    if greyed and Cartomancer.SETTINGS.deck_view_hide_drawn_cards then
-      -- Ignore this card.
-    elseif not SUITS[v.base.suit][card_string] then
-          table.insert(SUITS_SORTED[v.base.suit], card_string)
-    
-            local _scale = 0.7
-            local copy = copy_card(v, nil, _scale)
-    
-            copy.greyed = greyed
-            copy.stacked_quantity = 1
-    
-            SUITS[v.base.suit][card_string] = copy
-      else
-        local stacked_card = SUITS[v.base.suit][card_string]
-        stacked_card.stacked_quantity = stacked_card.stacked_quantity + 1
-      end
+    table.insert(SUITS[v.base.suit], v)
   end
   for j = 1, 4 do
-    if SUITS_SORTED[suit_map[j]][1] then
+    if SUITS[suit_map[j]][1] then
       local view_deck = CardArea(
         G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
         6.5*G.CARD_W,
         0.6*G.CARD_H,
-        {card_limit = #SUITS_SORTED[suit_map[j]], type = 'title', view_deck = true, highlight_limit = 0, card_w = G.CARD_W*0.7, draw_layers = {'card'}})
+        {card_limit = #SUITS[suit_map[j]], type = 'title', view_deck = true, highlight_limit = 0, card_w = G.CARD_W*0.7, draw_layers = {'card'}})
       table.insert(deck_tables, 
       {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
         {n=G.UIT.O, config={object = view_deck}}
       }}
       )
 
-      for i = 1, #SUITS_SORTED[suit_map[j]] do
-        local card_string = SUITS_SORTED[suit_map[j]][i]
-        local card = SUITS[suit_map[j]][card_string]
-      
-        card.T.x = view_deck.T.x + view_deck.T.w/2
-        card.T.y = view_deck.T.y
-        card:create_quantity_display()
-      
-        card:hard_set_T()
-        view_deck:emplace(card)
-      
-      end
+      for i = 1, #SUITS[suit_map[j]] do
+        if SUITS[suit_map[j]][i] then
+          local greyed, _scale = nil, 0.7
+          if unplayed_only and not ((SUITS[suit_map[j]][i].area and SUITS[suit_map[j]][i].area == G.deck) or SUITS[suit_map[j]][i].ability.wheel_flipped) then
+            greyed = true
+          end
+          local copy = copy_card(SUITS[suit_map[j]][i],nil, _scale)
+          copy.greyed = greyed
+          copy.T.x = view_deck.T.x + view_deck.T.w/2
+          copy.T.y = view_deck.T.y
 
+          copy:hard_set_T()
+          view_deck:emplace(copy)
+        end
+      end
     end
   end
 
@@ -3618,7 +3539,6 @@ function G.UIDEF.view_deck(unplayed_only)
       {n=G.UIT.C, config={align = "cm", padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables}
     }},
     {n=G.UIT.R, config={align = "cm", minh = 0.8, padding = 0.05}, nodes={
-      not unplayed_only and Cartomancer.add_unique_count() or nil,
       modded and {n=G.UIT.R, config={align = "cm"}, nodes={
         {n=G.UIT.C, config={padding = 0.3, r = 0.1, colour = mix_colours(G.C.BLUE, G.C.WHITE,0.7)}, nodes = {}},
         {n=G.UIT.T, config={text =' '..localize('ph_deck_preview_effective'),colour = G.C.WHITE, scale =0.3}},
@@ -4337,20 +4257,9 @@ function create_UIBox_your_collection_blinds(exit)
     end)
   }))
 
-  local min_ante = 1
-  local max_ante = 16
-  local spacing = 1 - 15*0.06
-  if G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante then
-      local current_ante = G.GAME.round_resets.ante
-  
-      if current_ante > 8 then
-          min_ante = current_ante - 8 + 1
-          max_ante = current_ante + 8
-      end
-  end
   local ante_amounts = {}
-  for i = min_ante, max_ante do
-    -- :3
+  for i = 1, math.min(16, math.max(16, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) do 
+    local spacing = 1 - math.min(20, math.max(15, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt))*0.06
     if spacing > 0 and i > 1 then 
       ante_amounts[#ante_amounts+1] = {n=G.UIT.R, config={minh = spacing}, nodes={}}
     end
@@ -6455,13 +6364,6 @@ function UIBox_button(args)
   local but_UI_label = {}
 
   local button_pip = nil
-  if args.dynamic_label then
-    but_UI_label = {}
-    
-    table.insert(but_UI_label, {n=G.UIT.R, config={align = "cm", padding = 0, minw = args.minw, maxw = args.maxw}, nodes={
-      {n=G.UIT.T, config={ref_table = args.dynamic_label, ref_value = 'text', scale = args.scale, colour = args.text_colour, shadow = args.shadow, focus_args = button_pip and args.focus_args or nil, func = button_pip,}}
-    }})
-  end
   for k, v in ipairs(args.label) do 
     if k == #args.label and args.focus_args and args.focus_args.set_button_pip then 
       button_pip ='set_button_pip'
@@ -6486,7 +6388,7 @@ function UIBox_button(args)
       padding = args.padding or 0,
       r = 0.1,
       hover = true,
-      colour = args.ref_table and args.ref_table.colour or args.colour, -- Cartomancer
+      colour = args.colour,
       one_press = args.one_press,
       button = (args.button ~= 'nil') and args.button or nil,
       choice = args.choice,
@@ -6500,6 +6402,6 @@ function UIBox_button(args)
       ref_table = args.ref_table,
       mid = args.mid
     }, nodes=
-    args.ref_table and args.ref_table.custom_button or but_UI_label -- Cartomancer
+    but_UI_label
     }}}
 end

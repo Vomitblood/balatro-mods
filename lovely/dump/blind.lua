@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'ceaf7d365cb8eac62c7dcf3be1ef07cc6b0dac3977bde52960496d7f844a668d'
+LOVELY_INTEGRITY = '2c00c26e55b0f21d108e0353b98757a950fc433f1f9951ac8a454c589450b12c'
 
 --class
 Blind = Moveable:extend()
@@ -606,7 +606,7 @@ function Blind:debuff_hand(cards, hand, handname, check)
     end
     if self.name == 'The Arm' then 
         self.triggered = false
-        if G.GAME.hands[handname].level > 1 then
+        if to_big(G.GAME.hands[handname].level) > to_big(1) then
             self.triggered = true
             if not check then
                 level_up_hand(self.children.animatedSprite, handname, nil, -1)

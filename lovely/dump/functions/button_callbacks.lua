@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'd7f48a66f05694a22b7aae4c15c27e443dc398089f32ae2891b595f051091e07'
+LOVELY_INTEGRITY = 'e36471bd79b456102440b1c69061665aed2f0a92e67cfd840d15eafe4e55be17'
 
 --Moves the tutorial to the next step in queue
 --
@@ -55,7 +55,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_buy = function(e)
-    if (e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) and (e.config.ref_table.cost > 0) then
+    if (to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (e.config.ref_table.cost > 0) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -77,7 +77,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_buy_and_use = function(e)
-    if (((e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) and (e.config.ref_table.cost > 0)) or (not e.config.ref_table:can_use_consumeable())) then
+    if (((to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (e.config.ref_table.cost > 0)) or (not e.config.ref_table:can_use_consumeable())) then
         e.UIBox.states.visible = false
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
@@ -96,7 +96,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_redeem = function(e)
-  if e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at then
+  if to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at) then
       e.config.colour = G.C.UI.BACKGROUND_INACTIVE
       e.config.button = nil
   else
@@ -111,7 +111,7 @@ end
 ---@param e {}
 --**e** Is the UIE that called this function
 G.FUNCS.can_open = function(e)
-  if (e.config.ref_table.cost) > 0 and (e.config.ref_table.cost > G.GAME.dollars - G.GAME.bankrupt_at) then
+  if (e.config.ref_table.cost) > 0 and (to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) then
       e.config.colour = G.C.UI.BACKGROUND_INACTIVE
       e.config.button = nil
   else
@@ -2020,12 +2020,12 @@ G.FUNCS.flame_handler = function(e)
       local exptime = math.exp(-0.4*G.real_dt)
       
       if to_big(G.ARGS.score_intensity.earned_score) >= to_big(G.ARGS.score_intensity.required_score) and to_big(G.ARGS.score_intensity.required_score) > to_big(0) then
-        _F.intensity = ((G.pack_cards and not G.pack_cards.REMOVED) or (G.TAROT_INTERRUPT)) and 0 or Cartomancer.get_flames_intensity()
+        _F.intensity = ((G.pack_cards and not G.pack_cards.REMOVED) or (G.TAROT_INTERRUPT)) and 0 or math.max(0., math.log(G.ARGS.score_intensity.earned_score, 5)-2)
       else
         _F.intensity = 0
       end
 
-      _F.timer = Cartomancer.handle_flames_timer(_F.timer, _F.intensity)
+      _F.timer = _F.timer + G.real_dt*(1 + _F.intensity*0.2)
       if _F.intensity_vel < 0 then _F.intensity_vel = _F.intensity_vel*(1 - 10*G.real_dt) end
       _F.intensity_vel = (1-exptime)*(_F.intensity - _F.real_intensity)*G.real_dt*25 + exptime*_F.intensity_vel
       _F.real_intensity = math.max(0, _F.real_intensity + _F.intensity_vel)
@@ -2078,7 +2078,7 @@ end
   end
 
   G.FUNCS.can_reroll = function(e)
-    if ((G.GAME.dollars-G.GAME.bankrupt_at) - G.GAME.current_round.reroll_cost < 0) and G.GAME.current_round.reroll_cost ~= 0 then 
+    if ((to_big(G.GAME.dollars)-to_big(G.GAME.bankrupt_at)) - to_big(G.GAME.current_round.reroll_cost) < to_big(0)) and G.GAME.current_round.reroll_cost ~= 0 then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
         --e.children[1].children[1].config.shadow = false

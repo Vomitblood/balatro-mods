@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'af84d6c3467720a23ecaec33b0418eba5566291929fca3634893138f120ee811'
+LOVELY_INTEGRITY = 'b7b1bb9e3088ca71ed96c4b7bdaf1ec1c67106c37ba37b8f4aef385f8743a60b'
 
 --class
 Card = Moveable:extend()
@@ -4171,7 +4171,7 @@ function Card:calculate_joker(context)
                             }
                         end
                         if self.ability.name == 'Vagabond' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
-                            if G.GAME.dollars <= self.ability.extra then
+                            if to_big(G.GAME.dollars) <= to_big(self.ability.extra) then
                                 G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
                                 G.E_MANAGER:add_event(Event({
                                     trigger = 'before',
@@ -4363,7 +4363,7 @@ function Card:calculate_joker(context)
                                 colour = G.C.MULT
                             }
                         end
-                        if self.ability.name == 'Bull' and (G.GAME.dollars + (G.GAME.dollar_buffer or 0)) > 0 then
+                        if self.ability.name == 'Bull' and to_big(G.GAME.dollars + (G.GAME.dollar_buffer or 0)) > to_big(0) then
                             return {
                                 message = localize{type='variable',key='a_chips',vars={self.ability.extra*math.max(0,(G.GAME.dollars + (G.GAME.dollar_buffer or 0))) }},
                                 chip_mod = self.ability.extra*math.max(0,(G.GAME.dollars + (G.GAME.dollar_buffer or 0))), 
@@ -4473,7 +4473,7 @@ function Card:calculate_joker(context)
                                 Xmult_mod = self.ability.extra.Xmult,
                             }
                         end
-                        if self.ability.name == 'Bootstraps' and math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars) >= 1 then 
+                        if self.ability.name == 'Bootstraps' and to_big(math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars)) >= to_big(1) then
                             return {
                                 message = localize{type='variable',key='a_mult',vars={self.ability.extra.mult*math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars)}},
                                 mult_mod = self.ability.extra.mult*math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars)
@@ -4795,7 +4795,6 @@ function Card:draw(layer)
     self.hover_tilt = 1
     
     if not self.states.visible then return end
-    if self.VT.x < -3 or self.VT.x > G.TILE_W + 2.5 then return end
     
     if (layer == 'shadow' or layer == 'both') then
         self.ARGS.send_to_shader = self.ARGS.send_to_shader or {}

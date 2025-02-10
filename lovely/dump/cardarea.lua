@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'e8693aca875516bf9cb3c84fcb6f392131135da095f221f2ef0e6ac727b926df'
+LOVELY_INTEGRITY = '0825b896143c8e8c22c2c18adfc937960d407b986f1c18addc68bedde1768967'
 
 --Class
 CardArea = Moveable:extend()
@@ -32,9 +32,6 @@ function CardArea:init(X, Y, W, H, config)
 end
 
 function CardArea:emplace(card, location, stay_flipped)
-if self == G.jokers then
-    Cartomancer.handle_joker_added(card)
-end
     if card.edition and card.edition.card_limit and (self == G.hand) then
         self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) + card.edition.card_limit
         self.config.card_limit = math.max(0, self.config.real_card_limit)
@@ -326,9 +323,6 @@ function CardArea:draw()
                 }
             end
         self.children.area_uibox:draw()
-        if self == G.jokers then
-            Cartomancer.add_visibility_controls()
-        end
     end
 
     self:draw_boundingrect()
@@ -431,39 +425,15 @@ function CardArea:align_cards()
     end
     if (self == G.hand or self == G.deck or self == G.discard or self == G.play) and G.view_deck and G.view_deck[1] and G.view_deck[1].cards then return end
     if self.config.type == 'deck' then
-            local display_limit
-            if not Cartomancer.SETTINGS.compact_deck_enabled then
-                display_limit = 999999
-            else
-                display_limit = Cartomancer.SETTINGS.compact_deck_visible_cards
-            end
-            
             local deck_height = (self.config.deck_height or 0.15)/52
-            local total_cards = #self.cards <= display_limit and #self.cards or display_limit -- limit height
-            local fixedX, fixedY, fixedR = nil, nil, nil
-            
             for k, card in ipairs(self.cards) do
                 if card.facing == 'front' then card:flip() end
-            
+
                 if not card.states.drag.is then
-                    if fixedX then
-                        card.T.x = fixedX
-                        card.T.y = fixedY
-                        card.T.r = fixedR -- rotation
-                        card.states.visible = false
-                    else
-                        card.T.x = self.T.x + 0.5*(self.T.w - card.T.w) + self.shadow_parrallax.x*deck_height*(total_cards/(self == G.deck and 1 or 2) - k) + 0.9*self.shuffle_amt*(1 - k*0.01)*(k%2 == 1 and 1 or -0)
-                        card.T.y = self.T.y + 0.5*(self.T.h - card.T.h) + self.shadow_parrallax.y*deck_height*(total_cards/(self == G.deck and 1 or 2) - k)
-                        card.T.r = 0 + 0.3*self.shuffle_amt*(1 + k*0.05)*(k%2 == 1 and 1 or -0)
-                        card.T.x = card.T.x + card.shadow_parrallax.x/30
-                        card.states.visible = true
-            
-                        if k >= display_limit then
-                            fixedX = card.T.x
-                            fixedY = card.T.y
-                            fixedR = card.T.r
-                        end
-                    end
+                    card.T.x = self.T.x + 0.5*(self.T.w - card.T.w) + self.shadow_parrallax.x*deck_height*(#self.cards/(self == G.deck and 1 or 2) - k) + 0.9*self.shuffle_amt*(1 - k*0.01)*(k%2 == 1 and 1 or -0)
+                    card.T.y = self.T.y + 0.5*(self.T.h - card.T.h) + self.shadow_parrallax.y*deck_height*(#self.cards/(self == G.deck and 1 or 2) - k)
+                    card.T.r = 0 + 0.3*self.shuffle_amt*(1 + k*0.05)*(k%2 == 1 and 1 or -0)
+                    card.T.x = card.T.x + card.shadow_parrallax.x/30
                 end
             end
     end
@@ -551,18 +521,7 @@ function CardArea:align_cards()
         end
         table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
     end 
-    if self == G.jokers and G.jokers.cart_jokers_expanded then
-        local align_cards = Cartomancer.expand_G_jokers()
-    
-        -- This should work fine without cryptid. But because cryptid's patch is priority=0, it has to be this way
-        if not G.GAME.modifiers.cry_conveyor then 
-            table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)
-        end
-        
-        if align_cards then
-            G.jokers:hard_set_cards()
-        end
-    elseif self.config.type == 'joker' or self.config.type == 'title_2' then
+    if self.config.type == 'joker' or self.config.type == 'title_2' then
         for k, card in ipairs(self.cards) do
             if not card.states.drag.is then 
                 card.T.r = 0.1*(-#self.cards/2 - 0.5 + k)/(#self.cards)+ (G.SETTINGS.reduced_motion and 0 or 1)*0.02*math.sin(2*G.TIMERS.REAL+card.T.x)
@@ -652,9 +611,6 @@ function CardArea:draw_card_from(area, stay_flipped, discarded_only)
             if card then
                 if area == G.discard then
                     card.T.r = 0
-                end
-                if self == G.hand and not card.states.visible then
-                    card.states.visible = true
                 end
                 local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(self, card)
                 if (self == G.hand) and G.GAME.modifiers.flipped_cards then

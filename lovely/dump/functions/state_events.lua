@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '4e744c84a896d13965c350778ddd9bc20dc5aeec8b4dd69951b460db6f5383cb'
+LOVELY_INTEGRITY = '444830d91f018dc97aacd41f468f575ea3ad4eea5095b8d83a79bd7e8a40c1ff'
 
 function win_game()
     if (not G.GAME.seeded and not G.GAME.challenge) or SMODS.config.seeded_unlocks then
@@ -1090,7 +1090,7 @@ G.FUNCS.evaluate_round = function()
             dollars = dollars + ret.dollars
         end
     end
-    if G.GAME.dollars >= 5 and not G.GAME.modifiers.no_interest and G.GAME.cry_payload then
+    if to_big(G.GAME.dollars) >= to_big(5) and not G.GAME.modifiers.no_interest and G.GAME.cry_payload then
         add_round_eval_row({bonus = true, payload = G.GAME.cry_payload, name='interest_payload', pitch = pitch, dollars = G.GAME.interest_amount*G.GAME.cry_payload*math.min(math.floor(G.GAME.dollars/5), G.GAME.interest_cap/5)})
         pitch = pitch + 0.06
         if not G.GAME.seeded and not G.GAME.challenge then
@@ -1103,7 +1103,7 @@ G.FUNCS.evaluate_round = function()
         check_for_unlock({type = 'interest_streak'})
         dollars = dollars + G.GAME.interest_amount*G.GAME.cry_payload*math.min(math.floor(G.GAME.dollars/5), G.GAME.interest_cap/5)
         G.GAME.cry_payload = nil
-    elseif G.GAME.dollars >= 5 and not G.GAME.modifiers.no_interest then
+    elseif to_big(G.GAME.dollars) >= to_big(5) and not G.GAME.modifiers.no_interest then
         add_round_eval_row({bonus = true, name='interest', pitch = pitch, dollars = G.GAME.interest_amount*math.min(math.floor(G.GAME.dollars/5), G.GAME.interest_cap/5)})
         pitch = pitch + 0.06
         if (not G.GAME.seeded and not G.GAME.challenge) or SMODS.config.seeded_unlocks then

@@ -1,148 +1,4 @@
-LOVELY_INTEGRITY = 'bb0f108ed0f5fea2a65f1d93362d3d1e1561e17a19a8c7e0d07c0cc4747d3696'
-
-
-local Cartomancer_replacements = {
-    {
-        find = [[
-	for k, v in ipairs%(G%.playing_cards%) do
-		if v%.base%.suit then table%.insert%(SUITS%[v%.base%.suit%], v%) end]],
-    -- Steamodded<0917b
-        find_alt = [[
-	for k, v in ipairs%(G%.playing_cards%) do
-		table%.insert%(SUITS%[v%.base%.suit%], v%)]],
-        place = [[
-local SUITS_SORTED = Cartomancer.tablecopy(SUITS)
-for k, v in ipairs(G.playing_cards) do
-  if v.base.suit then
-  local greyed
-  if unplayed_only and not ((v.area and v.area == G.deck) or v.ability.wheel_flipped) then
-    greyed = true
-  end
-  local card_string = v:cart_to_string()
-  if greyed then
-    card_string = card_string .. "Greyed" -- for some reason format doesn't work and final string is `sGreyed`
-  end
-  if greyed and Cartomancer.SETTINGS.deck_view_hide_drawn_cards then
-  -- Ignore this card.
-  elseif not Cartomancer.SETTINGS.deck_view_stack_enabled then
-    -- Don't stack cards    
-    local _scale = 0.7
-    local copy = copy_card(v, nil, _scale)
-    
-    copy.greyed = greyed
-    copy.stacked_quantity = 1
-    table.insert(SUITS_SORTED[v.base.suit], copy)
-
-  elseif not SUITS[v.base.suit][card_string] then
-    -- Initiate stack
-    table.insert(SUITS_SORTED[v.base.suit], card_string)
-
-    local _scale = 0.7
-    local copy = copy_card(v, nil, _scale)
-
-    copy.greyed = greyed
-    copy.stacked_quantity = 1
-
-    SUITS[v.base.suit][card_string] = copy
-  else
-    -- Stack cards
-    local stacked_card = SUITS[v.base.suit][card_string]
-    stacked_card.stacked_quantity = stacked_card.stacked_quantity + 1
-  end
-  end]]
-    },
-
-    {
-        find = "card_limit = #SUITS%[suit_map%[j%]%],",
-        place = "card_limit = #SUITS_SORTED[suit_map[j]],"
-    },
-
-    {
-        find = [[
-for i = 1%, %#SUITS%[suit_map%[j%]%] do
-				if SUITS%[suit_map%[j%]%]%[i%] then
-					local greyed%, _scale = nil%, 0%.7
-					if unplayed_only and not %(%(SUITS%[suit_map%[j%]%]%[i%]%.area and SUITS%[suit_map%[j%]%]%[i%]%.area == G%.deck%) or SUITS%[suit_map%[j%]%]%[i%]%.ability%.wheel_flipped%) then
-						greyed = true
-					end
-					local copy = copy_card%(SUITS%[suit_map%[j%]%]%[i%]%, nil%, _scale%)
-					copy%.greyed = greyed
-					copy%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w %/ 2
-					copy%.T%.y = view_deck%.T%.y
-
-					copy:hard_set_T%(%)
-					view_deck:emplace%(copy%)
-				end
-			end]],
-        place = [[
-for i = 1%, %#SUITS_SORTED%[suit_map%[j%]%] do
-  local card
-  if not Cartomancer.SETTINGS.deck_view_stack_enabled then
-    card = SUITS_SORTED%[suit_map%[j%]%]%[i%]
-  else
-    local card_string = SUITS_SORTED%[suit_map%[j%]%]%[i%]
-    card = SUITS%[suit_map%[j%]%]%[card_string%]
-  end
-
-  card%.T%.x = view_deck%.T%.x %+ view_deck%.T%.w%/2
-  card%.T%.y = view_deck%.T%.y
-  card:create_quantity_display%(%)
-
-  card:hard_set_T%(%)
-  view_deck:emplace%(card%)
-end]]
-    },
-    
-    {
-      find = '			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {',
-      place = [=[
-      not unplayed_only and Cartomancer.add_unique_count() or nil,
-			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {]=]
-  },
-
-}
-
-
---  Mom, can we have lovely patches for overrides.lua?
---  No, we have lovely patches at home
-
---  Lovely patches at home:
-
-local Cartomancer_nfs_read
-local Cartomancer_nfs_read_override = function (containerOrName, nameOrSize, sizeOrNil)
-    local data, size = Cartomancer_nfs_read(containerOrName, nameOrSize, sizeOrNil)
-
-    if type(containerOrName) ~= "string" then
-        return data, size
-    end
-    local overrides = '/overrides.lua'
-    if containerOrName:sub(-#overrides) ~= overrides then
-        return data, size
-    end
-
-    local replaced = 0
-    local total_replaced = 0
-    for _, v in ipairs(Cartomancer_replacements) do
-        data, replaced = string.gsub(data, v.find, v.place)
-
-        if replaced == 0 and v.find_alt then
-          data, replaced = string.gsub(data, v.find_alt, v.place)
-        end
-
-        if replaced == 0 then
-          print("Failed to replace " .. v.find .. " for overrides.lua")
-        else
-          total_replaced = total_replaced + 1
-        end
-    end
-
-    print("Totally applied " .. total_replaced .. " replacements to overrides.lua")
-
-    -- We no longer need this override
-    NFS.read = Cartomancer_nfs_read
-    
-    return data, size
-end
+LOVELY_INTEGRITY = '7a80102588959caa0bf8986947ac508ff87fd856221043d85aeb54a472571ab0'
 
 --- STEAMODDED CORE
 --- MODULE STACKTRACE
@@ -1001,10 +857,6 @@ injectStackTrace()
 -- --------MOD CORE API STACKTRACE END-----------
 
 if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
-do
-    local logger = require("debugplus.logger")
-    logger.registerLogHandler()
-end
 require "engine/object"
 require "bit"
 require "engine/string_packer"
@@ -1150,17 +1002,10 @@ function love.draw()
 	--Perf monitoring checkpoint
     timer_checkpoint(nil, 'draw', true)
 	G:draw()
-	do
-	    local console = require("debugplus.console")
-	    console.doConsoleRender()
-	    timer_checkpoint('DebugPlus Console', 'draw')
-	end
 end
 
 function love.keypressed(key)
 if Handy.controller.process_key(key, false) then return end
-local console = require("debugplus.console")
-if not console.consoleHandleKey(key) then return end
 	if not _RELEASE_MODE and G.keybind_mapping[key] then love.gamepadpressed(G.CONTROLLER.keyboard_controller, G.keybind_mapping[key])
 	else
 		G.CONTROLLER:set_HID_flags('mouse')
@@ -1479,10 +1324,6 @@ local function find_self(directory, target_filename, target_line, depth)
 end
 
 SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
-
-Cartomancer_nfs_read = NFS.read
-NFS.read = Cartomancer_nfs_read_override
-
 
 for _, path in ipairs {
     "src/ui.lua",
@@ -3771,7 +3612,9 @@ if Talisman.config_file.break_infinity then
           v.s_mult = to_big(v.s_mult)
           v.l_chips = to_big(v.l_chips)
           v.l_mult = to_big(v.l_mult)
+          v.level = to_big(v.level)
       end
+      obj.starting_params.dollars = to_big(obj.starting_params.dollars)
       return obj
   end
 
@@ -3792,6 +3635,11 @@ if Talisman.config_file.break_infinity then
   function math.floor(x)
       if type(x) == 'table' then return x:floor() end
       return mf(x)
+  end
+  local mc = math.ceil
+  function math.ceil(x)
+      if type(x) == 'table' then return x:ceil() end
+      return mc(x)
   end
 
   local l10 = math.log10
@@ -3906,6 +3754,25 @@ if Talisman.config_file.break_infinity then
       G.PROFILES[G.SETTINGS.profile].high_scores[score].amt = math.floor(amt)
       G:save_settings()
     end--]] --going to hold off on modifying this until proper save loading exists
+  end
+
+  local ics = inc_career_stat
+  -- This is used often for unlocks, so we can't just prevent big money from being added
+  -- Also, I'm completely overriding this, since I don't think any mods would want to change it
+  function inc_career_stat(stat, mod)
+    if G.GAME.seeded or G.GAME.challenge then return end
+    if not G.PROFILES[G.SETTINGS.profile].career_stats[stat] then G.PROFILES[G.SETTINGS.profile].career_stats[stat] = 0 end
+    G.PROFILES[G.SETTINGS.profile].career_stats[stat] = G.PROFILES[G.SETTINGS.profile].career_stats[stat] + (mod or 0)
+    -- Make sure this isn't ever a talisman number
+    if type(G.PROFILES[G.SETTINGS.profile].career_stats[stat]) == 'table' then
+      if G.PROFILES[G.SETTINGS.profile].career_stats[stat] > to_big(1e300) then
+        G.PROFILES[G.SETTINGS.profile].career_stats[stat] = to_big(1e300)
+      elseif G.PROFILES[G.SETTINGS.profile].career_stats[stat] < to_big(-1e300) then
+        G.PROFILES[G.SETTINGS.profile].career_stats[stat] = to_big(-1e300)
+      end
+      G.PROFILES[G.SETTINGS.profile].career_stats[stat] = G.PROFILES[G.SETTINGS.profile].career_stats[stat]:to_number()
+    end
+    G:save_settings()
   end
 
   local sn = scale_number
@@ -4067,8 +3934,8 @@ function tal_uht(config, vals)
             G.GAME.current_round.current_hand.hand_level = vals.level
         else
             G.GAME.current_round.current_hand.hand_level = ' '..localize('k_lvl')..tostring(vals.level)
-            if type(vals.level) == 'number' then 
-                G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[math.min(vals.level, 7)]
+            if is_number(vals.level) then 
+                G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[to_big(math.min(vals.level, 7)):to_number()]
             else
                 G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[1]
             end
@@ -4102,135 +3969,145 @@ function Game:update(dt)
       Talisman.dollar_update = false
     end
 end
---scoring coroutine
-local oldplay = G.FUNCS.evaluate_play
-
-function G.FUNCS.evaluate_play()
-    G.SCORING_COROUTINE = coroutine.create(oldplay)
-    G.LAST_SCORING_YIELD = love.timer.getTime()
-    G.CARD_CALC_COUNTS = {} -- keys = cards, values = table containing numbers
-    local success, err = coroutine.resume(G.SCORING_COROUTINE)
-    if not success then
-      error(err)
-    end
-end
-
-
-local oldupd = love.update
-function love.update(dt, ...)
-    oldupd(dt, ...)
-    if G.SCORING_COROUTINE then
-      if collectgarbage("count") > 1024*1024 then
-        collectgarbage("collect")
-      end
-        if coroutine.status(G.SCORING_COROUTINE) == "dead" then
-            G.SCORING_COROUTINE = nil
-            G.FUNCS.exit_overlay_menu()
-            local totalCalcs = 0
-            for i, v in pairs(G.CARD_CALC_COUNTS) do
-              totalCalcs = totalCalcs + v[1]
-            end
-            G.GAME.LAST_CALCS = totalCalcs
-        else
-            G.SCORING_TEXT = nil
-            if not G.OVERLAY_MENU then
-                G.scoring_text = {"Calculating...", "", "", ""}
-                G.SCORING_TEXT = { 
-                  {n = G.UIT.C, nodes = {
-                    {n = G.UIT.R, config = {padding = 0.1, align = "cm"}, nodes = {
-                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 1}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 1, silent = true})}},
-                    }},{n = G.UIT.R,  nodes = {
-                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 2}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
-                    }},{n = G.UIT.R,  nodes = {
-                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 3}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
-                    }},{n = G.UIT.R,  nodes = {
-                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 4}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
-                }}}}}
-                G.FUNCS.overlay_menu({
-                    definition = 
-                    {n=G.UIT.ROOT, minw = G.ROOM.T.w*5, minh = G.ROOM.T.h*5, config={align = "cm", padding = 9999, offset = {x = 0, y = -3}, r = 0.1, colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3],0.7}}, nodes= G.SCORING_TEXT}, 
-                    config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}
-                })
-            else
-
-                if G.OVERLAY_MENU and G.scoring_text then
-                  local totalCalcs = 0
-                  for i, v in pairs(G.CARD_CALC_COUNTS) do
-                    totalCalcs = totalCalcs + v[1]
-                  end
-                  local jokersYetToScore = #G.jokers.cards + #G.play.cards - #G.CARD_CALC_COUNTS
-                  G.scoring_text[1] = "Calculating..."
-                  G.scoring_text[2] = "Elapsed calculations: "..tostring(totalCalcs)
-                  G.scoring_text[3] = "Cards yet to score: "..tostring(jokersYetToScore)
-                  G.scoring_text[4] = "Calculations last played hand: " .. tostring(G.GAME.LAST_CALCS or "Unknown")
-                end
-
-            end
-			--this coroutine allows us to stagger GC cycles through
-			--the main source of waste in terms of memory (especially w joker retriggers) is through local variables that become garbage
-			--this practically eliminates the memory overhead of scoring
-			--event queue overhead seems to not exist if Talismans Disable Scoring Animations is off.
-			--event manager has to wait for scoring to finish until it can keep processing events anyways.
-
-            
-	          G.LAST_SCORING_YIELD = love.timer.getTime()
-            
-            local success, msg = coroutine.resume(G.SCORING_COROUTINE)
-            if not success then
-              error(msg)
-            end
-        end
-    end
-end
-
-
-
-TIME_BETWEEN_SCORING_FRAMES = 0.03 -- 30 fps during scoring
--- we dont want overhead from updates making scoring much slower
--- originally 10 fps, I think 30 fps is a good way to balance it while making it look smooth, too
---wrap everything in calculating contexts so we can do more things with it
-Talisman.calculating_joker = false
-Talisman.calculating_score = false
-Talisman.calculating_card = false
-Talisman.dollar_update = false
-local ccj = Card.calculate_joker
-function Card:calculate_joker(context)
+Talisman.F_NO_COROUTINE = false --easy disabling for bugfixing, since the coroutine can make it hard to see where errors are
+if not Talisman.F_NO_COROUTINE then
   --scoring coroutine
-  G.CURRENT_SCORING_CARD = self
-  G.CARD_CALC_COUNTS = G.CARD_CALC_COUNTS or {}
-  if G.CARD_CALC_COUNTS[self] then
-    G.CARD_CALC_COUNTS[self][1] = G.CARD_CALC_COUNTS[self][1] + 1
-  else
-    G.CARD_CALC_COUNTS[self] = {1, 1}
+  local oldplay = G.FUNCS.evaluate_play
+
+  function G.FUNCS.evaluate_play()
+      G.SCORING_COROUTINE = coroutine.create(oldplay)
+      G.LAST_SCORING_YIELD = love.timer.getTime()
+      G.CARD_CALC_COUNTS = {} -- keys = cards, values = table containing numbers
+      local success, err = coroutine.resume(G.SCORING_COROUTINE)
+      if not success then
+        error(err)
+      end
   end
 
 
-  if G.LAST_SCORING_YIELD and ((love.timer.getTime() - G.LAST_SCORING_YIELD) > TIME_BETWEEN_SCORING_FRAMES) and coroutine.running() then
-        coroutine.yield()
-  end
-  Talisman.calculating_joker = true
-  local ret = ccj(self, context)
+  local oldupd = love.update
+  function love.update(dt, ...)
+      oldupd(dt, ...)
+      if G.SCORING_COROUTINE then
+        if collectgarbage("count") > 1024*1024 then
+          collectgarbage("collect")
+        end
+          if coroutine.status(G.SCORING_COROUTINE) == "dead" then
+              G.SCORING_COROUTINE = nil
+              G.FUNCS.exit_overlay_menu()
+              local totalCalcs = 0
+              for i, v in pairs(G.CARD_CALC_COUNTS) do
+                totalCalcs = totalCalcs + v[1]
+              end
+              G.GAME.LAST_CALCS = totalCalcs
+              G.GAME.LAST_CALC_TIME = G.CURRENT_CALC_TIME
+          else
+              G.SCORING_TEXT = nil
+              if not G.OVERLAY_MENU then
+                  G.scoring_text = {"Calculating...", "", "", ""}
+                  G.SCORING_TEXT = { 
+                    {n = G.UIT.C, nodes = {
+                      {n = G.UIT.R, config = {padding = 0.1, align = "cm"}, nodes = {
+                      {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 1}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 1, silent = true})}},
+                      }},{n = G.UIT.R,  nodes = {
+                      {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 2}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
+                      }},{n = G.UIT.R,  nodes = {
+                      {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 3}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
+                      }},{n = G.UIT.R,  nodes = {
+                      {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.scoring_text, ref_value = 4}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 0.4, silent = true})}},
+                  }}}}}
+                  G.FUNCS.overlay_menu({
+                      definition = 
+                      {n=G.UIT.ROOT, minw = G.ROOM.T.w*5, minh = G.ROOM.T.h*5, config={align = "cm", padding = 9999, offset = {x = 0, y = -3}, r = 0.1, colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3],0.7}}, nodes= G.SCORING_TEXT}, 
+                      config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}
+                  })
+              else
 
-  if ret and type(ret) == "table" and ret.repetitions then
-    G.CARD_CALC_COUNTS[ret.card] = G.CARD_CALC_COUNTS[ret.card] or {1,1}
-    G.CARD_CALC_COUNTS[ret.card][2] = G.CARD_CALC_COUNTS[ret.card][2] + ret.repetitions
+                  if G.OVERLAY_MENU and G.scoring_text then
+                    local totalCalcs = 0
+                    for i, v in pairs(G.CARD_CALC_COUNTS) do
+                      totalCalcs = totalCalcs + v[1]
+                    end
+                    local jokersYetToScore = #G.jokers.cards + #G.play.cards - #G.CARD_CALC_COUNTS
+                    G.CURRENT_CALC_TIME = (G.CURRENT_CALC_TIME or 0) + dt
+                    G.scoring_text[1] = "Calculating..."
+                    G.scoring_text[2] = "Elapsed calculations: "..tostring(totalCalcs).." ("..tostring(number_format(G.CURRENT_CALC_TIME)).."s)"
+                    G.scoring_text[3] = "Cards yet to score: "..tostring(jokersYetToScore)
+                    G.scoring_text[4] = "Calculations last played hand: " .. tostring(G.GAME.LAST_CALCS or "Unknown") .." ("..tostring(G.GAME.LAST_CALC_TIME and number_format(G.GAME.LAST_CALC_TIME) or "???").."s)"
+                  end
+
+              end
+        --this coroutine allows us to stagger GC cycles through
+        --the main source of waste in terms of memory (especially w joker retriggers) is through local variables that become garbage
+        --this practically eliminates the memory overhead of scoring
+        --event queue overhead seems to not exist if Talismans Disable Scoring Animations is off.
+        --event manager has to wait for scoring to finish until it can keep processing events anyways.
+
+              
+              G.LAST_SCORING_YIELD = love.timer.getTime()
+              
+              local success, msg = coroutine.resume(G.SCORING_COROUTINE)
+              if not success then
+                error(msg)
+              end
+          end
+      end
   end
+
+
+
+  TIME_BETWEEN_SCORING_FRAMES = 0.03 -- 30 fps during scoring
+  -- we dont want overhead from updates making scoring much slower
+  -- originally 10 fps, I think 30 fps is a good way to balance it while making it look smooth, too
+  --wrap everything in calculating contexts so we can do more things with it
   Talisman.calculating_joker = false
-  return ret
-end
-local cuc = Card.use_consumable
-function Card:use_consumable(x,y)
-  Talisman.calculating_score = true
-  local ret = cuc(self, x,y)
   Talisman.calculating_score = false
-  return ret
-end
-local gfep = G.FUNCS.evaluate_play
-G.FUNCS.evaluate_play = function(e)
-  Talisman.calculating_score = true
-  local ret = gfep(e)
-  Talisman.calculating_score = false
-  return ret
+  Talisman.calculating_card = false
+  Talisman.dollar_update = false
+  local ccj = Card.calculate_joker
+  function Card:calculate_joker(context)
+    --scoring coroutine
+    G.CURRENT_SCORING_CARD = self
+    G.CARD_CALC_COUNTS = G.CARD_CALC_COUNTS or {}
+    if G.CARD_CALC_COUNTS[self] then
+      G.CARD_CALC_COUNTS[self][1] = G.CARD_CALC_COUNTS[self][1] + 1
+    else
+      G.CARD_CALC_COUNTS[self] = {1, 1}
+    end
+
+
+    if G.LAST_SCORING_YIELD and ((love.timer.getTime() - G.LAST_SCORING_YIELD) > TIME_BETWEEN_SCORING_FRAMES) and coroutine.running() then
+          coroutine.yield()
+    end
+    Talisman.calculating_joker = true
+    local ret, trig = ccj(self, context)
+
+    if ret and type(ret) == "table" and ret.repetitions then
+      if not ret.card then
+        G.CARD_CALC_COUNTS.other = G.CARD_CALC_COUNTS.other or {1,1}
+        G.CARD_CALC_COUNTS.other[2] = G.CARD_CALC_COUNTS.other[2] + ret.repetitions
+      else
+        G.CARD_CALC_COUNTS[ret.card] = G.CARD_CALC_COUNTS[ret.card] or {1,1}
+        G.CARD_CALC_COUNTS[ret.card][2] = G.CARD_CALC_COUNTS[ret.card][2] + ret.repetitions
+      end
+    end
+    Talisman.calculating_joker = false
+    return ret, trig
+  end
+  local cuc = Card.use_consumable
+  function Card:use_consumable(x,y)
+    Talisman.calculating_score = true
+    local ret = cuc(self, x,y)
+    Talisman.calculating_score = false
+    return ret
+  end
+  local gfep = G.FUNCS.evaluate_play
+  G.FUNCS.evaluate_play = function(e)
+    Talisman.calculating_score = true
+    local ret = gfep(e)
+    Talisman.calculating_score = false
+    return ret
+  end
 end
 --[[local ec = eval_card
 function eval_card()
@@ -4325,7 +4202,7 @@ local edo = ease_dollars
 function ease_dollars(mod, instant)
   if Talisman.config_file.disable_anims then--and (Talisman.calculating_joker or Talisman.calculating_score or Talisman.calculating_card) then
     mod = mod or 0
-    if mod < 0 then inc_career_stat('c_dollars_earned', mod) end
+    if to_big(mod) < to_big(0) then inc_career_stat('c_dollars_earned', mod) end
     G.GAME.dollars = G.GAME.dollars + mod
     Talisman.dollar_update = true
   else return edo(mod, instant) end
@@ -4340,11 +4217,13 @@ function safe_str_unpack(str)
     if success then
     return result
     else
-    print("Error unpacking string: " .. result)
+    print("[Talisman] Error unpacking string: " .. result)
+    print(tostring(str))
     return nil
     end
   else
-    print("Error loading string: " .. err)
+    print("[Talisman] Error loading string: " .. err)
+    print(tostring(str))
     return nil
   end
   end
@@ -4373,6 +4252,207 @@ function G.FUNCS.evaluate_round()
     end
 end
 
+local g_start_run = Game.start_run
+function Game:start_run(args)
+  local ret = g_start_run(self, args)
+  self.GAME.round_resets.ante_disp = self.GAME.round_resets.ante_disp or number_format(self.GAME.round_resets.ante)
+  return ret
+end
+
+-- Steamodded calculation API: add extra operations
+if SMODS and SMODS.calculate_individual_effect then
+  local smods_xchips = false
+  for _, v in pairs(SMODS.calculation_keys) do
+    if v == 'x_chips' then
+      smods_xchips = true
+      break
+    end
+  end
+  local scie = SMODS.calculate_individual_effect
+  function SMODS.calculate_individual_effect(effect, scored_card, key, amount, from_edition)
+    -- For some reason, some keys' animations are completely removed
+    -- I think this is caused by a lovely patch conflict
+    --if key == 'chip_mod' then key = 'chips' end
+    --if key == 'mult_mod' then key = 'mult' end
+    --if key == 'Xmult_mod' then key = 'x_mult' end
+    local ret = scie(effect, scored_card, key, amount, from_edition)
+    if ret then
+      return ret
+    end
+    if not smods_xchips and (key == 'x_chips' or key == 'xchips' or key == 'Xchip_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      hand_chips = mod_chips(hand_chips * amount)
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "X"..amount, colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'Xchip_mod' then
+              if effect.xchip_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.xchip_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'x_chips', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'e_chips' or key == 'echips' or key == 'Echip_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      hand_chips = mod_chips(hand_chips ^ amount)
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^"..amount, colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'Echip_mod' then
+              if effect.echip_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.echip_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'e_chips', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'ee_chips' or key == 'eechips' or key == 'EEchip_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      hand_chips = mod_chips(hand_chips:arrow(2, amount))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^^"..amount, colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'EEchip_mod' then
+              if effect.eechip_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.eechip_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'ee_chips', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'eee_chips' or key == 'eeechips' or key == 'EEEchip_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      hand_chips = mod_chips(hand_chips:arrow(3, amount))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^^^"..amount, colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'EEEchip_mod' then
+              if effect.eeechip_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.eeechip_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'eee_chips', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'hyper_chips' or key == 'hyperchips' or key == 'hyperchip_mod') and type(amount) == 'table' then 
+      if effect.card then juice_card(effect.card) end
+      hand_chips = mod_chips(hand_chips:arrow(amount[1], amount[2]))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = (amount[1] > 5 and ('{' .. amount[1] .. '}') or string.rep('^', amount[1])) .. amount[2], colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'hyperchip_mod' then
+              if effect.hyperchip_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.hyperchip_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'hyper_chips', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'e_mult' or key == 'emult' or key == 'Emult_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      mult = mod_chips(mult ^ amount)
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^"..amount.." Mult", colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'Emult_mod' then
+              if effect.emult_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.emult_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'e_mult', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'ee_mult' or key == 'eemult' or key == 'EEmult_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      mult = mod_chips(mult:arrow(2, amount))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^^"..amount.." Mult", colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'EEmult_mod' then
+              if effect.eemult_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.eemult_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'ee_mult', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'eee_mult' or key == 'eeemult' or key == 'EEEmult_mod') and amount ~= 1 then 
+      if effect.card then juice_card(effect.card) end
+      mult = mod_chips(mult:arrow(3, amount))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = "^^^"..amount.." Mult", colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'EEEmult_mod' then
+              if effect.eeemult_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.eeemult_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'eee_mult', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+
+    if (key == 'hyper_mult' or key == 'hypermult' or key == 'hypermult_mod') and type(amount) == 'table' then 
+      if effect.card then juice_card(effect.card) end
+      mult = mod_chips(mult:arrow(amount[1], amount[2]))
+      update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+      if not effect.remove_default_message then
+          if from_edition then
+              card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = ((amount[1] > 5 and ('{' .. amount[1] .. '}') or string.rep('^', amount[1])) .. amount[2]).." Mult", colour =  G.C.EDITION, edition = true})
+          elseif key ~= 'hypermult_mod' then
+              if effect.hypermult_message then
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'extra', nil, percent, nil, effect.hypermult_message)
+              else
+                  card_eval_status_text(scored_card or effect.card or effect.focus, 'hyper_mult', amount, percent)
+              end
+          end
+      end
+      return true
+    end
+  end
+  for _, v in ipairs({'e_mult', 'e_chips', 'ee_mult', 'ee_chips', 'eee_mult', 'eee_chips', 'hyper_mult', 'hyper_chips',
+                      'emult', 'echips', 'eemult', 'eechips', 'eeemult', 'eeechips', 'hypermult', 'hyperchips',
+                      'Emult_mod', 'Echip_mod', 'EEmult_mod', 'EEchip_mod', 'EEEmult_mod', 'EEEchip_mod', 'hypermult_mod', 'hyperchip_mod'}) do
+    table.insert(SMODS.calculation_keys, v)
+  end
+  if not smods_xchips then
+    for _, v in ipairs({'x_chips', 'xchips', 'Xchip_mod'}) do
+    table.insert(SMODS.calculation_keys, v)
+  end
+  end
+end
+
 --some debugging functions
 --[[local callstep=0
 function printCallerInfo()
@@ -4390,79 +4470,3 @@ function EventManager:add_event(x,y,z)
   printCallerInfo()
   return emae(self,x,y,z)
 end--]]
-
-require 'cartomancer.init'
-
-Cartomancer.path = assert(
-    Cartomancer.find_self('cartomancer.lua'),
-    "Failed to find mod folder. Make sure that `Cartomancer` folder has `cartomancer.lua` file!"
-)
-
-Cartomancer.load_mod_file('internal/config.lua', 'internal.config')
-Cartomancer.load_mod_file('internal/atlas.lua', 'internal.atlas')
-Cartomancer.load_mod_file('internal/ui.lua', 'internal.ui')
-Cartomancer.load_mod_file('internal/keybinds.lua', 'internal.keybinds')
-
-Cartomancer.load_mod_file('core/view-deck.lua', 'core.view-deck')
-Cartomancer.load_mod_file('core/flames.lua', 'core.flames')
-Cartomancer.load_mod_file('core/optimizations.lua', 'core.optimizations')
-Cartomancer.load_mod_file('core/jokers.lua', 'core.jokers')
-Cartomancer.load_mod_file('core/hand.lua', 'core.hand')
-
-Cartomancer.load_config()
-
-Cartomancer.INTERNAL_jokers_menu = false
-
--- TODO dedicated keybinds file? keybinds need to load after config
-Cartomancer.register_keybind {
-    name = 'hide_joker',
-    func = function (controller)
-        Cartomancer.hide_hovered_joker(controller)
-    end
-}
-
-Cartomancer.register_keybind {
-    name = 'toggle_tags',
-    func = function (controller)
-        Cartomancer.SETTINGS.hide_tags = not Cartomancer.SETTINGS.hide_tags
-        Cartomancer.update_tags_visibility()
-    end
-}
-
-Cartomancer.register_keybind {
-    name = 'toggle_consumables',
-    func = function (controller)
-        Cartomancer.SETTINGS.hide_consumables = not Cartomancer.SETTINGS.hide_consumables
-    end
-}
-
-Cartomancer.register_keybind {
-    name = 'toggle_deck',
-    func = function (controller)
-        Cartomancer.SETTINGS.hide_deck = not Cartomancer.SETTINGS.hide_deck
-    end
-}
-
-Cartomancer.register_keybind {
-    name = 'toggle_jokers',
-    func = function (controller)
-        if not (G and G.jokers) then
-            return
-        end
-        G.jokers.cart_hide_all = not G.jokers.cart_hide_all
-
-        if G.jokers.cart_hide_all then
-            Cartomancer.hide_all_jokers()
-        else
-            Cartomancer.show_all_jokers()
-        end
-        Cartomancer.align_G_jokers()
-    end
-}
-
-Cartomancer.register_keybind {
-    name = 'toggle_jokers_buttons',
-    func = function (controller)
-        Cartomancer.SETTINGS.jokers_controls_buttons = not Cartomancer.SETTINGS.jokers_controls_buttons
-    end
-}

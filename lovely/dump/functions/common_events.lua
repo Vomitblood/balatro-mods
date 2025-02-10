@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '2c8ce4c0bac30f3323a4c474be97cee2bdcdd76ecf06cecea0a240c944640f67'
+LOVELY_INTEGRITY = 'ab00e08d711a2c3f72976a640fd09ce67bc5a2fbcc3a1d480a50325ec883c75e'
 
 function set_screen_positions()
     if G.STAGE == G.STAGES.RUN then
@@ -75,7 +75,7 @@ function ease_dollars(mod, instant)
         mod = mod or 0
         local text = '+'..localize('$')
         local col = G.C.MONEY
-        if mod < 0 then
+        if to_big(mod) < to_big(0) then
             text = '-'..localize('$')
             col = G.C.RED              
         else
@@ -120,7 +120,7 @@ function ease_discard(mod, instant, silent)
         mod = math.max(-G.GAME.current_round.discards_left, mod)
         local text = '+'
         local col = G.C.GREEN
-        if mod < 0 then
+        if to_big(mod) < to_big(0) then
             text = ''
             col = G.C.RED
         end
@@ -159,7 +159,7 @@ function ease_hands_played(mod, instant)
         mod = mod or 0
         local text = '+'
         local col = G.C.GREEN
-        if mod < 0 then
+        if to_big(mod) < to_big(0) then
             text = ''
             col = G.C.RED
         end
@@ -200,7 +200,7 @@ function ease_ante(mod)
           mod = mod or 0
           local text = '+'
           local col = G.C.IMPORTANT
-          if mod < 0 then
+          if to_big(mod) < to_big(0) then
               text = '-'
               col = G.C.RED
           end
@@ -235,7 +235,7 @@ function ease_round(mod)
           mod = mod or 0
           local text = '+'
           local col = G.C.IMPORTANT
-          if mod < 0 then
+          if to_big(mod) < to_big(0) then
               text = ''
               col = G.C.RED
           end
@@ -405,9 +405,6 @@ function draw_card(from, to, percent, dir, sort, card, delay, mute, stay_flipped
             if card then 
                 if from then card = from:remove_card(card) end
                 if card then drawn = true end
-                if card and to == G.hand and not card.states.visible then
-                    card.states.visible = true
-                end
                 local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(to, card)
                 if G.GAME.modifiers.flipped_cards and to == G.hand then
                     if pseudorandom(pseudoseed('flipped_card')) < 1/G.GAME.modifiers.flipped_cards then
@@ -487,7 +484,7 @@ function level_up_hand(card, hand, instant, amount)
         G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].mult * (universum_mod)^amount, 1)
         G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].chips * (universum_mod)^amount, 1)
     end
-    if not instant then 
+    if not instant and not Talisman.config_file.disable_anims then
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2, func = function()
             play_sound('tarot1')
             if card and card.juice_up then card:juice_up(0.8, 0.5) end
@@ -577,8 +574,8 @@ function update_hand_text(config, vals)
                 G.GAME.current_round.current_hand.hand_level = vals.level
             else
                 G.GAME.current_round.current_hand.hand_level = ' '..localize('k_lvl')..tostring(vals.level)
-                if type(vals.level) == 'number' then 
-                    G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[math.min(vals.level, 7)]
+                if is_number(vals.level) then
+                    G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[to_big(math.min(vals.level, 7)):to_number()]
                 else
                     G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[1]
                 end
@@ -954,12 +951,12 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
         sound = 'chips1'
         amt = amt
         colour = G.C.CHIPS
-        text = localize{type='variable',key='a_chips'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_chips'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
         delay = 0.6
     elseif eval_type == 'mult' then 
         sound = 'multhit1'--'other1'
         amt = amt
-        text = localize{type='variable',key='a_mult'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_mult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
         colour = G.C.MULT
         config.type = 'fade'
         config.scale = 0.7
@@ -975,14 +972,14 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
         sound = 'multhit2'
         volume = 0.7
         amt = amt
-        text = localize{type='variable',key='a_xmult'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_xmult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
         colour = G.C.XMULT
         config.type = 'fade'
         config.scale = 0.7
     elseif eval_type == 'h_mult' then 
         sound = 'multhit1'
         amt = amt
-        text = localize{type='variable',key='a_mult'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}
+        text = localize{type='variable',key='a_mult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}
         colour = G.C.MULT
         config.type = 'fade'
         config.scale = 0.7
@@ -1241,7 +1238,7 @@ function add_round_eval_row(config)
             end
         }))
         local dollar_row = 0
-        if num_dollars > 60 or num_dollars < -60 then
+        num_dollars = to_number(num_dollars); if math.abs(to_number(num_dollars)) > 60 then
             if num_dollars < 0 then --if negative
                 G.E_MANAGER:add_event(Event({
                     trigger = 'before',delay = 0.38,
@@ -1345,7 +1342,7 @@ function change_shop_size(mod)
     if not G.GAME.shop then return end
     G.GAME.shop.joker_max = G.GAME.shop.joker_max + mod
     if G.shop_jokers and G.shop_jokers.cards then
-        if mod < 0 then
+        if to_big(mod) < to_big(0) then
             --Remove jokers in shop
             for i = #G.shop_jokers.cards, G.GAME.shop.joker_max+1, -1 do
                 if G.shop_jokers.cards[i] then
@@ -1477,7 +1474,7 @@ function check_for_unlock(args)
         end
     end
     if args.type == 'money' then
-        if G.GAME.dollars >= 400 then
+        if to_big(G.GAME.dollars) >= to_big(400) then
             unlock_achievement('nest_egg')
         end
     end
@@ -1514,7 +1511,7 @@ function check_for_unlock(args)
         end
     end
     if args.type == 'upgrade_hand' then
-        if args.level >= 10 then
+        if to_big(args.level) >= to_big(10) then
             unlock_achievement('retrograde')
         end
     end
@@ -1751,7 +1748,7 @@ function check_for_unlock(args)
                 end
             end
             if args.type == 'money' then
-                if card.unlock_condition.extra <= G.GAME.dollars then
+                if to_big(card.unlock_condition.extra) <= to_big(G.GAME.dollars) then
                     ret = true
                     unlock_card(card)   
                 end
@@ -3123,7 +3120,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     elseif _c.set == 'Planet' then
         loc_vars = {
             G.GAME.hands[cfg.hand_type].level,localize(cfg.hand_type, 'poker_hands'), G.GAME.hands[cfg.hand_type].l_mult, G.GAME.hands[cfg.hand_type].l_chips,
-            colours = {(G.GAME.hands[cfg.hand_type].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[cfg.hand_type].level)])}
+            colours = {(to_big(G.GAME.hands[cfg.hand_type].level)==to_big(1) and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[to_big(math.min(7, G.GAME.hands[cfg.hand_type].level)):to_number()])}
         }
         localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = _c.vars or loc_vars}
     elseif _c.set == 'Tarot' then

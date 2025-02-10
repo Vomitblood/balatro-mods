@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = 'd36e3953c2739cd4ea15794fb5e4031a2dac09fc33baadd0a2820e4726891304'
+LOVELY_INTEGRITY = 'd9e5d51702216f37d8d0de3c89deb8d1a47bcad6430594945df872f263a14c04'
 
 ---@class Controller
 Controller = Object:extend()
@@ -768,12 +768,6 @@ function Controller:button_release_update(button, dt)
 end
 
 function Controller:key_press_update(key, dt)
-    if key == "escape" and Cartomancer.INTERNAL_in_config then
-        Cartomancer.INTERNAL_in_config = false
-        if not Cartomancer.use_smods() then
-            Cartomancer.save_config()
-        end
-    end
     if key == "escape" and G.ACTIVE_MOD_UI then
         G.FUNCS.exit_mods()
     end
@@ -828,7 +822,7 @@ function Controller:key_press_update(key, dt)
             end
         end
     end
-    if not _RELEASE_MODE and require("debugplus.core").isOkayToHandleDebugForKey(key) then
+    if not _RELEASE_MODE then
         if key == 'tab' and not G.debug_tools then
             G.debug_tools = UIBox{
                 definition = create_UIBox_debug_tools(),
@@ -859,8 +853,6 @@ function Controller:key_press_update(key, dt)
                         add_joker(_card.config.center.key)
                         _card:set_sprites(_card.config.center)
                     end
-                    local debugplus = require("debugplus.core")
-                    debugplus.handleSpawn(self, _card)
                     if _card.ability.consumeable and G.consumeables and #G.consumeables.cards < G.consumeables.config.card_limit then
                         add_joker(_card.config.center.key)
                         _card:set_sprites(_card.config.center)
@@ -912,17 +904,13 @@ function Controller:key_press_update(key, dt)
       if key == "space" then
           live_test()
       end
-      local debugplus = require("debugplus.core")
-      debugplus.handleKeys(self, key, dt)
       if key == 'v' then
         if not G.prof then G.prof = require "engine/profile"; G.prof.start()
         else    G.prof:stop();
             print(G.prof.report()); G.prof = nil end
-            debugplus.profileMessage()
         end
        if key == "p" then
            G.SETTINGS.perf_mode = not G.SETTINGS.perf_mode
-           debugplus.togglePerfUI()
        end
     end
 end

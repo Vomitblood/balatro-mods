@@ -1,4 +1,4 @@
-LOVELY_INTEGRITY = '4af0a05e5998e1bbb1bd6610b6f3d87c6fea5c42d526b7d7d6bd3d6bf983044e'
+LOVELY_INTEGRITY = 'fff73090942942422c5293599c9a5f94fd18419e9275888a510770e6688dd01c'
 
 --Class
 Game = Object:extend()
@@ -109,109 +109,7 @@ function Game:start_up()
     boot_timer('window init', 'savemanager')
     --call the save manager to wait for any save requests
     G.SAVE_MANAGER = {
-        thread = love.thread.newThread([[require "love.system" 
-        
-        if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
-        
-        require "love.timer"
-        require "love.thread"
-        require 'love.filesystem'
-        require "engine/object"
-        require "engine/string_packer"
-        
-        --vars needed for sound manager thread
-        CHANNEL = love.thread.getChannel("save_request")
-        
-        talisman = "]] .. Talisman.config_file.break_infinity .. [["
-        
-        --untested
-        function tal_compress_and_save(_file, _data)
-          local save_string = type(_data) == 'table' and STR_PACK(_data) or _data
-          local fallback_save = STR_PACK({GAME = {won = true}}) --just bare minimum to not crash, maybe eventually display some info?
-          if talisman == 'bignumber' then
-            fallback_save = "if not BigMeta then " .. fallback_save
-          elseif talisman == 'omeganum' then
-            fallback_save = "if not OmegaMeta then " .. fallback_save
-          else
-            fallback_save = "if BigMeta or OmegaMeta then " .. fallback_save
-          end
-          fallback_save = fallback_save .. " end"
-          save_string = fallback_save .. " " .. save_string
-          save_string = love.data.compress('string', 'deflate', save_string, 1)
-          love.filesystem.write(_file,save_string)
-        end
-        
-         while true do
-            --Monitor the channel for any new requests
-            local request = CHANNEL:demand() -- Value from channel
-            if request then
-                --Saves progress for settings, unlocks, alerts and discoveries
-                if request.type == 'save_progress' then
-                    local prefix_profile = (request.save_progress.SETTINGS.profile or 1)..''
-                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-                    prefix_profile = prefix_profile..'/'
-        
-                    if not love.filesystem.getInfo(prefix_profile..'meta.jkr') then
-                        love.filesystem.append( prefix_profile..'meta.jkr', 'return {}' )
-                    end
-        
-                    local meta = STR_UNPACK(get_compressed(prefix_profile..'meta.jkr') or 'return {}')
-                    meta.unlocked = meta.unlocked or {}
-                    meta.discovered = meta.discovered or {}
-                    meta.alerted = meta.alerted or {}
-        
-                    local _append = false
-        
-                    for k, v in pairs(request.save_progress.UDA) do
-                        if string.find(v, 'u') and not meta.unlocked[k] then 
-                            meta.unlocked[k] = true
-                            _append = true
-                        end
-                        if string.find(v, 'd') and not meta.discovered[k] then 
-                            meta.discovered[k] = true
-                            _append = true
-                        end
-                        if string.find(v, 'a') and not meta.alerted[k] then 
-                            meta.alerted[k] = true
-                            _append = true
-                        end
-                    end
-                    if _append then compress_and_save( prefix_profile..'meta.jkr', STR_PACK(meta)) end
-        
-                    compress_and_save('settings.jkr', request.save_progress.SETTINGS)
-                    compress_and_save(prefix_profile..'profile.jkr', request.save_progress.PROFILE)
-        
-                    CHANNEL:push('done')
-                --Saves the settings file
-                elseif request.type == 'save_settings' then 
-                    compress_and_save('settings.jkr', request.save_settings)
-                    compress_and_save(request.profile_num..'/profile.jkr', request.save_profile)
-                    --Saves the metrics file
-                elseif request.type == 'save_metrics' then 
-                    compress_and_save('metrics.jkr', request.save_metrics)
-                --Saves any notifications
-                elseif request.type == 'save_notify' then 
-                    local prefix_profile = (request.profile_num or 1)..''
-                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-                    prefix_profile = prefix_profile..'/'
-        
-                    if not love.filesystem.getInfo(prefix_profile..'unlock_notify.jkr') then love.filesystem.append( prefix_profile..'unlock_notify.jkr', '') end
-                    local unlock_notify = get_compressed(prefix_profile..'unlock_notify.jkr') or ''
-        
-                    if request.save_notify and not string.find(unlock_notify, request.save_notify) then 
-                        compress_and_save( prefix_profile..'unlock_notify.jkr', unlock_notify..request.save_notify..'\n')
-                    end
-        
-                --Saves the run
-                elseif request.type == 'save_run' then 
-                    local prefix_profile = (request.profile_num or 1)..''
-                    if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-                    prefix_profile = prefix_profile..'/'
-        
-                    tal_compress_and_save(prefix_profile..'save.jkr', request.save_table)
-                end
-            end
-        end]]),
+        thread = love.thread.newThread('engine/save_manager.lua'),
         channel = love.thread.getChannel('save_request')
     }
     G.SAVE_MANAGER.thread:start(2)
@@ -322,7 +220,6 @@ function Game:start_up()
         end
     end
     set_profile_progress()
-    Cartomancer.load_mod_file('internal/localization.lua', 'localization')
     boot_timer('prep stage', 'splash prep',1)
     self:splash_screen()
     boot_timer('splash prep', 'end',1)
@@ -1355,7 +1252,7 @@ function Game:prep_stage(new_stage, new_state, new_game_obj)
         self.CONTROLLER.locks[k] = nil
     end
     if new_game_obj then self.GAME = self:init_game_object() end
-    if new_game_obj and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
+    if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
     self.STAGE = new_stage or self.STAGES.MAIN_MENU
     self.STATE = new_state or self.STATES.MENU
     self.STATE_COMPLETE = false
@@ -2193,7 +2090,7 @@ function Game:start_run(args)
     local selected_back = saveTable and saveTable.BACK.name or (args.challenge and args.challenge.deck and args.challenge.deck.type) or (self.GAME.viewed_back and self.GAME.viewed_back.name) or self.GAME.selected_back and self.GAME.selected_back.name or 'Red Deck'
     selected_back = get_deck_from_name(selected_back)
     self.GAME = saveTable and saveTable.GAME or self:init_game_object()
-    if (not saveTable or not saveTable.GAME) and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
+    if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end
     Handy.UI.init()
     self.GAME.modifiers = self.GAME.modifiers or {}
     self.GAME.stake = args.stake or self.GAME.stake or 1
@@ -2656,7 +2553,6 @@ function Game:start_run(args)
         reset_blinds()
     end
 
-    Cartomancer.update_tags_visibility()
     G.FUNCS.blind_chip_UI_scale(G.hand_text_area.blind_chips)
      
     self.HUD:recalculate()
@@ -2693,7 +2589,7 @@ function Game:update(dt)
     self.TIMERS.BACKGROUND = self.TIMERS.BACKGROUND + dt*(G.ARGS.spin and G.ARGS.spin.amount or 0)
     self.real_dt = dt
 
-    if require('debugplus.config').getValue('enableLongDT') and self.real_dt > 0.05 then print('LONG DT @ '..math.floor(G.TIMERS.REAL)..': '..self.real_dt) end
+    if self.real_dt > 0.05 then print('LONG DT @ '..math.floor(G.TIMERS.REAL)..': '..self.real_dt) end
     if not G.fbf or G.new_frame then
         G.new_frame = false
 
@@ -2711,7 +2607,7 @@ function Game:update(dt)
         if G.STATE ~= G.ACC_state then G.ACC = 0 end
         G.ACC_state = G.STATE
 
-        if (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.NEW_ROUND) or Incantation and Incantation.accelerate then
+        if (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.NEW_ROUND) then 
             G.ACC = math.min((G.ACC or 0) + dt*0.2*self.SETTINGS.GAMESPEED, 16)
              elseif Handy.insta_cash_out.is_skipped then G.ACC = 999 
         else
@@ -2955,6 +2851,7 @@ function Game:update(dt)
             if G.FILE_HANDLER.run then
                 G.SAVE_MANAGER.channel:push({
                     type = 'save_run',
+                    talisman = Talisman.config_file.break_infinity,
                     save_table = G.ARGS.save_run,
                     profile_num = G.SETTINGS.profile})
                 G.SAVED_GAME = nil
@@ -3210,23 +3107,11 @@ love.graphics.pop()
 
     timer_checkpoint('canvas', 'draw')
 
-    if require("debugplus.config").getValue("showHUD") and not G.video_control and G.F_VERBOSE then
+    if not _RELEASE_MODE and G.DEBUG and not G.video_control and G.F_VERBOSE then 
         love.graphics.push()
         love.graphics.setColor(0, 1, 1,1)
         local fps = love.timer.getFPS( )
-        do
-            local otherSize = 0
-            for k,v in pairs(G.E_MANAGER.queues or {}) do 
-                if k ~= 'base' then 
-                    otherSize = otherSize + #v
-                end
-            end
-            if otherSize ~= 0 then
-                love.graphics.print(string.format("Current FPS: %d\nBase event queue: %d\nOther event queues: %d", fps, #(G.E_MANAGER.queues and G.E_MANAGER.queues.base or {}), otherSize), 10, 10)
-            else
-                love.graphics.print(string.format("Current FPS: %d\nBase event queue: %d", fps, #(G.E_MANAGER.queues and G.E_MANAGER.queues.base or {})), 10, 10)
-            end
-        end
+        love.graphics.print("Current FPS: "..fps, 10, 10)
 
         if G.check and G.SETTINGS.perf_mode then
             local section_h = 30
@@ -3245,10 +3130,6 @@ love.graphics.pop()
                         end
                         love.graphics.rectangle('fill', 10+poll_w*kk,  20 + v_off, 5*poll_w, -(vv)*resolution)
                     end
-                    v_off = v_off + section_h
-                    end
-                    local v_off = v_off - section_h * #b.checkpoint_list
-                    for k, v in ipairs(b.checkpoint_list) do
                     love.graphics.setColor(a == 2 and 0.5 or 1, a == 2 and 1 or 0.5, 1,1)
                     love.graphics.print(v.label..': '..(string.format("%.2f",1000*(v.average or 0)))..'\n', 10, -section_h + 30 + v_off)
                     v_off = v_off + section_h
