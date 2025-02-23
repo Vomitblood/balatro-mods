@@ -438,13 +438,173 @@ if Big and G.STATE == G.STATES.MENU then self.config.scale = to_big(self.config.
 '''
 match_indent = true
 
+# poker hand level fixes
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "{n=G.UIT.T, config={text = localize('k_level_prefix')..G.GAME.hands[handname].level, scale = 0.5, colour = G.C.UI.TEXT_DARK}}"
+position = "at"
+payload = "{n=G.UIT.T, config={text = localize('k_level_prefix')..number_format(G.GAME.hands[handname].level), scale = 0.5, colour = G.C.UI.TEXT_DARK}}"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if args.level >= 10 then"
+position = "at"
+payload = "if to_big(args.level) >= to_big(10) then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if type(vals.level) == 'number' then"
+position = "at"
+payload = "if is_number(vals.level) then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[math.min(vals.level, 7)]"
+position = "at"
+payload = "G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[to_big(math.min(vals.level, 7)):to_number()]"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "colours = {(G.GAME.hands[cfg.hand_type].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[cfg.hand_type].level)])}"
+position = "at"
+payload = "colours = {(to_big(G.GAME.hands[cfg.hand_type].level)==to_big(1) and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[to_big(math.min(7, G.GAME.hands[cfg.hand_type].level)):to_number()])}"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '{n=G.UIT.C, config={align = "cm", padding = 0.01, r = 0.1, colour = G.C.HAND_LEVELS[math.min(7, G.GAME.hands[handname].level)], minw = 1.5, outline = 0.8, outline_colour = G.C.WHITE}, nodes={'
+position = "at"
+payload = '{n=G.UIT.C, config={align = "cm", padding = 0.01, r = 0.1, colour = G.C.HAND_LEVELS[to_big(math.min(7, G.GAME.hands[handname].level)):to_number()], minw = 1.5, outline = 0.8, outline_colour = G.C.WHITE}, nodes={'
+match_indent = true
+
+# money fixes
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''G\.GAME\.dollars >= 5'''
+position = "at"
+payload = "to_big(G.GAME.dollars) >= to_big(5)"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if G.GAME.dollars >= 400 then"
+position = "at"
+payload = '''if to_big(G.GAME.dollars) >= to_big(400) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "if ((G.GAME.dollars-G.GAME.bankrupt_at) - G.GAME.current_round.reroll_cost < 0) and G.GAME.current_round.reroll_cost ~= 0 then"
+position = "at"
+payload = '''if ((to_big(G.GAME.dollars)-to_big(G.GAME.bankrupt_at)) - to_big(G.GAME.current_round.reroll_cost) < to_big(0)) and G.GAME.current_round.reroll_cost ~= 0 then'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/button_callbacks.lua"
+pattern = '''e\.config\.ref_table\.cost > G\.GAME\.dollars - G\.GAME\.bankrupt_at'''
+position = "at"
+payload = '''to_big(e.config.ref_table.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = '''if ((G.GAME.dollars-G.GAME.bankrupt_at) - 10 >= 0) and'''
+position = "at"
+payload = '''
+if ((to_big(G.GAME.dollars)-to_big(G.GAME.bankrupt_at)) - to_big(10) >= to_big(0)) and
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if card.unlock_condition.extra <= G.GAME.dollars then'''
+position = "at"
+payload = '''if to_big(card.unlock_condition.extra) <= to_big(G.GAME.dollars) then'''
+match_indent = true
+
+# Talisman compat for vanilla jokers 
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if self.ability.name == 'Bull' and (G.GAME.dollars + (G.GAME.dollar_buffer or 0)) > 0 then'''
+position = "at"
+payload = '''if self.ability.name == 'Bull' and to_big(G.GAME.dollars + (G.GAME.dollar_buffer or 0)) > to_big(0) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if self.ability.name == 'Bootstraps' and math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars) >= 1 then'''
+position = "at"
+payload = '''if self.ability.name == 'Bootstraps' and to_big(math.floor((G.GAME.dollars + (G.GAME.dollar_buffer or 0))/self.ability.extra.dollars)) >= to_big(1) then'''
+match_indent = true
+
+# Vagabond
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if G.GAME.dollars <= self.ability.extra then'''
+position = "at"
+payload = '''if to_big(G.GAME.dollars) <= to_big(self.ability.extra) then'''
+match_indent = true
+
+# for now, I'm letting dollar eval ignore bignum, I'll patch it later
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if num_dollars > 60 then"
+position = "at"
+payload = '''num_dollars = to_number(num_dollars); if math.abs(to_number(num_dollars)) > 60 then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if num_dollars > 60 or num_dollars < -60 then"
+position = "at"
+payload = '''num_dollars = to_number(num_dollars); if math.abs(to_number(num_dollars)) > 60 then'''
+match_indent = true
+
+# This one also patches some extra stuff, but shouldn't cause any trouble
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if mod < 0 then"
+position = "at"
+payload = "if to_big(mod) < to_big(0) then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "if G.GAME.hands[handname].level > 1 then"
+position = "at"
+payload = "if to_big(G.GAME.hands[handname].level) > to_big(1) then"
+match_indent = true
+
 # call init game object appendum after init game object
 [[patches]]
 [patches.pattern]
 target = "game.lua"
 pattern = "if new_game_obj then self.GAME = self:init_game_object() end"
 position = "after"
-payload =  "if new_game_obj and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end"
+payload =  "if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end"
 match_indent = true
 overwrite = false
 
@@ -454,7 +614,7 @@ overwrite = false
 target = "game.lua"
 pattern = "self.GAME = saveTable and saveTable.GAME or self:init_game_object()"
 position = "after"
-payload =  "if (not saveTable or not saveTable.GAME) and Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end"
+payload =  "if Talisman and Talisman.igo then self.GAME = Talisman.igo(self.GAME) end"
 match_indent = true
 overwrite = false
 
@@ -495,6 +655,16 @@ target = "card.lua"
 pattern = "if G.GAME.blind then G.E_MANAGER:add_event(Event({ func = function() G.GAME.blind:set_blind(nil, true, nil); return true end })) end"
 position = "at"
 payload = "if G.GAME.blind and (not SMODS or G.GAME.blind.in_blind) and not (Talisman.config_file.disable_anims and (Talisman.calculating_joker or Talisman.calculating_score or Talisman.calculating_card)) then G.E_MANAGER:add_event(Event({ func = function() G.GAME.blind:set_blind(nil, true, nil); return true end })) end"
+match_indent = true
+overwrite = false
+
+# hand level ups
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if not instant then"
+position = "at"
+payload = "if not instant and not Talisman.config_file.disable_anims then"
 match_indent = true
 overwrite = false
 
@@ -889,7 +1059,7 @@ if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
 		hand_chips = mod_chips(hand_chips * edi.x_chips)
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = 'X'.. edi.x_chips ..' Chips',
+		{message = 'X'.. edi.x_chips ,
 		edition = true,
 		x_chips = true})
 	end
@@ -897,7 +1067,7 @@ if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
 		hand_chips = mod_chips(hand_chips ^ edi.e_chips)
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^'.. edi.e_chips ..' Chips',
+		{message = '^'.. edi.e_chips ,
 		edition = true,
 		e_chips = true})
 	end
@@ -905,7 +1075,7 @@ if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(2, edi.ee_chips))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^^'.. edi.ee_chips ..' Chips',
+		{message = '^^'.. edi.ee_chips ,
 		edition = true,
 		ee_chips = true})
 	end
@@ -913,7 +1083,7 @@ if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(3, edi.eee_chips))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^^^'.. edi.eee_chips ..' Chips',
+		{message = '^^^'.. edi.eee_chips ,
 		edition = true,
 		eee_chips = true})
 	end
@@ -921,7 +1091,7 @@ if scoring_hand and scoring_hand[i] and scoring_hand[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(edi.hyper_chips[1], edi.hyper_chips[2]))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = (edi.hyper_chips[1] > 5 and ('{' .. edi.hyper_chips[1] .. '}') or string.rep('^', edi.hyper_chips[1])) .. edi.hyper_chips[2] ..' Chips',
+		{message = (edi.hyper_chips[1] > 5 and ('{' .. edi.hyper_chips[1] .. '}') or string.rep('^', edi.hyper_chips[1])) .. edi.hyper_chips[2] ,
 		edition = true,
 		eee_chips = true})
 	end
@@ -984,7 +1154,7 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 		hand_chips = mod_chips(hand_chips * edi.x_chips)
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = 'X'.. edi.x_chips ..' Chips',
+		{message = 'X'.. edi.x_chips ,
 		edition = true,
 		x_chips = true})
 	end
@@ -992,7 +1162,7 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 		hand_chips = mod_chips(hand_chips ^ edi.e_chips)
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^'.. edi.e_chips ..' Chips',
+		{message = '^'.. edi.e_chips ,
 		edition = true,
 		e_chips = true})
 	end
@@ -1000,7 +1170,7 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(2, edi.ee_chips))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^^'.. edi.ee_chips ..' Chips',
+		{message = '^^'.. edi.ee_chips ,
 		edition = true,
 		ee_chips = true})
 	end
@@ -1008,7 +1178,7 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(3, edi.eee_chips))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = '^^^'.. edi.eee_chips ..' Chips',
+		{message = '^^^'.. edi.eee_chips ,
 		edition = true,
 		eee_chips = true})
 	end
@@ -1016,7 +1186,7 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 		hand_chips = mod_chips(hand_chips:arrow(edi.hyper_chips[1], edi.hyper_chips[2]))
 		update_hand_text({delay = 0}, {chips = hand_chips})
 		card_eval_status_text(trg, 'extra', nil, percent, nil,
-		{message = (edi.hyper_chips[1] > 5 and ('{' .. edi.hyper_chips[1] .. '}') or string.rep('^', edi.hyper_chips[1])) .. edi.hyper_chips[2] ..' Chips',
+		{message = (edi.hyper_chips[1] > 5 and ('{' .. edi.hyper_chips[1] .. '}') or string.rep('^', edi.hyper_chips[1])) .. edi.hyper_chips[2] ,
 		edition = true,
 		eee_chips = true})
 	end
@@ -1055,119 +1225,6 @@ if G.jokers.cards and G.jokers.cards[i] and G.jokers.cards[i].edition then
 end
 edition_effects.jokers.x_mult_mod = nil
 '''
-
-# replace save manager with version that works with Talisman saves
-[[patches]]
-[patches.pattern]
-target = "game.lua"
-pattern = "thread = love.thread.newThread('engine/save_manager.lua'),"
-position = "at"
-payload = '''
-thread = love.thread.newThread([[require "love.system" 
-
-if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
-
-require "love.timer"
-require "love.thread"
-require 'love.filesystem'
-require "engine/object"
-require "engine/string_packer"
-
---vars needed for sound manager thread
-CHANNEL = love.thread.getChannel("save_request")
-
-talisman = "]] .. Talisman.config_file.break_infinity .. [["
-
---untested
-function tal_compress_and_save(_file, _data)
-  local save_string = type(_data) == 'table' and STR_PACK(_data) or _data
-  local fallback_save = STR_PACK({GAME = {won = true}}) --just bare minimum to not crash, maybe eventually display some info?
-  if talisman == 'bignumber' then
-    fallback_save = "if not BigMeta then " .. fallback_save
-  elseif talisman == 'omeganum' then
-    fallback_save = "if not OmegaMeta then " .. fallback_save
-  else
-    fallback_save = "if BigMeta or OmegaMeta then " .. fallback_save
-  end
-  fallback_save = fallback_save .. " end"
-  save_string = fallback_save .. " " .. save_string
-  save_string = love.data.compress('string', 'deflate', save_string, 1)
-  love.filesystem.write(_file,save_string)
-end
-
- while true do
-    --Monitor the channel for any new requests
-    local request = CHANNEL:demand() -- Value from channel
-    if request then
-        --Saves progress for settings, unlocks, alerts and discoveries
-        if request.type == 'save_progress' then
-            local prefix_profile = (request.save_progress.SETTINGS.profile or 1)..''
-            if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-            prefix_profile = prefix_profile..'/'
-
-            if not love.filesystem.getInfo(prefix_profile..'meta.jkr') then
-                love.filesystem.append( prefix_profile..'meta.jkr', 'return {}' )
-            end
-
-            local meta = STR_UNPACK(get_compressed(prefix_profile..'meta.jkr') or 'return {}')
-            meta.unlocked = meta.unlocked or {}
-            meta.discovered = meta.discovered or {}
-            meta.alerted = meta.alerted or {}
-
-            local _append = false
-
-            for k, v in pairs(request.save_progress.UDA) do
-                if string.find(v, 'u') and not meta.unlocked[k] then 
-                    meta.unlocked[k] = true
-                    _append = true
-                end
-                if string.find(v, 'd') and not meta.discovered[k] then 
-                    meta.discovered[k] = true
-                    _append = true
-                end
-                if string.find(v, 'a') and not meta.alerted[k] then 
-                    meta.alerted[k] = true
-                    _append = true
-                end
-            end
-            if _append then compress_and_save( prefix_profile..'meta.jkr', STR_PACK(meta)) end
-
-            compress_and_save('settings.jkr', request.save_progress.SETTINGS)
-            compress_and_save(prefix_profile..'profile.jkr', request.save_progress.PROFILE)
-
-            CHANNEL:push('done')
-        --Saves the settings file
-        elseif request.type == 'save_settings' then 
-            compress_and_save('settings.jkr', request.save_settings)
-            compress_and_save(request.profile_num..'/profile.jkr', request.save_profile)
-            --Saves the metrics file
-        elseif request.type == 'save_metrics' then 
-            compress_and_save('metrics.jkr', request.save_metrics)
-        --Saves any notifications
-        elseif request.type == 'save_notify' then 
-            local prefix_profile = (request.profile_num or 1)..''
-            if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-            prefix_profile = prefix_profile..'/'
-
-            if not love.filesystem.getInfo(prefix_profile..'unlock_notify.jkr') then love.filesystem.append( prefix_profile..'unlock_notify.jkr', '') end
-            local unlock_notify = get_compressed(prefix_profile..'unlock_notify.jkr') or ''
-
-            if request.save_notify and not string.find(unlock_notify, request.save_notify) then 
-                compress_and_save( prefix_profile..'unlock_notify.jkr', unlock_notify..request.save_notify..'\n')
-            end
-
-        --Saves the run
-        elseif request.type == 'save_run' then 
-            local prefix_profile = (request.profile_num or 1)..''
-            if not love.filesystem.getInfo(prefix_profile) then love.filesystem.createDirectory( prefix_profile ) end
-            prefix_profile = prefix_profile..'/'
-
-            tal_compress_and_save(prefix_profile..'save.jkr', request.save_table)
-        end
-    end
-end]]),
-'''
-match_indent = true
 
 # naneinf crash fixes
 [[patches]]
@@ -1225,3 +1282,69 @@ if not SMODS and type(subpart) ~= 'string' then
 end
 '''
 match_indent = false
+
+# Patch save manager to do Talisman things
+[[patches]]
+[patches.pattern]
+target = 'engine/save_manager.lua'
+pattern = 'CHANNEL = love.thread.getChannel("save_request")'
+position = 'after'
+payload = '''
+function tal_compress_and_save(_file, _data, talisman)
+  local save_string = type(_data) == 'table' and STR_PACK(_data) or _data
+  local fallback_save = STR_PACK({GAME = {won = true}}) --just bare minimum to not crash, maybe eventually display some info?
+  if talisman == 'bignumber' then
+    fallback_save = "if not BigMeta then " .. fallback_save
+  elseif talisman == 'omeganum' then
+    fallback_save = "if not OmegaMeta then " .. fallback_save
+  else
+    fallback_save = "if BigMeta or OmegaMeta then " .. fallback_save
+  end
+  fallback_save = fallback_save .. " end"
+  save_string = fallback_save .. " " .. save_string
+  save_string = love.data.compress('string', 'deflate', save_string, 1)
+  love.filesystem.write(_file,save_string)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'engine/save_manager.lua'
+pattern = "compress_and_save(prefix_profile..'save.jkr', request.save_table)"
+position = 'at'
+payload = "tal_compress_and_save(prefix_profile..'save.jkr', request.save_table, request.talisman)"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "type = 'save_run',"
+position = 'after'
+payload = 'talisman = Talisman.config_file.break_infinity,'
+match_indent = true
+
+# Fix some card_eval_status_text crashes
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "text = localize{type='variable',key='a_chips'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}"
+position = 'at'
+payload = "text = localize{type='variable',key='a_chips'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "text = localize{type='variable',key='a_mult'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}"
+position = 'at'
+payload = "text = localize{type='variable',key='a_mult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "text = localize{type='variable',key='a_xmult'..(amt<0 and '_minus' or ''),vars={math.abs(amt)}}"
+position = 'at'
+payload = "text = localize{type='variable',key='a_xmult'..(to_big(amt)<to_big(0) and '_minus' or ''),vars={math.abs(amt)}}"
+match_indent = true

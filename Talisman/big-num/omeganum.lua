@@ -718,7 +718,7 @@ function Big:div(other)
         return Big:create(R.NaN)
     end
     if (other:eq(R.ZERO)) then
-        Big:create(R.POSITIVE_INFINITY)
+        return Big:create(R.POSITIVE_INFINITY)
     end
     if (other:eq(R.ONE)) then
         return x:clone()
@@ -849,7 +849,9 @@ function Big:pow(other)
         return self:abs():pow(other):neg()
     end
     if (self:lt(R.ZERO)) then
-        return Big:create(R.NaN)
+        --return Big:create(R.NaN)
+        --Override this interaction to always make positive numbers
+        return self:abs():pow(other)
     end
     if (self:eq(R.ONE)) then
         return Big:create(R.ONE)
@@ -1330,6 +1332,11 @@ end
 
 function OmegaMeta.__tostring(b)
     return number_format(b)
+end
+
+function OmegaMeta.__concat(a, b)
+    a = Big:create(a)
+    return tostring(a) .. tostring(b)
 end
 
 
