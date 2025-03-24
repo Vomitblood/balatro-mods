@@ -449,7 +449,7 @@ if JokerDisplay then
 		},
 		text_config = { colour = G.C.CHIPS },
 		calc_function = function(card)
-			card.joker_display_values.stat = card.ability.extra.chips * (GLOBAL_cry_member_count or 1)
+			card.joker_display_values.stat = card.ability.extra.chips * Cryptid.member_count
 		end,
 	}
 	JokerDisplay.Definitions["j_cry_redeo"] = {
@@ -578,7 +578,7 @@ if JokerDisplay then
 				e_mult = (
 					card.ability.name == "Jolly Joker"
 					or card.edition and card.edition.key == "e_cry_m"
-					or safe_get(card, "pools", "M")
+					or Cryptid.safe_get(card, "pools", "M")
 				)
 						and mod_joker.ability.extra.mult * JokerDisplay.calculate_joker_triggers(mod_joker)
 					or nil,
@@ -1753,8 +1753,7 @@ if JokerDisplay then
 			},
 		},
 		calc_function = function(card)
-			card.joker_display_values.stat =
-				math.max(1, (card.ability.extra.Xmult_mod * (GLOBAL_cry_member_count or 1)))
+			card.joker_display_values.stat = math.max(1, card.ability.extra.Xmult_mod * Cryptid.member_count)
 		end,
 	}
 	JokerDisplay.Definitions["j_cry_cryptidmoment"] = {
@@ -1806,7 +1805,7 @@ if JokerDisplay then
 			{
 				border_nodes = {
 					{ text = "X" },
-					{ ref_table = "card.ability.extra", ref_value = "mult", retrigger_type = "exp" },
+					{ ref_table = "card.ability.extra", ref_value = "monster", retrigger_type = "exp" },
 				},
 			},
 		},

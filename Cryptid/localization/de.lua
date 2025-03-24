@@ -9,6 +9,21 @@ return {
 					"von {C:attention}jedem{} Deck",
 				},
 			},
+			b_cry_antimatter_balanced = {
+				name = "Antimaterie Deck",
+				text = {
+					"Hat die {C:legendary,E:1}positiven Effekte{}",
+					"von {C:attention}jedem{} Deck",
+					"mit dem du {C:gold}Goldenen Einsatz{} gewonnen hast",
+				},
+			},
+			b_cry_beige = {
+				name = "Beiges Deck",
+				text = {
+					"{C:attention}Gewöhnliche{} Joker haben",
+					"{C:attention}vierfache{} Werte",
+				},
+			},
 			b_cry_beta = {
 				name = "Nostalgisches Deck",
 				text = {
@@ -604,6 +619,16 @@ return {
 					"{C:inactive,s:0.8}Kopiert keine Nostalgischen Googol Play Karten{}",
 				},
 			},
+			j_cry_altgoogol_balanced = {
+				name = "Nostalgische Googol Play Karte",
+				text = {
+					"Verkaufe diese Karte um",
+					"{C:attention}#1#{} Kopie#<n>1# von dem linkesten {C:attention}Joker{} zu machen",
+					"{C:inactive,s:0.8}Kopiert keine Nostalgischen Googol Play Karten{}",
+					"{C:inactive}(Muss Platz haben){}",
+					--todo: add "removes negative from copy" like Ankh/Invis Joker
+				},
+			},
 			j_cry_antennastoheaven = {
 				name = "...Wie Antennen zum Himmel",
 				text = {
@@ -772,6 +797,20 @@ return {
 					"{C:attention}Löse{} alle {C:attention}Jokers{} auf der linken Seite",
 					"{C:attention}so oft neu aus{} wie du nicht-{C:blue}Gewöhnliche{C:attention} Joker{}",
 					"auf der rechten Seite hast",
+				},
+			},
+			j_cry_canvas_balanced = {
+				name = "Leinwand",
+				text = {
+					"{C:attention}Löse{} alle {C:attention}Jokers{} auf der linken Seite",
+					"{C:attention}so oft neu aus{} wie du nicht-{C:blue}Gewöhnliche{C:attention} Joker{}",
+					"auf der rechten Seite hast",
+					"{C:inactive}(Up to 2 retriggers)",
+				},
+				unlock = {
+					"Löse einen {C:attention}Joker",
+					"{C:attention}114{} mal in einer",
+					"Hand erneut aus.",
 				},
 			},
 			j_cry_caramel = {
@@ -1254,6 +1293,14 @@ return {
 					"{C:inactive,s:0.8}Seems legit...{}",
 				},
 			},
+			j_cry_jtron = {
+				name = "Jimbo-tron 9000",
+				text = {
+					"Dieser Joker bekommt {X:dark_edition,C:white} ^#1# {} Mult",
+					"für jeden Standard {C:attention}Joker{}",
+					"{C:inactive}(Momentan {X:dark_edition,C:white}^#2#{C:inactive} Mult)",
+				},
+			},
 			j_cry_kidnap = {
 				name = "Entführung",
 				text = {
@@ -1286,6 +1333,14 @@ return {
 					"Füge {C:dark_edition}Polychrome{} zu",
 					"einem zufälligen {C:attention}Joker{} hinzu",
 					"wenn {C:attention}Boss Blind{} besiegt wird",
+				},
+			},
+			j_cry_lebaron_james = {
+				name = "LeBaron James",
+				text = {
+					"Gespeilte und gewertete {C:attention}Könige{} geben",
+					"{C:attention}+#1#{} Handgröße für diese Runde",
+					"und lösen {C:attention}in der Hand{} Effekte aus",
 				},
 			},
 			j_cry_lightupthenight = {
@@ -1418,7 +1473,7 @@ return {
 					"{X:mult,C:white}X#1#{} Mult für jedes Mitglied",
 					"im {C:attention}Cryptid Discord{}",
 					"{C:inactive}(Momentan {X:mult,C:white}X#2#{C:inactive} Mult)",
-					"{C:blue,s:0.7}https://discord.gg/eUf9Ur6RyB{}",
+					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
 				},
 			},
 			j_cry_membershipcardtwo = {
@@ -1427,7 +1482,16 @@ return {
 					"{C:chips}+#1#{} Chips für jedes Mitglied",
 					"im {C:attention}Cryptid Discord{}",
 					"{C:inactive}(Momentan {C:chips}+#2#{C:inactive} Chips)",
-					"{C:blue,s:0.7}https://discord.gg/eUf9Ur6RyB{}",
+					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
+				},
+			},
+			j_cry_membershipcardtwo_balanced = {
+				name = "Alte Mitgliedskarte", --Could probably have a diff Name imo
+				text = {
+					"{C:chips}+#1#{} Chip#<s>1# für jedes Mitglied",
+					"im {C:attention}Cryptid Discord{}",
+					"{C:inactive}(Momentan {C:chips}+#2#{C:inactive} Chip#<s>2#)",
+					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
 				},
 			},
 			j_cry_meteor = {
@@ -1833,6 +1897,20 @@ return {
 					"{C:attention}+#1#{} Karte im Shop",
 				},
 			},
+			j_cry_soccer_balanced = {
+				name = "Einer für Alle", --changed the name from latin because this isn't exotic
+				text = {
+					"{C:attention}+#1#{} Joker Slot#<s>1#",
+					"{C:attention}+#1#{} Booster Packer Slot#<s>1#",
+					"{C:attention}+#1#{} Handgröße",
+					"{C:attention}+#1#{} Verbrauchsgegenstand Slot#<s>1#",
+					"{C:attention}+#1#{} Karte#<n>1# im Shop",
+				},
+				unlock = {
+					"Gewinne einen Durchlauf",
+					"mit nur {C:attention}High Card",
+				},
+			},
 			j_cry_fleshpanopticon = {
 				name = "Fleischpanoptikum",
 				text = {
@@ -1905,6 +1983,14 @@ return {
 				name = "Supercell",
 				text = {
 					"{C:chips}+#1#{} Chips, {C:mult}+#1#{} Mult,",
+					"{X:chips,C:white}X#2#{} Chips, {X:mult,C:white}X#2#{} Mult",
+					"Verdiene {C:money}$#3#{} am",
+					"Ende der Runde",
+				},
+			},
+			j_cry_supercell_balanced = {
+				name = "Supercell",
+				text = {
 					"{X:chips,C:white}X#2#{} Chips, {X:mult,C:white}X#2#{} Mult",
 					"Verdiene {C:money}$#3#{} am",
 					"Ende der Runde",
@@ -2220,6 +2306,29 @@ return {
 			},
 		},
 		Sleeve = {
+			sleeve_cry_beige_sleeve = {
+				name = "Beige Hülle",
+				text = {
+					"{C:attention}Gewöhnliche{} Joker haben",
+					"{C:attention}vierfache{} Werte",
+				},
+			},
+			sleeve_cry_beige_sleeve_alt = {
+				name = "Beige Hülle",
+				text = {
+					"{C:attention}Ungewöhnliche{} Joker haben",
+					"{C:attention}vierfache{} Werte",
+				},
+			},
+			sleeve_cry_beta_sleeve = {
+				name = "Nostalgische Hülle",
+				text = {
+					"{C:attention}Joker{} und {C:attention}Verbrauchgegenstände{}",
+					"Slots sind {C:attention}zusammengefasst",
+					"{C:attention}Nostalgische{} Blinds ersetzen",
+					"ihre neuen Versionen.",
+				},
+			},
 			sleeve_cry_bountiful_sleeve = {
 				name = "Größzügige Hülle",
 				text = {
@@ -2269,6 +2378,15 @@ return {
 					"{C:attention,T:v_overstock_plus}Überbestand Plus",
 				},
 			},
+			sleeve_cry_glowing_sleeve = {
+				name = "Glühende Hülle",
+				text = {
+					"Multipliziere die Werte",
+					"aller Joker mit {X:dark_edition,C:white} X1.25 {}",
+					"wenn die Boss Blind besiegt wurde.",
+					"{X:cry_jolly,C:white,s:0.8} Jolly#1#Open#1#Winner#1#-#1#wawa#1#person",
+				},
+			},
 			sleeve_cry_infinite_sleeve = {
 				name = "Unendliche Hülle",
 				text = {
@@ -2298,6 +2416,15 @@ return {
 					"Starte mit einem {C:eternal}Ewigen{} {C:attention,T:j_cry_chocolate_dice}Schokoladenwürfel",
 					"Nach jeder {C:attention}Ante{}, erstelle eine",
 					"{C:cry_candy}Süßigkeit{} oder einen {X:cry_cursed,C:white}Verfluchten{} Joker",
+				},
+			},
+			sleeve_cry_very_fair_sleeve = {
+				name = "Sehr Faire Hülle",
+				text = {
+					"{C:blue}-2{} Hände, {C:red}-2{} Abwürfe",
+					"jede Runde",
+					"{C:attention}Gutscheine{} erscheinen",
+					"nicht mehr im Shop",
 				},
 			},
 			sleeve_cry_wormhole_sleeve = {
@@ -3443,6 +3570,72 @@ return {
 		},
 	},
 	misc = {
+		tutorial = {
+			cry_intro_1 = {
+				"Hallo, ich bin {C:attention}Joseph J. Joker{}!",
+				"Wilkommen zu {C:cry_exotic,E:1}Cryptid{}!",
+			},
+			cry_intro_2 = {
+				"Sieht aus als hättest du auf diesem Profil",
+				"noch nie {C:cry_exotic,E:1}Cryptid{} genutzt.",
+				"Lass mich dir zeigen wie es funktioniert!",
+			},
+			cry_intro_3 = {
+				"*wächst hände*",
+			},
+			cry_intro_4 = {
+				"Es ist schwer dieses Mod in nur",
+				"einigen Sätzen zu beschreiben, aber was ich sagen kann",
+				"ist, dass es jetzt {C:cry_exotic,E:1}wild{} wird!",
+				"Das ist nicht das selbe {C:attention}Joker Poker{} das du kennst...",
+			},
+			cry_intro_5 = {
+				"Wie du von diesen {C:cry_ascendant}Gamesets{}",
+				"sehen kannst, mag ich den Buchstaben {C:attention}M{}.",
+				"Wähle ein Gameset das ich erklähren soll...",
+				"{s:0.8}Achtung: An Gamesets wird immernoch gearbeitet.",
+				"{s:0.8}Erwarte regelmäßige Änderungen!",
+			},
+			cry_modest_1 = {
+				"Suchst du eine Erfahrung ähnlich zu Vanilla?",
+				"Dann ist das {C:cry_ascendant}Modest{} Gameset für dich!",
+			},
+			cry_modest_2 = {
+				"Aber halte trotzdem die Augen offen für all",
+				"den Schabernack in Cryptid! Du weißt nie",
+				"was du in der nächsten Runde findest...",
+			},
+			cry_mainline_1 = {
+				"Willst du das Spiel gerne {E:1,C:attention}zerstören{}? Gute Nachichten!",
+				"Du kannst es machen ohne komplett durchzudrehen.",
+			},
+			cry_mainline_2 = {
+				"Hier ist es immernoch verrückt, aber du hast die",
+				"Chance das {C:cry_ascendant}Fortschrittsystem{} zu",
+				"erfahren. Aber werde nicht zu gemütlich...",
+			},
+			cry_mainline_3 = {
+				"Weil du stärker sein wirst,",
+				"habe ich einige {E:1,C:dark_edition}Bosse{} die",
+				"dich deine Wahl bereuen lassen könnten.",
+			},
+			cry_madness_1 = {
+				"Willst du deine Festplatte komplett {C:red,E:1}vernichten{}?",
+				"Oh, was ein Spaß! Das {C:cry_ascendant}Madness{} Gameset sagt",
+				"'Balance? {E:1,C:red}WAS IST DAS DEN!?{}'",
+			},
+			cry_madness_2 = {
+				"Ich habe viele schlaflose Wochen, {C:green}Mountain Dew{}-angetriebene",
+				"Nächte verbracht um sicherzustellen, dass dieses Gameset für dich",
+				"{C:cry_ascendant}PERFEKT BALANCIERT{} ist!",
+			},
+			cry_madness_3 = {
+				"Du beginnst mit allem freigeschaltet, also",
+				"kannst du die {C:red,E:1}volle Macht{} von Cryptid sofort nutzen!",
+				"Sei nur vorsichtig, dass das Spiel nicht {C:attention,E:1}abstürzt{},",
+				"da das Warscheinlich passiert bevor du verlierst...",
+			},
+		},
 		poker_hands = {
 			["cry_Bulwark"] = "Bollwerk",
 			["cry_Clusterfuck"] = "Clusterfuck",
@@ -3633,6 +3826,26 @@ return {
 			cry_notif_jimball_d1 = 'Jimball spielt den Song "Funkytown",',
 			cry_notif_jimball_d2 = "welcher urheberrechtlich geschützt ist und nicht",
 			cry_notif_jimball_d3 = "für Streams und Videos genutzt werden kann.",
+
+			cry_gameset_explanation = {
+				"Wähle eine Gameset Konfiguartion",
+				"für diese Karte.",
+			},
+			cry_gameset_disabled = "Deaktiviert",
+			cry_gameset_modest = "Modest",
+			cry_gameset_mainline = "Mainline",
+			cry_gameset_madness = "Madness",
+			cry_gameset_custom = "Modifiziert",
+			cry_gameset_exp = "Experimentel",
+			cry_gameset_exp_modest = "Experimentel (Modest)",
+			cry_gameset_exp_mainline = "Experimentel (Mainline)",
+			cry_gameset_exp_madness = "Experimentel (Madness)",
+
+			cry_view_set_contents = "Siehe Gegenstände im set",
+
+			b_reset_gameset_modest = "Setzt Gameset Konfiguaration zurück (Modest)",
+			b_reset_gameset_mainline = "Setzt Gameset Konfiguaration zurück (Mainline)",
+			b_reset_gameset_madness = "Setzt Gameset Konfiguaration zurück (Madness)",
 		},
 		labels = {
 			food_jokers = "Essen Joker",
@@ -3804,9 +4017,9 @@ return {
 			{ "VERSUCHST SPÄTER NOCHMAL", "HINWEIS: DU WIRST NICHT", "GENUG GELD HABEN" },
 			{ "HÄ?", '"GUTSCHEINE"?', "DAS IST NICHTMAL EIN WORT..." },
 			{ 'HALTE "R"', "UM ALLE GUTSCHEINE", "NACHZUFÜLLEN" },
-			{ "WÜSSTEST DU?", "ALT+F4 DRÜCKEN", "GIBT KOSTENLOSE GUTSCHEINE!" },
+			{ "WUSSTEST DU?", "ALT+F4 DRÜCKEN", "GIBT KOSTENLOSE GUTSCHEINE!" },
 			{ "TUHT MIR LEID,", "ES GIBT KEINE GUTSCHEINE", "WEGEN BUDGETVERKÜRZUNGEN" },
-			{ "RUFE 1-600-JIMBO AN", "UM DEINE ERFAHRUNG MIR", "GUTSCHEINEN ZU BEWERTEN" },
+			{ "RUFE 1-600-JIMBO AN", "UM DEINE ERFAHRUNG MIT", "GUTSCHEINEN ZU BEWERTEN" },
 			{ "BESIEGE", "ANTE 39 BOSS BLIND", "ZUM NACHFÜLLEN" },
 			{ "ZAUBERTRICK", "ICH HABE DIESEN GUTSCHEIN", "VERSCHWINDEN LASSEN" },
 			{ "WARUM IST EIN", "GUTSCHEIN WIE EIN", "SCHREIBTISCH?" },
@@ -3827,11 +4040,11 @@ return {
 			{ "ES GIBT KEINEN", "WEINACHTSMANN", "UND AUCH KEINE GUTSCHEINE" },
 			{ "", "GUTNEIN", "" },
 			{ "DU", "HAST GERADE", "DAS SPIEL VERLOREN" },
-			{ "CAN ICH DIR IN DIESEN", "IN DIESEN SCHWEREN ZEITEN", "EIN SCHÖNES EI ANBIETEN?" },
-			{ "BERÜHRE ETWAS GRASS", "ANSTATT DIESES", "DECK ZU BENUZEN" },
+			{ "KANN ICH DIR IN DIESEN", "IN DIESEN SCHWEREN ZEITEN", "EIN SCHÖNES EI ANBIETEN?" },
+			{ "BERÜHRE ETWAS GRASS", "ANSTATT DIESES", "DECK ZU BENUTZEN" },
 			{ "DU KÖNNTEST JETZT", "GERADE MIT DEM BLAUEN", "DECK SPEILEN" },
 			{ "KOSTENLOSE EXOTISCHE JOKER", "HOHLE SIE BEVOR", "ES ZU SPÄT IST (ausverkauft)" },
-			{ "DU KANNST BEWEISEN, DASS", "ICH FALSCH LIEGE INDEM", "DU DEN UNSICHBAREN GUTSCHEIN KAUFST" },
+			{ "DU KANNST BEWEISEN, DASS", "ICH FALSCH LIEGE INDEM", "DU DEN UNSICHTBAREN GUTSCHEIN KAUFST" },
 			{ "", "keine gutscheine?", "" },
 			{
 				"siehst du diese werbung?",
