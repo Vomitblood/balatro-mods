@@ -167,7 +167,7 @@ return {
 				name = "Die Uhr",
 				text = {
 					"+0.1X Blindgröße für alle",
-					"3 Sekunden, die du in dieser Ante verbringst.",
+					"12 Sekunden, die du in dieser Ante verbringst.",
 				},
 			},
 			bl_cry_hammer = {
@@ -195,7 +195,7 @@ return {
 				name = "Lavendelschleife",
 				text = {
 					"1.25X Blindgröße für alle",
-					"1.5 Sekunden, die du in dieser Runde verbringst",
+					"6 Sekunden, die du in dieser Runde verbringst",
 				},
 			},
 			bl_cry_obsidian_orb = {
@@ -1304,6 +1304,7 @@ return {
 			j_cry_kidnap = {
 				name = "Entführung",
 				text = {
+					"{C:red}Outdated Description{}",
 					"Verdiene {C:money}$#2#{} am Ende der Runde",
 					"Erhöhe Auszahlung um {C:money}$#1#{}",
 					"wenn ein {C:attention}Mult Typ{} oder",

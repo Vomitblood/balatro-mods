@@ -7,6 +7,11 @@ return {
 					"Applies the {C:legendary,E:1}upsides{}",
 					"of {C:attention}every{} deck",
 				},
+				unlock = {
+					"Win a run",
+					"with {C:attention}Blank Deck",
+					"on {C:attention}Gold Stake",
+				},
 			},
 			b_cry_antimatter_balanced = {
 				name = "Antimatter Deck",
@@ -22,6 +27,11 @@ return {
 					"{C:attention}Common{} Jokers have",
 					"{C:attention}quadrupled{} values",
 				},
+				unlock = {
+					"Discover at least",
+					"{C:attention}200{} items from",
+					"your collection",
+				},
 			},
 			b_cry_beta = {
 				name = "Nostalgic Deck",
@@ -30,6 +40,10 @@ return {
 					"slots are {C:attention}combined",
 					"{C:attention}Nostalgic{} Blinds replace",
 					"their updated Blind",
+				},
+				unlock = {
+					"Win a run",
+					"on {C:attention}Pink Stake",
 				},
 			},
 			b_cry_blank = {
@@ -44,12 +58,19 @@ return {
 					"After {C:blue}Play{} or {C:red}Discard{},",
 					"always draw {C:attention}5{} cards",
 				},
+				unlock = {
+					"Beat {C:attention}The Serpent",
+					"without {C:red}discarding",
+				},
 			},
 			b_cry_CCD = {
 				name = "CCD Deck",
 				text = {
 					"Every card is also",
 					"a {C:attention}random{} consumable",
+				},
+				unlock = {
+					"Use {C:spectral}Hammerspace",
 				},
 			},
 			b_cry_conveyor = {
@@ -60,6 +81,9 @@ return {
 					"{C:attention}duplicate{} rightmost Joker",
 					"and {C:attention}destroy{} leftmost Joker",
 				},
+				unlock = {
+					"Use {C:spectral}Analog",
+				},
 			},
 			b_cry_critical = {
 				name = "Critical Deck",
@@ -67,6 +91,9 @@ return {
 					"After each hand played,",
 					"{C:green}#1# in 4{} chance for {X:dark_edition,C:white} ^2 {} Mult",
 					"{C:green}#1# in 8{} chance for {X:dark_edition,C:white} ^0.5 {} Mult",
+				},
+				unlock = {
+					"Obtain a {C:attention}Rigged Joker",
 				},
 			},
 			b_cry_e_deck = {
@@ -76,6 +103,10 @@ return {
 					"Cards cannot change editions",
 					"{C:inactive}(Click to edit)",
 				},
+				unlock = {
+					"Discover every",
+					"{C:dark_edition}Edition",
+				},
 			},
 			b_cry_encoded = {
 				name = "Encoded Deck",
@@ -83,6 +114,9 @@ return {
 					"Start with a {C:cry_code,T:j_cry_CodeJoker}Code Joker{}",
 					"and a {C:cry_code,T:j_cry_copypaste}Copy/Paste{}",
 					"Only {C:cry_code}Code Cards{} appear in shop",
+				},
+				unlock = {
+					"Use {C:spectral}POINTER://",
 				},
 			},
 			b_cry_equilibrium = {
@@ -94,6 +128,10 @@ return {
 					"start run with",
 					"{C:attention,T:v_overstock_plus}Overstock Plus",
 				},
+				unlock = {
+					"Have {C:attention}100 Jokers",
+					"at the same time",
+				},
 			},
 			b_cry_et_deck = {
 				name = "Enhancement Deck",
@@ -101,6 +139,9 @@ return {
 					"All {C:attention}playing cards{}",
 					"are {C:attention}#1#{}(s)",
 					"{C:inactive}(Click to edit)",
+				},
+				unlock = {
+					"Use {C:spectral}Vacuum",
 				},
 			},
 			b_cry_glowing = {
@@ -111,6 +152,10 @@ return {
 					"when Boss Blind is defeated",
 					"{X:cry_jolly,C:white,s:0.8} Jolly#1#Open#1#Winner#1#-#1#wawa#1#person", --peak loc_vars right here
 				},
+				unlock = {
+					"Win a run",
+					"with {C:attention}Beige Deck",
+				},
 			},
 			b_cry_infinite = {
 				name = "Infinite Deck",
@@ -118,6 +163,10 @@ return {
 					"You can select {C:attention}any",
 					"number of cards",
 					"{C:attention}+1{} hand size",
+				},
+				unlock = {
+					"Play a hand containing",
+					"{C:attention}6{} or more cards",
 				},
 			},
 			b_cry_misprint = {
@@ -127,6 +176,9 @@ return {
 					"and poker hands",
 					"are {C:attention}randomized",
 				},
+				unlock = {
+					"Obtain a {C:dark_edition}Glitched{C:attention} Joker",
+				},
 			},
 			b_cry_redeemed = {
 				name = "Redeemed Deck",
@@ -134,12 +186,19 @@ return {
 					"When a {C:attention}Voucher{} is purchased,",
 					"gain its {C:attention}extra tiers",
 				},
+				unlock = {
+					"Discover every",
+					"{C:attention}Voucher",
+				},
 			},
 			b_cry_sk_deck = {
 				name = "Sticker Deck",
 				text = {
 					"All cards are {C:attention}#1#{}",
 					"{C:inactive}(Click to edit)",
+				},
+				unlock = {
+					"Use {C:spectral}Lock",
 				},
 			},
 			b_cry_sl_deck = {
@@ -149,6 +208,9 @@ return {
 					"Cards cannot change seals",
 					"{C:inactive}(Click to edit)",
 				},
+				unlock = {
+					"Use {C:spectral}Typhoon",
+				},
 			},
 			b_cry_spooky = {
 				name = "Spooky Deck",
@@ -157,6 +219,9 @@ return {
 					"After each {C:attention}Ante{}, create a",
 					"{C:cry_candy}Candy{} or {X:cry_cursed,C:white}Cursed{} Joker",
 				},
+				unlock = {
+					"Obtain a {C:cry_candy}Candy{C:attention} Joker",
+				},
 			},
 			b_cry_st_deck = {
 				name = "Suit Deck",
@@ -164,6 +229,9 @@ return {
 					"All playing cards are {C:dark_edition}#1#",
 					"and cannot change suits",
 					"{C:inactive}(Click to edit)",
+				},
+				unlock = {
+					"Use {C:spectral}Replica",
 				},
 			},
 			b_cry_very_fair = {
@@ -174,6 +242,10 @@ return {
 					"{C:attention}Vouchers{} no longer",
 					"appear in the shop",
 				},
+				unlock = {
+					"Win a run",
+					"with {C:attention}Blank Deck",
+				},
 			},
 			b_cry_wormhole = {
 				name = "Wormhole Deck",
@@ -183,6 +255,9 @@ return {
 					"likely to be {C:dark_edition}Negative",
 					"{C:attention}-2{} Joker slots",
 				},
+				unlock = {
+					"Obtain an {C:cry_exotic}Exotic{C:attention} Joker",
+				},
 			},
 			b_cry_legendary = {
 				name = "Legendary Deck",
@@ -190,6 +265,10 @@ return {
 					"Start with a {C:legendary}Legendary{C:legendary} Joker",
 					"{C:green}1 in 5{} chance to create another",
 					"when Boss Blind is defeated {C:inactive}(must have room){}",
+				},
+				unlock = {
+					"Have {C:attention}2 Legendary Jokers",
+					"at the same time",
 				},
 			},
 		},
@@ -205,7 +284,7 @@ return {
 				name = "The Clock",
 				text = {
 					"+0.1X blind requirements every",
-					"3 seconds spent this ante",
+					"12 seconds spent this ante",
 				},
 			},
 			bl_cry_hammer = {
@@ -233,7 +312,7 @@ return {
 				name = "Lavender Loop",
 				text = {
 					"1.25X blind requirements every",
-					"1.5 seconds spent this round",
+					"6 seconds spent this round",
 				},
 			},
 			bl_cry_obsidian_orb = {
@@ -307,6 +386,14 @@ return {
 				text = {
 					"Jokers with Epic or higher",
 					"rarity are debuffed",
+				},
+			},
+			bl_cry_scorch = {
+				name = "The Scorch",
+				text = {
+					"Must play 5 cards,",
+					"destroy played and",
+					"discarded cards",
 				},
 			},
 			bl_cry_pinkbow = {
@@ -486,8 +573,9 @@ return {
 			c_cry_patch = {
 				name = "://PATCH",
 				text = {
-					"Remove all debuffs and stickers",
+					"Remove all {C:cry_code}debuffs",
 					"from currently visible items",
+					"{C:cry_code}Resets{} shop state",
 				},
 			},
 			c_cry_payload = {
@@ -1080,6 +1168,15 @@ return {
 					"for the next {C:attention}#2#{} round#<s>2#",
 				},
 			},
+			j_cry_cat_owl = {
+				name = "Cat Owl",
+				text = {
+					"{C:attention}Lucky Cards{} are also",
+					"considered {C:attention}Echo Cards",
+					"{C:attention}Echo Cards{} are also",
+					"considered {C:attention}Lucky Cards",
+				},
+			},
 			j_cry_chad = {
 				name = "Chad",
 				text = {
@@ -1146,6 +1243,15 @@ return {
 					"{C:chips}+#1#{} Chip#<s>1#",
 					"{C:chips}-#2#{} Chip#<s>2# when",
 					"you {C:attention}click",
+				},
+			},
+			j_cry_clockwork = {
+				name = "Clockwork Joker",
+				text = {
+					"Retrigger held Steel Cards every {C:attention}#9#{} {C:inactive}(#1#){} hands",
+					"This Joker gains {X:mult,C:white}X#6#{} Mult {C:inactive}(X#5#){} every {C:attention}#10#{} {C:inactive}(#2#){} hands",
+					"Turn the first played card Steel every {C:attention}#11#{} {C:inactive}(#3#){} hands",
+					"Held Steel Cards give +{X:mult,C:white}X#8#{} Mult {C:inactive}(X#7#){} every {C:attention}#12#{} {C:inactive}(#4#){} hands",
 				},
 			},
 			j_cry_CodeJoker = {
@@ -1445,6 +1551,23 @@ return {
 					"All {C:attention}face{} cards are debuffed",
 				},
 			},
+			j_cry_eyeofhagane = {
+				name = "Eye of Hagane",
+				text = {
+					"All played {C:attention}face{} cards",
+					"become {C:attention}Steel{} cards",
+					"when scored",
+				},
+			},
+			j_cry_highfive = {
+				name = "High Five",
+				text = {
+					"If highest {C:attention}scoring rank{}",
+					"is {C:attention}5{}, convert {C:attention}all{} scoring cards",
+					"into {C:attention}5{}s",
+					"{s:0.8,C:inactive}Aces are considered 1",
+				},
+			},
 			j_cry_facile = {
 				name = "Facile",
 				text = {
@@ -1693,10 +1816,10 @@ return {
 			j_cry_kidnap = {
 				name = "Kidnapping",
 				text = {
-					"Earn {C:money}$#2#{} at end of round",
-					"Increase payout by {C:money}$#1#{}",
-					"when a {C:attention}Type Mult{} or",
-					"{C:attention}Type Chips{} Joker is sold",
+					"Earn {C:money}$#1#{} at end of round",
+					"per unique {C:attention}Type Mult{} or",
+					"{C:attention}Type Chips{} Joker sold this run",
+					"{C:inactive}(Currently {C:money}$#2#{C:inactive})",
 				},
 			},
 			j_cry_kittyprinter = {
@@ -2029,7 +2152,7 @@ return {
 				},
 			},
 			j_cry_notebook = {
-				name = "The Motebook",
+				name = "Motebook",
 				text = {
 					"{C:green} #1# in #2#{} chance to gain {C:dark_edition}+#6#{} Joker",
 					"slot#<s>6# per {C:attention}reroll{} in the shop",
@@ -2150,6 +2273,7 @@ return {
 					"{C:attention}#1#{} hand size,",
 					"increases by",
 					"{C:blue}#2#{} every round",
+					"{C:inactive}(Maximum {}{C:attention}#3#{}{C:inactive} hand size){}",
 				},
 				unlock = {
 					"Increase your {C:attention}handsize",
@@ -2673,6 +2797,14 @@ return {
 					"{C:inactive}(Currently {X:mult,C:white} X#2# {C:inactive} Mult)",
 				},
 			},
+			j_cry_wonka_bar = {
+				name = "Wonka Bar",
+				text = {
+					"Sell this card to",
+					"permanently gain {C:attention}+#1#{}",
+					"card selection limit",
+				},
+			},
 			j_cry_wrapped = {
 				name = "Wrapped Candy",
 				text = {
@@ -2817,8 +2949,8 @@ return {
 				text = {
 					"{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){}",
 					"Increase power of",
-					"{C:attention}Ascended{} hands by {X:gold,C:white}0.05{}",
-					"{C:inactive}(Currently {X:gold,C:white}X(#2#^asc){C:inactive})",
+					"{C:attention}Ascended{} hands by {X:gold,C:white}#2#{}",
+					"{C:inactive}(Currently {X:gold,C:white}X(#3#^asc){C:inactive})",
 				},
 			},
 		},
@@ -3001,7 +3133,7 @@ return {
 				name = "Conduit",
 				text = {
 					"Swap the {C:attention}editions{} of",
-					"{C:attention}2{} selected cards or {C:attention}Jokers{}",
+					"{C:attention}2{} selected playing cards or {C:attention}Jokers{}",
 				},
 			},
 			c_cry_gateway = {
@@ -4165,7 +4297,7 @@ return {
 				},
 			},
 			p_cry_empowered = {
-				name = "Spectral Pack [Empowered Tag]",
+				name = "Empowered Pack",
 				text = {
 					"Choose {C:attention}#1#{} of up to",
 					"{C:attention}#2#{C:spectral} Spectral{} card#<s>2#",
@@ -4318,6 +4450,7 @@ return {
 			["cry_Clusterfuck"] = Cryptid_config.family_mode and "Cluster" or "Clusterfuck",
 			["cry_UltPair"] = "Ultimate Pair",
 			["cry_WholeDeck"] = Cryptid_config.family_mode and "The Entire Deck" or "The Entire Fucking Deck",
+			["cry-Cluster Bulwark"] = "Clusterwark",
 		},
 		poker_hand_descriptions = {
 			["cry_Bulwark"] = {
@@ -4360,6 +4493,8 @@ return {
 			ach_cry_used_crash = "We Told You Not To",
 			ach_cry_what_have_you_done = "WHAT HAVE YOU DONE?!",
 			ach_cry_pin = "Pin of Shame",
+			ach_cry_youre_fucking_kidding = Cryptid_config.family_mode and "You Can't Be Serious"
+				or "You're Fucking Kidding",
 		},
 		achievement_descriptions = {
 			ach_cry_ace_in_crash = 'check_for_unlock({type = "ace_in_crash"})',
@@ -4383,6 +4518,7 @@ return {
 			ach_cry_used_crash = "Use ://CRASH",
 			ach_cry_what_have_you_done = "Delete or Sacrifice an Exotic Joker",
 			ach_cry_pin = "Lose a run to The Pin",
+			ach_cry_youre_fucking_kidding = "Discard " .. localize("cry_WholeDeck", "poker_hands"),
 		},
 		challenge_names = {
 			c_cry_ballin = "Ballin'",
@@ -4430,6 +4566,7 @@ return {
 			cry_mus_exotic = "Exotic Jokers (Joker in Latin by AlexZGreat)",
 			cry_mus_high_score = "High Score (Final Boss [For Your Computer] by AlexZGreat)",
 			cry_mus_alt_bg = "Background Music (by MathIsFun_)",
+			cry_force_tooltips = "Force Tooltips",
 			cry_family = "Family Friendly Mode",
 			cry_experimental = "Experimental Mode",
 
@@ -4503,6 +4640,7 @@ return {
 			cry_good_luck_ex = "Good luck!",
 			cry_sus_ex = "Impostor!",
 			cry_jolly_ex = "Jolly Up!",
+			cry_highfive_ex = "High Five!",
 			cry_m_minus = "m",
 			cry_m = "M",
 			cry_m_ex = "M!",

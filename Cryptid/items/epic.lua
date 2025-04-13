@@ -398,11 +398,6 @@ local error_joker = {
 			"set_cry_epic",
 		},
 	},
-	conflicts = {
-		mods = {
-			"jen",
-		},
-	},
 	immutable = true,
 	rarity = "cry_epic",
 	cost = 1,
@@ -599,6 +594,7 @@ local error_joker = {
 			{ string = "Jolly", colour = G.C.CRY_JOLLY },
 			{ string = "Tags", colour = G.C.RED },
 			{ string = "Cryptids", colour = G.C.SECONDARY_SET.Spectral },
+			{ string = "Glop", colour = G.C.CRY_ALTGREENGRADIENT },
 			{ string = "%%ERROR", colour = G.C.CRY_ASCENDANT }, --temp string, this will be modified
 		}
 
@@ -939,7 +935,6 @@ local double_scale = {
 	atlas = "atlasepic",
 	--todo: support jokers that scale multiple variables
 	cry_scale_mod = function(self, card, joker, orig_scale_scale, true_base, orig_scale_base, new_scale_base)
-		print(orig_scale_scale, true_base, orig_scale_base, new_scale_base)
 		if Cryptid.gameset(self) == "exp_modest" then
 			return true_base * 2
 		end
@@ -1228,11 +1223,6 @@ local curse_sob = {
 	gameset_config = {
 		modest = { cost = 20, center = { rarity = 4 } },
 	},
-	conflicts = {
-		mods = {
-			"jen",
-		},
-	},
 	rarity = "cry_epic",
 	cost = 9,
 	order = 82,
@@ -1355,7 +1345,7 @@ local bonusjoker = {
 	atlas = "atlasepic",
 	calculate = function(self, card, context)
 		if context.individual and context.cardarea == G.play then
-			if context.other_card.ability.effect == "Bonus Card" then
+			if SMODS.has_enhancement(context.other_card, "m_bonus") then
 				if
 					pseudorandom("bonusjoker")
 						< cry_prob(card.ability.cry_prob, card.ability.extra.odds, card.ability.cry_rigged) / card.ability.extra.odds
@@ -1442,7 +1432,7 @@ local multjoker = {
 	calculate = function(self, card, context)
 		if context.individual and context.cardarea == G.play then
 			if
-				context.other_card.ability.effect == "Mult Card"
+				SMODS.has_enhancement(context.other_card, "m_mult")
 				and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit
 			then
 				if
@@ -1512,7 +1502,7 @@ local goldjoker = {
 	end,
 	calculate = function(self, card, context)
 		if context.cardarea == G.play and context.individual and not context.blueprint then
-			if context.other_card.ability.effect == "Gold Card" then
+			if SMODS.has_enhancement(context.other_card, "m_gold") then
 				card.ability.extra.percent = card.ability.extra.percent + card.ability.extra.percent_mod
 				return {
 					extra = { focus = card, message = localize("k_upgrade_ex") },
@@ -1522,7 +1512,7 @@ local goldjoker = {
 			end
 		end
 		if context.individual and context.cardarea == G.play then
-			if context.other_card.ability.effect == "Gold Card" then
+			if SMODS.has_enhancement(context.other_card, "m_gold") then
 				card.ability.extra.percent = card.ability.extra.percent + card.ability.extra.percent_mod
 				return {
 					message = localize("k_upgrade_ex"),
@@ -1871,7 +1861,12 @@ local spectrogram = {
 			end
 		end
 
-		if context.retrigger_joker_check and not context.retrigger_joker and context.other_card ~= self then
+		if
+			context.retrigger_joker_check
+			and not context.retrigger_joker
+			and context.other_card == G.jokers.cards[#G.jokers.cards]
+			and context.other_card ~= self
+		then
 			if card.ability.extra.echonum and card.ability.extra.echonum > 0 then
 				return {
 					message = localize("k_again_ex"),
@@ -1936,6 +1931,164 @@ local jtron = {
 		code = { "candycanearter" },
 	},
 }
+-- Retriggers steels every 2nd hand, scaling xmult every 3rd hand, first card to steel every 5th hand, stronger steels every 7th hand
+local clockwork = { -- Steel Support: The Joker
+	object_type = "Joker",
+	dependencies = {
+		items = {
+			"set_cry_epic",
+		},
+	},
+	name = "cry-clockwork",
+	key = "clockwork",
+	pos = { x = 5, y = 5 },
+	config = {
+		limits = { l1 = 2, l2 = 3, l3 = 5, l4 = 7 },
+		counters = { c1 = 0, c2 = 0, c3 = 0, c4 = 0 },
+		extra = { xmult = 1, xmult_mod = 0.25, steelenhc = 1, steel_mod = 0.1 },
+	},
+	order = 135,
+	immutable = false,
+	rarity = "cry_epic",
+	cost = 12,
+	blueprint_compat = true,
+	atlas = "atlasone",
+	enhancement_gate = "m_steel", -- lucky joker uses this? hopefully it works
+	loc_vars = function(self, info_queue, center)
+		local function process_var(m, cap)
+			if m >= cap - 1 then
+				return localize("k_active_ex")
+			end
+			return cap - m - 1
+		end
+		return {
+			vars = {
+				process_var(center.ability.counters.c1, center.ability.limits.l1),
+				process_var(center.ability.counters.c2, center.ability.limits.l2),
+				process_var(center.ability.counters.c3, center.ability.limits.l3),
+				process_var(center.ability.counters.c4, center.ability.limits.l4),
+				center.ability.extra.xmult,
+				center.ability.extra.xmult_mod,
+				center.ability.extra.steelenhc,
+				center.ability.extra.steel_mod,
+				center.ability.limits.l1,
+				center.ability.limits.l2,
+				center.ability.limits.l3,
+				center.ability.limits.l4,
+			},
+		}
+	end,
+	calculate = function(self, card, context)
+		if context.before and context.cardarea == G.jokers and not context.blueprint and not context.retrigger then
+			local function clamp(c, l)
+				local m = c + 1
+				if c + 1 >= l then
+					return 0
+				end
+				return m
+			end
+
+			card.ability.counters.c1 = clamp(card.ability.counters.c1, card.ability.limits.l1) -- ticker 1
+
+			card.ability.counters.c2 = clamp(card.ability.counters.c2, card.ability.limits.l2) -- ticker 2
+			if card.ability.counters.c2 == 0 then
+				card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.xmult_mod
+			end
+
+			card.ability.counters.c3 = clamp(card.ability.counters.c3, card.ability.limits.l3) -- ticker 3
+
+			card.ability.counters.c4 = clamp(card.ability.counters.c4, card.ability.limits.l4) -- ticker 4
+			if card.ability.counters.c4 == 0 then
+				card.ability.extra.steelenhc = card.ability.extra.steelenhc + card.ability.extra.steel_mod
+			end
+		end
+		if context.repetition and context.cardarea == G.hand and card.ability.counters.c1 == 0 then -- effect 1
+			if SMODS.has_enhancement(context.other_card, "m_steel") then
+				return {
+					message = localize("k_again_ex"),
+					repetitions = 1,
+					card = card,
+				}
+			end
+		end
+		if
+			context.joker_main and context.cardarea == G.jokers -- effect 2
+		then
+			return { xmult = card.ability.extra.xmult }
+		end
+		if
+			context.before
+			and context.cardarea == G.jokers
+			and not context.blueprint_card
+			and not context.retrigger_joker
+			and card.ability.counters.c3 == 0
+		then -- effect 3
+			context.full_hand[1]:set_ability(G.P_CENTERS["m_steel"], nil, true)
+		end
+		if
+			context.individual
+			and context.cardarea == G.hand
+			and not context.end_of_round
+			and SMODS.has_enhancement(context.other_card, "m_steel")
+			and card.ability.extra.steelenhc ~= 1
+		then
+			if context.other_card.debuff then
+				return {
+					message = localize("k_debuffed"),
+					colour = G.C.RED,
+					card = card,
+				}
+			else -- effect 4
+				return { xmult = card.ability.extra.steelenhc }
+			end
+		end
+		--imo this secret effect can be madness only -Math
+		if
+			context.after
+			and context.cardarea == G.jokers
+			and not context.blueprint_card
+			and not context.retrigger_joker
+		then -- The Clockwork Joker is canonically a non-binary self-replicating machine amoeba, that self replicates every 21 minutes. Their pronouns are any/all; they are several billion tiny jokers
+			if -- in a trench coat, constantly ticking in an almost perfect yet flawed mechanism. Its only purpose is the strengthening and spreading of the steel world; everything else is meaningless to it.
+				card.ability.counters.c1 == 0 -- lore by nova :3
+				and card.ability.counters.c2 == 0
+				and card.ability.counters.c3 == 0
+				and card.ability.counters.c4 == 0
+			then
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						local m = copy_card(card)
+						m:add_to_deck()
+						G.jokers:emplace(m)
+						return true
+					end,
+				}))
+				return {
+					message = localize("k_duplicated_ex"),
+					card = card,
+				}
+			end
+		end
+	end,
+	set_ability = function(self, card, initial, delay_sprites)
+		card.ability.counters.c1 = math.floor(pseudorandom("Clockwork1") * (card.ability.limits.l1 - 1) + 0.5)
+		card.ability.counters.c2 = math.floor(pseudorandom("Clockwork2") * (card.ability.limits.l2 - 1) + 0.5)
+		card.ability.counters.c3 = math.floor(pseudorandom("Clockwork3") * (card.ability.limits.l3 - 1) + 0.5)
+		card.ability.counters.c4 = math.floor(pseudorandom("Clockwork4") * (card.ability.limits.l4 - 1) + 0.5)
+	end,
+	cry_credits = {
+		idea = {
+			"cassknows",
+		},
+		code = {
+			"Nova",
+			"Math",
+		},
+		art = {
+			"unexian",
+		},
+	},
+}
 return {
 	name = "Epic Jokers",
 	items = {
@@ -1963,5 +2116,6 @@ return {
 		fleshpanopticon,
 		spectrogram,
 		jtron,
+		clockwork,
 	},
 }

@@ -14,20 +14,15 @@ Cryptid_config = SMODS.current_mod.config
 SMODS.current_mod.optional_features = {
 	retrigger_joker = true,
 	post_trigger = true,
-	cardareas = {
-		unscored = true,
-	},
+	quantum_enhancements = false,
 	-- Here are some other ones Steamodded has
 	-- Cryptid doesn't use them YET, but these should be uncommented if Cryptid uses them
-	--[[
-	quantum_enhancements = true,
 	-- These ones add new card areas that Steamodded will calculate through
 	-- Might already be useful for sticker calc
 	cardareas = {
-		deck = true,
-		discard = true,
-	}
-	]]
+		--deck = true,
+		discard = true, -- used by scorch
+	},
 }
 
 --Load Library Files
@@ -58,11 +53,11 @@ local function process_items(f, mod)
 					if item.key then
 						if item.object_type and SMODS[item.object_type].class_prefix then
 							item.key = SMODS[item.object_type].class_prefix .. "_" .. mod.prefix .. "_" .. item.key
-						else
+						elseif string.find(item.key, mod.prefix .. "_") ~= 1 then
 							item.key = mod.prefix .. "_" .. item.key
 						end
 					end
-					if item.atlas then
+					if item.atlas and string.find(item.atlas, mod.prefix .. "_") ~= 1 then
 						item.atlas = mod.prefix .. "_" .. item.atlas
 					end
 					-- this will also display the mod's own badge
@@ -236,6 +231,12 @@ local cryptidConfigTab = function()
 		active_colour = HEX("1f8505"),
 		ref_table = Cryptid_config,
 		ref_value = "experimental",
+	})
+	cry_nodes[#cry_nodes + 1] = create_toggle({
+		label = localize("cry_force_tooltips"),
+		active_colour = HEX("22c705"),
+		ref_table = Cryptid_config,
+		ref_value = "force_tooltips",
 	})
 	cry_nodes[#cry_nodes + 1] = create_toggle({
 		label = localize("cry_feat_https module"),

@@ -41,7 +41,7 @@ local meme1 = {
 			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
 		then
 			if pseudorandom("meme1_" .. G.GAME.round_resets.ante) > 0.997 then
-				return create_card(nil, G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
+				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
 			end
 		end
 		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_meme")
@@ -98,7 +98,7 @@ local meme2 = {
 			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
 		then
 			if pseudorandom("memetwo_" .. G.GAME.round_resets.ante) > 0.997 then
-				return create_card(nil, G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
+				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
 			end
 		end
 		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_memetwo")
@@ -155,7 +155,7 @@ local meme3 = {
 			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
 		then
 			if pseudorandom("memethree_" .. G.GAME.round_resets.ante) > 0.997 then
-				return create_card(nil, G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
+				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
 			end
 		end
 		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_memethree")
@@ -340,7 +340,7 @@ local oversat = {
 					end,
 				}))
 				update_hand_text({ delay = 1.3 }, { mult = G.GAME.hands[hand].mult, StatusText = true })
-			elseif hand == G.handlist[#G.handlist] then
+			elseif Aurinko.VerboseMode then
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0.2,
@@ -350,7 +350,10 @@ local oversat = {
 						return true
 					end,
 				}))
-				update_hand_text({ delay = 1.3 }, { chips = (amount > 0 and "++" or "--"), StatusText = true })
+				update_hand_text(
+					{ delay = 1.3 },
+					{ chips = (to_big(amount) > to_big(0) and "++" or "--"), StatusText = true }
+				)
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0.2,
@@ -360,7 +363,10 @@ local oversat = {
 						return true
 					end,
 				}))
-				update_hand_text({ delay = 1.3 }, { mult = (amount > 0 and "++" or "--"), StatusText = true })
+				update_hand_text(
+					{ delay = 1.3 },
+					{ mult = (to_big(amount) > to_big(0) and "++" or "--"), StatusText = true }
+				)
 			end
 		end
 	end,
@@ -570,7 +576,7 @@ local glitched = {
 					StatusText = true,
 				})
 				update_hand_text({ delay = 1.3 }, { mult = G.GAME.hands[hand].mult })
-			elseif hand == G.handlist[#G.handlist] then
+			elseif Aurinko.VerboseMode then
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0.2,
@@ -938,6 +944,90 @@ local noisy = {
 		desc_nodes[#desc_nodes + 1] = chip_ui
 	end,
 	init = function(self)
+		local randtext = {
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F",
+			"G",
+			"H",
+			"I",
+			"J",
+			"K",
+			"L",
+			"M",
+			"N",
+			"O",
+			"P",
+			"Q",
+			"R",
+			"S",
+			"T",
+			"U",
+			"V",
+			"W",
+			"X",
+			"Y",
+			"Z",
+			" ",
+			"a",
+			"b",
+			"c",
+			"d",
+			"e",
+			"f",
+			"g",
+			"h",
+			"i",
+			"j",
+			"k",
+			"l",
+			"m",
+			"n",
+			"o",
+			"p",
+			"q",
+			"r",
+			"s",
+			"t",
+			"u",
+			"v",
+			"w",
+			"x",
+			"y",
+			"z",
+			"0",
+			"1",
+			"2",
+			"3",
+			"4",
+			"5",
+			"6",
+			"7",
+			"8",
+			"9",
+			"+",
+			"-",
+			"?",
+			"!",
+			"$",
+			"%",
+			"[",
+			"]",
+			"(",
+			")",
+		}
+
+		local function obfuscatedtext(length)
+			local str = ""
+			for i = 1, length do
+				str = str .. randtext[math.random(#randtext)]
+			end
+			return str
+		end
+
 		AurinkoAddons.cry_noisy = function(card, hand, instant, amount)
 			local modc = pseudorandom("cry_noisy_chips_aurinko", noisy_stats.min.chips, noisy_stats.max.chips)
 			local modm = pseudorandom("cry_noisy_mult_aurinko", noisy_stats.min.mult, noisy_stats.max.mult)
@@ -959,10 +1049,10 @@ local noisy = {
 						return true
 					end,
 				}))
-				update_hand_text(
-					{ delay = 0 },
-					{ chips = (amount > to_big(0) and "+" or "-") .. number_format(math.abs(modc)), StatusText = true }
-				)
+				update_hand_text({ delay = 0 }, {
+					chips = (to_big(amount) > to_big(0) and "+" or "-") .. number_format(math.abs(modc)),
+					StatusText = true,
+				})
 				update_hand_text({ delay = 1.3 }, { chips = G.GAME.hands[hand].chips })
 				for i = 1, math.random(2, 4) do
 					update_hand_text(
@@ -979,10 +1069,10 @@ local noisy = {
 						return true
 					end,
 				}))
-				update_hand_text(
-					{ delay = 0 },
-					{ mult = (amount > to_big(0) and "+" or "-") .. number_format(math.abs(modm)), StatusText = true }
-				)
+				update_hand_text({ delay = 0 }, {
+					mult = (to_big(amount) > to_big(0) and "+" or "-") .. number_format(math.abs(modm)),
+					StatusText = true,
+				})
 				update_hand_text({ delay = 1.3 }, { mult = G.GAME.hands[hand].mult })
 			elseif hand == G.handlist[#G.handlist] then
 				G.E_MANAGER:add_event(Event({
@@ -994,7 +1084,10 @@ local noisy = {
 						return true
 					end,
 				}))
-				update_hand_text({ delay = 1.3 }, { chips = (amount > 0 and "+" or "-") .. "???", StatusText = true })
+				update_hand_text(
+					{ delay = 1.3 },
+					{ chips = (to_big(amount) > to_big(0) and "+" or "-") .. "???", StatusText = true }
+				)
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0.2,
@@ -1004,7 +1097,10 @@ local noisy = {
 						return true
 					end,
 				}))
-				update_hand_text({ delay = 1.3 }, { mult = (amount > 0 and "+" or "-") .. "???", StatusText = true })
+				update_hand_text(
+					{ delay = 1.3 },
+					{ mult = (to_big(amount) > to_big(0) and "+" or "-") .. "???", StatusText = true }
+				)
 			end
 		end
 	end,
@@ -1094,18 +1190,12 @@ local jollyedition = {
 				gcui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)
 			if
 				card
-				and card.edition
-				and card.edition.cry_m
-				and (not card.ability or card.ability.set ~= "Edition")
-				and full_UI_table
-				and full_UI_table.name
-				and type(full_UI_table.name) == "table"
-				and full_UI_table.name[1]
-				and full_UI_table.name[1].config
-				and full_UI_table.name[1].config.object
-				and full_UI_table.name[1].config.object.config
+				and Cryptid.safe_get(card, "edition", "cry_m")
+				and ((not card.ability) or card.ability.set ~= "Edition")
+				and type(Cryptid.safe_get(full_UI_table, "name")) == "table"
+				and Cryptid.safe_get(full_UI_table.name, 1, "nodes", 1, "config", "object", "config")
 			then
-				local conf = full_UI_table.name[1].config.object.config
+				local conf = full_UI_table.name[1].nodes[1].config.object.config
 				if conf.string and #conf.string > 0 then
 					local function m_ify_word(text)
 						-- Define a pattern for vowels
@@ -1140,8 +1230,8 @@ local jollyedition = {
 						return result
 					end
 					conf.string[1] = m_ify(conf.string[1])
-					full_UI_table.name[1].config.object:remove()
-					full_UI_table.name[1].config.object = DynaText(conf)
+					full_UI_table.name[1].nodes[1].config.object:remove()
+					full_UI_table.name[1].nodes[1].config.object = DynaText(conf)
 				end
 			end
 			return full_UI_table
@@ -1216,7 +1306,7 @@ local glass_edition = {
 		then
 			if
 				not card.ability.eternal
-				and (
+				and not (
 					pseudorandom(pseudoseed("cry_fragile"))
 					> ((self.config.shatter_chance - 1) / self.config.shatter_chance)
 				)
@@ -1439,147 +1529,6 @@ local double_sided = {
 					return true
 				end,
 			}))
-		end
-		local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
-		function G.UIDEF.use_and_sell_buttons(card)
-			local retval = use_and_sell_buttonsref(card)
-			if
-				card.area
-				and card.edition
-				and (card.area == G.jokers or card.area == G.consumeables or card.area == G.hand)
-				and card.edition.cry_double_sided
-				and not Card.no(card, "dbl")
-			then
-				local use = {
-					n = G.UIT.C,
-					config = { align = "cr" },
-					nodes = {
-						{
-							n = G.UIT.C,
-							config = {
-								ref_table = card,
-								align = "cr",
-								maxw = 1.25,
-								padding = 0.1,
-								r = 0.08,
-								hover = true,
-								shadow = true,
-								colour = G.C.UI.BACKGROUND_INACTIVE,
-								one_press = true,
-								button = "flip",
-								func = "can_flip_card",
-							},
-							nodes = {
-								{ n = G.UIT.B, config = { w = 0.1, h = 0.3 } },
-								{
-									n = G.UIT.T,
-									config = {
-										text = localize("b_flip"),
-										colour = G.C.UI.TEXT_LIGHT,
-										scale = 0.3,
-										shadow = true,
-									},
-								},
-							},
-						},
-					},
-				}
-				local m = retval.nodes[1]
-				if not card.added_to_deck then
-					use.nodes[1].nodes = { use.nodes[1].nodes[2] }
-					if card.ability.consumeable then
-						m = retval
-					end
-				end
-				m.nodes = m.nodes or {}
-				table.insert(m.nodes, { n = G.UIT.R, config = { align = "cl" }, nodes = {
-					use,
-				} })
-				return retval
-			end
-			if
-				card.area
-				and (card.area == G.jokers or card.area == G.consumeables or card.area == G.hand)
-				and (not card.edition or not card.edition.cry_double_sided)
-				and not card.ability.eternal
-				and not Card.no(card, "dbl")
-			then
-				for i = 1, #card.area.cards do
-					if card.area.cards[i].edition and card.area.cards[i].edition.cry_double_sided then
-						local use = {
-							n = G.UIT.C,
-							config = { align = "cr" },
-							nodes = {
-								{
-									n = G.UIT.C,
-									config = {
-										ref_table = card,
-										align = "cr",
-										maxw = 1.25,
-										padding = 0.1,
-										r = 0.08,
-										hover = true,
-										shadow = true,
-										colour = G.C.UI.BACKGROUND_INACTIVE,
-										one_press = true,
-										button = "flip_merge",
-										func = "can_flip_merge_card",
-									},
-									nodes = {
-										{ n = G.UIT.B, config = { w = 0.1, h = 0.3 } },
-										{
-											n = G.UIT.T,
-											config = {
-												text = localize("b_merge"),
-												colour = G.C.UI.TEXT_LIGHT,
-												scale = 0.3,
-												shadow = true,
-											},
-										},
-									},
-								},
-							},
-						}
-						local m = retval.nodes[1]
-						if not card.added_to_deck then
-							use.nodes[1].nodes = { use.nodes[1].nodes[2] }
-							if card.ability.consumeable then
-								m = retval
-							end
-						end
-						m.nodes = m.nodes or {}
-						table.insert(m.nodes, { n = G.UIT.R, config = { align = "cl" }, nodes = {
-							use,
-						} })
-						return retval
-					end
-				end
-			end
-			return retval
-		end
-		local cupd = Card.update
-		function Card:update(dt)
-			cupd(self, dt)
-			if self.area then
-				if self.area.config.type == "discard" or self.area.config.type == "deck" then
-					return --prevent lagging event queues with unneeded flips
-				end
-			end
-			if self.sprite_facing == "back" and self.edition and self.edition.cry_double_sided then
-				self.sprite_facing = "front"
-				self.facing = "front"
-				if self.flipping == "f2b" then
-					self.flipping = "b2f"
-				end
-				self:dbl_side_flip()
-			end
-			if self.ability.cry_absolute then -- feedback loop... may be problematic
-				self.cry_absolute = true
-			end
-			if self.cry_absolute then
-				self.ability.cry_absolute = true
-				self.ability.eternal = true
-			end
 		end
 		function Cryptid.copy_dbl_card(C, c, deck_effects)
 			if not deck_effects then
@@ -2057,7 +2006,12 @@ local azure_seal = {
 	pos = { x = 0, y = 2 },
 	-- This is still quite jank
 	calculate = function(self, card, context)
-		if context.destroying_card and not card.will_shatter then
+		if context.destroying_card and not card.will_shatter and context.cardarea == G.play then
+			for i, cards in ipairs(context.full_hand) do
+				if cards ~= card then
+					return
+				end
+			end
 			card.will_shatter = true
 			G.E_MANAGER:add_event(Event({
 				trigger = "before",
@@ -2130,6 +2084,7 @@ local typhoon = {
 	pos = { x = 0, y = 4 },
 	use = function(self, card, area, copier) --Good enough
 		local used_consumable = copier or card
+		check_for_unlock({ cry_used_consumable = "c_cry_typhoon" })
 		for i = 1, #G.hand.highlighted do
 			local highlighted = G.hand.highlighted[i]
 			G.E_MANAGER:add_event(Event({
@@ -2224,8 +2179,8 @@ local miscitems = {
 	blessing,
 	typhoon,
 	azure_seal,
-	double_sided,
-	meld,
+	--double_sided,
+	--meld,
 	absolute,
 	light,
 	seraph,

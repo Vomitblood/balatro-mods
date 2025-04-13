@@ -154,7 +154,7 @@ return {
 				name = "El reloj",
 				text = {
 					"+0.1X requisitos de ciega por cada",
-					"3 segundos pasados en esta apuesta",
+					"12 segundos pasados en esta apuesta",
 				},
 			},
 			bl_cry_hammer = {
@@ -182,7 +182,7 @@ return {
 				name = "Ciclo lavanda",
 				text = {
 					"1.25X requisitos de ciega por cada",
-					"1.5 segundos pasados en esta ronda",
+					"6 segundos pasados en esta ronda",
 				},
 			},
 			bl_cry_obsidian_orb = {
@@ -1278,6 +1278,7 @@ return {
 			j_cry_kidnap = {
 				name = "Secuestro",
 				text = {
+					"{C:red}Outdated Description{}",
 					"Gana {C:money}$#2#{} al final de la ronda",
 					"Aumenta el pago por {C:money}$#1#{}",
 					"cuando un comodín de {C:attention}tipo multi{}",

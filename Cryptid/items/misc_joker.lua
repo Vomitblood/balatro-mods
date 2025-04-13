@@ -221,7 +221,7 @@ local potofjokes = {
 	},
 	name = "cry-Pot of Jokes",
 	key = "pot_of_jokes",
-	config = { extra = { h_size = -2, h_mod = 1 } },
+	config = { extra = { h_size = -2, h_mod = 1 }, immutable = { h_added = 0, h_mod_max = 1000 } },
 	pos = { x = 5, y = 0 },
 	rarity = 3,
 	order = 104,
@@ -234,13 +234,39 @@ local potofjokes = {
 				center.ability.extra.h_size < 0 and center.ability.extra.h_size
 					or "+" .. math.min(1000, center.ability.extra.h_size),
 				center.ability.extra.h_mod,
+				"+" .. center.ability.immutable.h_mod_max,
 			},
 		}
 	end,
 	calculate = function(self, card, context)
 		if context.end_of_round and not context.individual and not context.repetition and not context.blueprint then
-			G.hand:change_size(math.min(math.max(0, 1000 - card.ability.extra.h_size), card.ability.extra.h_mod))
+			if
+				to_big(card.ability.extra.h_size) + to_big(card.ability.extra.h_mod)
+				>= to_big(card.ability.immutable.h_mod_max)
+			then
+				card.ability.extra.h_size = card.ability.immutable.h_mod_max
+				card.ability.extra.h_mod = 0
+
+				-- Fallback for if Pot of Jokes comes into this calcuate function with large h_size
+				if card.ability.immutable.h_added < card.ability.immutable.h_mod_max then
+					local delta = card.ability.immutable.h_mod_max - card.ability.immutable.h_added
+
+					G.hand:change_size(delta)
+
+					card.ability.immutable.h_added = card.ability.immutable.h_mod_max
+				end
+			end
+
+			local delta = math.min(
+				math.max(0, card.ability.immutable.h_mod_max - card.ability.extra.h_size),
+				card.ability.extra.h_mod
+			)
+
+			G.hand:change_size(delta)
+
 			card.ability.extra.h_size = card.ability.extra.h_size + card.ability.extra.h_mod
+			card.ability.immutable.h_added = card.ability.immutable.h_added + delta
+
 			return {
 				message = localize({ type = "variable", key = "a_handsize", vars = { card.ability.extra.h_mod } }),
 				colour = G.C.FILTER,
@@ -249,10 +275,10 @@ local potofjokes = {
 		end
 	end,
 	add_to_deck = function(self, card, from_debuff)
-		G.hand:change_size(math.min(1000, card.ability.extra.h_size))
+		G.hand:change_size(math.min(card.ability.immutable.h_mod_max, card.ability.extra.h_size))
 	end,
 	remove_from_deck = function(self, card, from_debuff)
-		G.hand:change_size(-1 * math.min(1000, card.ability.extra.h_size))
+		G.hand:change_size(-1 * math.min(card.ability.immutable.h_mod_max, card.ability.extra.h_size))
 	end,
 	cry_credits = {
 		idea = {
@@ -263,6 +289,7 @@ local potofjokes = {
 		},
 		code = {
 			"Math",
+			"BobJoe400",
 		},
 	},
 	unlocked = false,
@@ -629,7 +656,7 @@ local pickle = {
 						end
 						tag.ability.orbital_hand = pseudorandom_element(_poker_hands, pseudoseed("cry_pickle_orbital"))
 					end
-					tag.ability.shiny = cry_rollshinybool()
+					tag.ability.shiny = Cryptid.is_shiny()
 					add_tag(tag)
 				end
 			end
@@ -739,18 +766,6 @@ local cube = {
 			"Math",
 		},
 	},
-	init = function(self)
-		local sc = Card.set_cost
-		function Card:set_cost()
-			sc(self)
-			if self.ability.name == "cry-Cube" then
-				self.cost = -27
-			end
-			if self.ability.name == "cry-Big Cube" then
-				self.cost = 27
-			end
-		end
-	end,
 }
 local triplet_rhythm = {
 	object_type = "Joker",
@@ -981,7 +996,7 @@ local big_cube = {
 	name = "cry-Big Cube",
 	key = "big_cube",
 	joker_gate = "cry-Cube",
-	config = { extra = { x_chips = 6 } },
+	config = { extra = { x_chips = 6 }, override_x_chips_check = true },
 	pos = { x = 4, y = 4 },
 	rarity = 1,
 	order = 105,
@@ -1369,7 +1384,12 @@ local sus = {
 		local function is_impostor(card)
 			return card.base.value and SMODS.Ranks[card.base.value].key == "King" and card:is_suit("Hearts")
 		end
-		if context.end_of_round and context.cardarea == G.jokers and not context.blueprint and not context.retrigger_joker then
+		if
+			context.end_of_round
+			and context.cardarea == G.jokers
+			and not context.blueprint
+			and not context.retrigger_joker
+		then
 			if not card.ability.used_round or card.ability.used_round ~= G.GAME.round then
 				card.ability.chosen_card = nil
 			end
@@ -1605,7 +1625,7 @@ local wario = {
 			"Auto Watto",
 		},
 		art = {
-			"Linus Goof Balls",
+			"MarioFan597",
 		},
 		code = {
 			"Auto Watto",
@@ -3761,6 +3781,7 @@ local rnjoker = {
 		G.hand:change_size(-hand_size)
 	end,
 	generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+		card = card or self:create_fake_card()
 		local len = (
 			card.ability
 			and card.ability.abilities
@@ -3791,6 +3812,7 @@ local rnjoker = {
 			end
 			new_loc.text_parsed = card.ability.abilities[1].text_parsed
 		end
+		new_loc.text_parsed = new_loc.text_parsed or {}
 		if not full_UI_table.name then
 			full_UI_table.name =
 				localize({ type = "name", set = self.set, key = target.key or self.key, nodes = full_UI_table.name })
@@ -6691,63 +6713,69 @@ local kittyprinter = {
 	end,
 }
 local kidnap = {
-	object_type = "Joker",
 	dependencies = {
 		items = {
 			"set_cry_misc_joker",
 		},
 	},
+	object_type = "Joker",
 	name = "cry-kidnap",
 	key = "kidnap",
 	order = 23,
 	pos = { x = 1, y = 2 },
 	config = {
-		extra = { money = 1, money_mod = 3 },
+		extra = 4,
 	},
 	rarity = 1,
 	cost = 4,
 	blueprint_compat = false,
 	loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.money_mod, center.ability.extra.money } }
+		local value = 0
+		if G.GAME and G.GAME.jokers_sold then
+			for _, v in ipairs(G.GAME.jokers_sold) do
+				if
+					G.P_CENTERS[v].effect == "Type Mult"
+					or G.P_CENTERS[v].effect == "Cry Type Mult"
+					or G.P_CENTERS[v].effect == "Cry Type Chips"
+					or G.P_CENTERS[v].effect == "Boost Kidnapping"
+					or (
+						G.P_CENTERS[v].name == "Sly Joker"
+						or G.P_CENTERS[v].name == "Wily Joker"
+						or G.P_CENTERS[v].name == "Clever Joker"
+						or G.P_CENTERS[v].name == "Devious Joker"
+						or G.P_CENTERS[v].name == "Crafty Joker"
+					)
+				then
+					value = value + 1
+				end
+			end
+		end
+		return { vars = { center.ability.extra, center.ability.extra * value } }
 	end,
 	atlas = "atlasone",
-	calculate = function(self, card, context)
-		if
-			context.selling_card
-			and (
-				(
-					context.card.ability.name == "Sly Joker"
-					or context.card.ability.name == "Wily Joker"
-					or context.card.ability.name == "Clever Joker"
-					or context.card.ability.name == "Devious Joker"
-					or context.card.ability.name == "Crafty Joker"
-				)
-				or context.card.ability.effect == "Type Mult"
-				or context.card.ability.effect == "Cry Type Mult"
-				or context.card.ability.effect == "Cry Type Chips"
-				--[[
-				Other developers can add effect == "Boost Kidnapping"
-                to their joker config if they want it to boost kidnapping when sold
-				]]
-				--
-				or context.card.ability.effect == "Boost Kidnapping"
-				or context.card:is_jolly()
-			)
-			and not context.blueprint
-		then
-			card.ability.extra.money = card.ability.extra.money + card.ability.extra.money_mod
-			return {
-				card_eval_status_text(card, "extra", nil, nil, nil, {
-					message = localize("k_upgrade_ex"),
-					colour = G.C.MONEY,
-				}),
-			}
-		end
-	end,
 	calc_dollar_bonus = function(self, card)
-		if card.ability.extra.money > 0 then
-			return card.ability.extra.money
+		local value = 0
+		for _, v in ipairs(G.GAME.jokers_sold) do
+			if
+				G.P_CENTERS[v].effect == "Type Mult"
+				or G.P_CENTERS[v].effect == "Cry Type Mult"
+				or G.P_CENTERS[v].effect == "Cry Type Chips"
+				or G.P_CENTERS[v].effect == "Boost Kidnapping"
+				or (
+					G.P_CENTERS[v].name == "Sly Joker"
+					or G.P_CENTERS[v].name == "Wily Joker"
+					or G.P_CENTERS[v].name == "Clever Joker"
+					or G.P_CENTERS[v].name == "Devious Joker"
+					or G.P_CENTERS[v].name == "Crafty Joker"
+				)
+			then
+				value = value + 1
+			end
 		end
+		if value == 0 then
+			return
+		end
+		return card.ability.extra * value
 	end,
 	cry_credits = {
 		idea = {
@@ -6871,6 +6899,7 @@ local tropical_smoothie = {
 	cost = 5,
 	order = 125,
 	atlas = "atlastwo",
+	pools = { ["Food"] = true },
 	loc_vars = function(self, info_queue, center)
 		return { vars = { center.ability.extra } }
 	end,
@@ -7132,6 +7161,8 @@ local necromancer = {
 			and context.card.config.center.set == "Joker"
 			and G.GAME.jokers_sold
 			and #G.GAME.jokers_sold > 0
+			and not context.blueprint
+			and not context.retrigger_joker
 		then
 			local card = create_card(
 				"Joker",
@@ -7311,7 +7342,7 @@ local tax_fraud = {
 		},
 	},
 }
---TODO update desc
+
 local pity_prize = {
 	object_type = "Joker",
 	dependencies = {
@@ -7321,6 +7352,7 @@ local pity_prize = {
 	},
 	name = "cry-Pity-Prize",
 	key = "pity_prize",
+	blueprint_compat = true,
 	pos = { x = 5, y = 5 },
 	config = {},
 	rarity = 1,
@@ -7338,7 +7370,7 @@ local pity_prize = {
 			until tag_key ~= "tag_boss" --I saw pickle not generating boss tags because it apparently causes issues, so I did the same here
 			-- this is my first time seeing repeat... wtf
 			local tag = Tag(tag_key)
-			tag.ability.shiny = cry_rollshinybool()
+			tag.ability.shiny = Cryptid.is_shiny()
 			if tag.name == "Orbital Tag" then
 				local _poker_hands = {}
 				for k, v in pairs(G.GAME.hands) do
@@ -7623,14 +7655,16 @@ local zooble = {
 			if not (next(context.poker_hands["Straight"]) or next(context.poker_hands["Straight Flush"])) then
 				local unique_ranks = {}
 				for i, v in pairs(context.scoring_hand) do
-					local not_unique = false
-					for i = 1, #unique_ranks do
-						if unique_ranks[i] == v:get_id() then
-							not_unique = true
+					if not (SMODS.has_no_rank(v) and not v.vampired) then
+						local not_unique = false
+						for i = 1, #unique_ranks do
+							if unique_ranks[i] == v:get_id() then
+								not_unique = true
+							end
 						end
-					end
-					if not not_unique then
-						unique_ranks[#unique_ranks + 1] = v:get_id()
+						if not not_unique then
+							unique_ranks[#unique_ranks + 1] = v:get_id()
+						end
 					end
 				end
 				if #unique_ranks >= 1 then
@@ -7643,7 +7677,7 @@ local zooble = {
 				end
 			end
 		end
-		if context.joker_main and context.cardarea == G.jokers then
+		if context.joker_main and card.ability.extra.mult > 0 then
 			return {
 				message = localize({ type = "variable", key = "a_mult", vars = { card.ability.extra.mult } }),
 				mult_mod = card.ability.extra.mult,
@@ -7674,6 +7708,7 @@ local lebaron_james = {
 	key = "lebaron_james",
 	pos = { x = 2, y = 5 },
 	config = { extra = { h_mod = 1 } },
+	blueprint_compat = true,
 	rarity = 3,
 	cost = 6,
 	atlas = "atlasone",
@@ -7771,6 +7806,166 @@ local huntingseason = { -- If played hand contains three cards, destroy the midd
 		},
 	},
 }
+local cat_owl = { -- Lucky Cards are considered Echo Cards and vice versa
+	object_type = "Joker",
+	dependencies = {
+		items = {
+			"set_cry_misc_joker",
+			"m_cry_echo",
+			"set_cry_misc",
+		},
+	},
+	name = "cry-cat_owl",
+	pools = { ["Meme"] = true },
+	key = "cat_owl",
+	pos = { x = 6, y = 5 },
+	order = 135,
+	rarity = 3,
+	cost = 8,
+	blueprint_compat = false,
+	atlas = "atlasone",
+	loc_vars = function(self, info_queue, center)
+		info_queue[#info_queue + 1] = G.P_CENTERS.m_lucky
+		info_queue[#info_queue + 1] = G.P_CENTERS.m_cry_echo
+	end,
+	calculate = function(self, card, context)
+		if context.check_enhancement then
+			if context.other_card.config.center.key == "m_lucky" then
+				return { m_cry_echo = true }
+			end
+			if context.other_card.config.center.key == "m_cry_echo" then
+				return { m_lucky = true }
+			end
+		end
+	end,
+	cry_credits = {
+		idea = {
+			"Math",
+		},
+		code = {
+			"Math",
+		},
+		art = {
+			"George the Rat",
+		},
+	},
+}
+local eyeofhagane = {
+	object_type = "Joker",
+	dependencies = {
+		items = {
+			"set_cry_misc_joker",
+		},
+	},
+	name = "cry-eyeofhagane",
+	key = "eyeofhagane",
+	order = 136,
+	pos = { x = 5, y = 6 },
+	rarity = 2,
+	cost = 6,
+	blueprint_compat = false,
+	immutable = true,
+	atlas = "atlastwo", -- https://discord.com/channels/1264429948970733782/1274103559113150629/1351479917367263312
+	calculate = function(self, card, context)
+		if context.before then
+			local faces = {}
+			for k, v in ipairs(context.scoring_hand) do
+				if v:is_face() then
+					faces[#faces + 1] = v
+					v:set_ability(G.P_CENTERS.m_steel, nil, true)
+					G.E_MANAGER:add_event(Event({
+						func = function()
+							v:juice_up()
+							return true
+						end,
+					}))
+				end
+			end
+			if #faces > 0 then
+				return {
+					message = "Steel",
+					colour = G.C.UI.TEXT_INACTIVE,
+					card = self,
+				}
+			end
+		end
+	end,
+	cry_credits = {
+		idea = { "Soren" },
+		code = { "Lexi" },
+		art = { "Soren" },
+	},
+}
+
+local highfive = {
+	object_type = "Joker",
+	dependencies = {
+		items = {
+			"set_cry_misc_joker",
+		},
+	},
+	name = "cry-highfive",
+	key = "highfive",
+	order = 137,
+	atlas = "atlastwo",
+	pos = { x = 4, y = 1 },
+	blueprint_compat = false,
+	eternal_compat = true,
+	perishable_compat = true,
+	rarity = 3,
+	cost = 5,
+	calculate = function(self, card, context)
+		if context.final_scoring_step then
+			local maximum = -1
+			local fives = 0
+			for k, v in ipairs(context.scoring_hand) do
+				if not SMODS.has_no_rank(v) then
+					local thunk = v:get_id() == 14 and 1 or v:get_id()
+					if thunk == 5 then
+						fives = fives + 1
+					end
+					if thunk > maximum then
+						maximum = thunk
+					end
+				end
+			end
+
+			local whapoosh = false
+			if maximum == 5 and fives ~= #context.scoring_hand then
+				for index = 1, #context.scoring_hand do
+					local v = context.scoring_hand[index]
+					if v:get_id() ~= 5 and not SMODS.has_no_rank(v) then
+						whapoosh = true
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								assert(SMODS.change_base(v, _, "5"))
+								v:juice_up()
+								return true
+							end,
+						}))
+					end
+				end
+
+				if whapoosh then
+					G.E_MANAGER:add_event(Event({
+						func = function()
+							play_sound("cry_whapoosh")
+							return true
+						end,
+					}))
+					return {
+						message = localize("cry_highfive_ex"),
+					}
+				end
+			end
+		end
+	end,
+	cry_credits = {
+		idea = { "cassknows" },
+		art = { "MarioFan597" },
+		code = { "astrapboy" },
+	},
+}
 local miscitems = {
 	jimball_sprite,
 	dropshot,
@@ -7859,8 +8054,8 @@ local miscitems = {
 	exposed,
 	mask,
 	tropical_smoothie,
-	pumpkin,
-	carved_pumpkin,
+	--pumpkin,
+	--carved_pumpkin,
 	cookie,
 	necromancer,
 	oil_lamp,
@@ -7884,6 +8079,9 @@ local miscitems = {
 	translucent,
 	lebaron_james,
 	huntingseason,
+	--cat_owl,
+	--eyeofhagane, (apparently this wasn't screened)
+	highfive,
 }
 return {
 	name = "Misc. Jokers",

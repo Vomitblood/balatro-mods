@@ -307,6 +307,26 @@ end
 local updateref = Card.update
 function Card:update(dt)
 	updateref(self, dt)
+	if self.area then
+		if self.area.config.type == "discard" or self.area.config.type == "deck" then
+			return --prevent lagging event queues with unneeded flips
+		end
+	end
+	if self.sprite_facing == "back" and self.edition and self.edition.cry_double_sided then
+		self.sprite_facing = "front"
+		self.facing = "front"
+		if self.flipping == "f2b" then
+			self.flipping = "b2f"
+		end
+		self:dbl_side_flip()
+	end
+	if self.ability.cry_absolute then -- feedback loop... may be problematic
+		self.cry_absolute = true
+	end
+	if self.cry_absolute then
+		self.ability.cry_absolute = true
+		self.ability.eternal = true
+	end
 	if self.ability.pinned then
 		self.pinned = true
 	end -- gluing these variables together
@@ -371,7 +391,7 @@ function cry_best_interest_cap()
 	local vouchers = {
 		SMODS.find_card("v_seed_money"),
 		SMODS.find_card("v_money_tree"),
-		SMODS.find_card("v_cry_money_beanstalk"),
+		SMODS.find_card("v_cry_moneybean"),
 	}
 	for _, table in ipairs(vouchers) do
 		for i, v in ipairs(table) do
@@ -382,11 +402,25 @@ function cry_best_interest_cap()
 	end
 	return best
 end
-
 local evaluateroundref = G.FUNCS.evaluate_round
 G.FUNCS.evaluate_round = function()
 	G.GAME.interest_cap = cry_best_interest_cap() -- blehhhhhh
-	evaluateroundref()
+	--Semicolon Stuff
+	if G.GAME.current_round.semicolon then
+		add_round_eval_row({ dollars = 0, name = "blind1", pitch = 0.95, saved = true })
+		G.E_MANAGER:add_event(Event({
+			trigger = "before",
+			delay = 1.3 * math.min(G.GAME.blind.dollars + 2, 7) / 2 * 0.15 + 0.5,
+			func = function()
+				G.GAME.blind:defeat()
+				return true
+			end,
+		}))
+		delay(0.2)
+		add_round_eval_row({ name = "bottom", dollars = 0 })
+	else
+		return evaluateroundref()
+	end
 end
 function Cryptid.edition_to_table(edition) -- look mom i figured it out (this does NOT need to be a function)
 	if edition then
@@ -749,7 +783,7 @@ function Tag:set_ability()
 		G.GAME.cry_shiny_choices[G.GAME.round_resets.ante] = G.GAME.cry_shiny_choices[G.GAME.round_resets.ante] or {}
 
 		if not G.GAME.cry_shiny_choices[G.GAME.round_resets.ante][self.ability.blind_type] then
-			G.GAME.cry_shiny_choices[G.GAME.round_resets.ante][self.ability.blind_type] = cry_rollshiny()
+			G.GAME.cry_shiny_choices[G.GAME.round_resets.ante][self.ability.blind_type] = Cryptid.roll_shiny()
 		end
 		self.ability.shiny = G.GAME.cry_shiny_choices[G.GAME.round_resets.ante][self.ability.blind_type] == "shiny"
 			and true
