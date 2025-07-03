@@ -14,7 +14,7 @@
    git clone https://git.vomitblood.com/Vomitblood/balatro-mods.git Mods
    ```
 
-   - Balatro game directory should look like this:
+   - Balatro game directory should look like this:  
      ![screenshot](assets/screenshot.png)
 
 3. Right click on Balatro in your Steam library.
