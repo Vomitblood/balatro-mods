@@ -111,8 +111,8 @@ return {
 				name = "Jeu Critique",
 				text = {
 					"Après chaque main jouée,",
-					"{C:green}#1# chance#<s>1# sur 4{} d'obtenir {X:dark_edition,C:white} ^2 {} Multi",
-					"{C:green}#1# chance#<s>1# sur 8{} d'obtenir {X:dark_edition,C:white} ^0.5 {} Multi",
+					"{C:green}#1# chance#<s>1# sur #2#{} d'obtenir {X:dark_edition,C:white} ^2 {} Multi",
+					"{C:green}#1# chance#<s>1# sur #3#{} d'obtenir {X:dark_edition,C:white} ^0.5 {} Multi",
 				},
 				unlock = {
 					"Obtenir un {C:attention}Joker Truqué",
@@ -285,7 +285,7 @@ return {
 				name = "Jeu Légendaire",
 				text = {
 					"Démarre avec un Joker {C:legendary}Légendaire{C:legendary}",
-					"{C:green}1 chance sur 5{} d'en créer un autre",
+					"{C:green}#1# chance sur #2#{} d'en créer un autre",
 					"lorsque la Blinde de Boss est battue",
 					"{C:inactive}(selon la place disponible)",
 				},
@@ -307,7 +307,8 @@ return {
 				name = "L'Horloge",
 				text = {
 					"+0.1X du score requis toutes",
-					"les 12 secondes passées dans cette Ante",
+					"les 12 secondes passées dans cette Ante,",
+					"multiplié par la vitesse du jeu",
 				},
 			},
 			bl_cry_hammer = {
@@ -335,7 +336,8 @@ return {
 				name = "Boucle Lavande",
 				text = {
 					"1.25X du score requis toutes les",
-					"6 secondes passées dans cette manche",
+					"6 secondes passées dans cette manche,",
+					"multiplié par la vitesse du jeu",
 				},
 			},
 			bl_cry_obsidian_orb = {
@@ -412,6 +414,37 @@ return {
 					"rareté supérieure sont affaiblis",
 				},
 			},
+			bl_cry_greed = {
+				name = "L'Avarice",
+				text = {
+					"+#2# à la taille de la blinde pour",
+					"chaque $#1# lorsqu'elle est sélectionnée",
+				},
+			},
+			bl_cry_repulsor = {
+				name = "Le Répulseur",
+				text = {
+					"Redéclenche les jokers",
+					"aux extrêmités, tous les autres",
+					"Jokers ne déclenchent pas",
+				},
+			},
+			bl_cry_chromatic = {
+				name = "Le Chromatisme",
+				text = {
+					"Le score de la main",
+					"est soustrait sur les",
+					"mains impaires",
+				},
+			},
+			bl_cry_landlord = {
+				name = "Le Locateur",
+				text = {
+					"Applique Location à",
+					"un Joker aléatoire",
+					"après que la main soit jouée",
+				},
+			},
 			bl_cry_pinkbow = {
 				name = "Nœud Rose",
 				text = {
@@ -422,9 +455,9 @@ return {
 			bl_cry_scorch = {
 				name = "La Grille",
 				text = {
-					"Must play 5 cards,",
-					"destroy played and",
-					"discarded cards",
+					"5 cartes doivent être jouées,",
+					"toutes les cartes jouées",
+					"et défaussées sont détruites",
 				},
 			},
 			bl_cry_sapphire_stamp = {
@@ -490,8 +523,25 @@ return {
 					"sont affaiblis",
 				},
 			},
+			bl_cry_decision = {
+				name = "La Décision",
+				text = {
+					"Attache les Jokers après qu'une main",
+					"soit jouée ou défaussée",
+					"Ouvre un Paquet Bouffon Maléfique",
+					"après la manche",
+				},
+			},
 		},
 		Code = {
+			c_cry_assemble = {
+				name = "://ASSEMBLAGE",
+				text = {
+					"Ajoute du {C:cry_code}Multi{}",
+					"à la {C:cry_code}main sélectionnée{} égal au",
+					"nombre de Jokers possédés",
+				},
+			},
 			c_cry_alttab = {
 				name = "://ALTTAB",
 				text = {
@@ -518,7 +568,7 @@ return {
 			c_cry_crash = {
 				name = "://CRASH",
 				text = {
-					"{C:cry_code,E:1}Ne le faites pas.",
+					"{C:cry_code,E:1}Ne le fais pas.",
 				},
 			},
 			c_cry_ctrl_v = {
@@ -555,12 +605,26 @@ return {
 					"{C:inactive,s:0.8}découvertes pour être valides",
 				},
 			},
+			c_cry_cryfunction = {
+				name = "FONCTION://",
+				text = {
+					"Enregistre les {C:cry_code}trois derniers{} consommables utilisés,",
+					"réutiliser cette carte crée une copie du",
+					"premier consommable avec un sticker {C:cry_code}Fonction://{}",
+				},
+			},
+			c_cry_global = {
+				name = "://GLOBAL",
+				text = {
+					"Définit la carte sélectionnée",
+					"comme carte {C:cry_code}Globale{}",
+				},
+			},
 			c_cry_hook = {
 				name = "ACCROCHER://",
 				text = {
-					"Les deux jokers sélectionnés deviennent {C:cry_code}Accrochés",
-					"{C:inactive,s:0.8}Ne marche seulement si les Jokers se déclenchent dans le même contexte,",
-					"{C:inactive,s:0.8}comme Joker et Le Duo (les deux après le compte)",
+					"Applique {C:cry_code}Accroché{} à",
+					"2 Jokers sélectionnés",
 				},
 			},
 			c_cry_inst = {
@@ -569,6 +633,21 @@ return {
 					"Tire une carte avec la {C:cry_code}couleur{} de la carte sélectionnée",
 					"et une carte avec le {C:cry_code}rang{} de la carte sélectionnée",
 					"{C:inactive}(si possible){}",
+				},
+			},
+			c_cry_keygen = {
+				name = "://KEYGEN",
+				text = {
+					"Crée un coupon {C:cry_code}Périssable Banane{}",
+					"aléatoire, {C:cry_code}détruit{} le dernier coupon créé",
+					"de cette manière",
+				},
+			},
+			c_cry_log = {
+				name = "://LOG",
+				text = {
+					"To Be {C:cry_code}Implemented{}",
+					"in a future {C:cry_code}update{}",
 				},
 			},
 			c_cry_machinecode = {
@@ -596,6 +675,13 @@ return {
 					"la fin de la manche",
 				},
 			},
+			c_cry_nperror = {
+				name = "://ERREURNP",
+				text = {
+					"Retourne la {C:cry_code}dernière main jouée{}",
+					"dans votre main",
+				},
+			},
 			c_cry_patch = {
 				name = "://PATCH",
 				text = {
@@ -618,6 +704,14 @@ return {
 					"{C:cry_code}#1#{} carte supplémentaire et",
 					"{C:cry_code}#1#{} choix supplémentaire",
 					"{C:inactive}(Currently {C:cry_code}+#2#{C:inactive})",
+				},
+			},
+			c_cry_quantify = {
+				name = "://QUANTIFIER",
+				text = {
+					"Transfère {C:attention}#1#{} {C:attention}Carte#<s>1#{}",
+					"ou {C:attention}Paquet#<s>1#{} sélectionné#<s>1#",
+					"dans les emplacements de {C:attention}Jokers{}",
 				},
 			},
 			c_cry_reboot = {
@@ -671,11 +765,27 @@ return {
 					"Nourriture {C:cry_code}Glitché",
 				},
 			},
+			c_cry_cryupdate = {
+				name = "://MISEAJOUR",
+				text = {
+					"on sait {C:cry_code}pas encore{},",
+					"reviens dans la prochaine {C:cry_code}mise à jour{}",
+				},
+			},
 			c_cry_variable = {
 				name = "://VARIABLE",
 				text = {
 					"Convertit {C:cry_code}#1#{} cartes sélectionnés",
 					"en un rang {C:cry_code}choisi{}",
+				},
+			},
+			c_cry_declare = {
+				name = "://DECLARER",
+				text = {
+					"Vos {C:attention}cartes sélectionnées{}",
+					"deviennent une {C:cry_code}nouvelle{} main de Poker",
+					"qui est considérée comme un {C:attention}#1#{}",
+					"Un maximum de {C:attention}3{} {C:inactive}[#2#]{} mains peuvent être créées",
 				},
 			},
 		},
@@ -731,6 +841,13 @@ return {
 					"et au {C:attention}Joker Joyeux",
 				},
 			},
+			set_cry_meme = {
+				name = "Mème",
+				text = {
+					"Tout un tas de références",
+					"à de nombreux mèmes",
+				},
+			},
 			set_cry_misc = {
 				name = "Divers",
 				text = {
@@ -757,7 +874,7 @@ return {
 			set_cry_poker_hand_stuff = {
 				name = "Mains de poker supplémentaires",
 				text = {
-					"Rajoute 4 nouvelles {C:attention}mains de poker",
+					"Rajoute 5 nouvelles {C:attention}mains de poker",
 					"et active les {C:attention}mains ascensionnées",
 				},
 			},
@@ -839,6 +956,7 @@ return {
 					"{C:green}#1# chance#<s>1# sur #2#{} de",
 					"ne pas {C:red}détruire{} cette carte",
 					"lorsqu'elle est déclenchée",
+					"{C:inactive}Non-truquable{}",
 				},
 			},
 			e_cry_glitched = {
@@ -906,6 +1024,16 @@ return {
 					"{C:inactive}(Actuellement {X:mult,C:white}X#2#{C:inactive} Multi)",
 				},
 			},
+			m_cry_abstract = {
+				name = "Carte abstraite",
+				text = {
+					"{X:dark_edition,C:white}^#1#{} Multi,",
+					"Compte comme son {C:attention}propre{} rang et couleur",
+					"{C:green}#4# chance#<s>4# sur #5#{} de",
+					"{C:red,E:2}détruire{} la carte lorsqu'elle {C:attention}jouée",
+					"ou {C:attention}à la fin de la manche{} si elle est tenue en main",
+				},
+			},
 		},
 		Joker = {
 			j_cry_test_modest = {
@@ -953,6 +1081,7 @@ return {
 					"Vendre cette carte crée",
 					"{C:attention}2{} copies du {C:attention}Joker{} le plus à gauche",
 					"{C:inactive,s:0.8}Ne copie pas les Carte Googol Play Nostalgiques{}",
+					"{C:inactive}(Selon la place disponible){}",
 				},
 			},
 			j_cry_altgoogol_balanced = {
@@ -1036,6 +1165,16 @@ return {
 					"fixe les {C:chips}Jetons{} et {C:mult}Multi{} à 0",
 					"{C:red,E:2}s'auto-détruit{} s'il n'y a pas de {C:attention}#1#{} dans le jeu",
 					"{C:inactive,s:0.8}Le rang ne change pas",
+				},
+			},
+			j_cry_rotten_egg = {
+				name = "Œuf pourri",
+				text = {
+					"Lorsque obtenu, définit la valeur de vente",
+					"de tous les Jokers actuels et futurs à {C:attention}$#1#{}",
+					"Réduit la valeur de vente des {C:attention}Jokers{} de {C:attention}$#2#{}",
+					"À la fin de la manche, après avoir gagné {C:attention}$#3#{} {C:inactive}[#4#]{}",
+					"en vendant des {C:attention}Jokers{}, {C:red}s'auto-détruit{}",
 				},
 			},
 			j_cry_blender = {
@@ -1127,6 +1266,14 @@ return {
 					"pour {C:mult}+#2#{} Multi",
 					"{C:green}1 chance sur 4{}",
 					"pour {C:mult}-#2#{} Multi",
+				},
+			},
+			j_cry_buttercup = {
+				name = "Potimarron",
+				text = {
+					"Permet de stocker {C:attention}#1#{} objet#<s>1# de la boutique",
+					"Lorsque ce Joker est vendu: Ajoute l#<es objets,'objet>1# stocké#<s>1#",
+					"à la prochaîne boutique",
 				},
 			},
 			j_cry_candy_basket = {
@@ -1269,6 +1416,18 @@ return {
 				unlock = {
 					"Gagner une partie",
 					"en jouant une {E:1,C:attention}Paire Ultime",
+					"comme main gagnante",
+				},
+			},
+			j_cry_the = {
+				name = "Le",
+				text = {
+					"{X:mult,C:white} X#1# {} Multi si",
+					"la dernière m {C:attention}#2#",
+				},
+				unlock = {
+					"Gagner une partie",
+					"en ne jouant {E:1,C:attention}Rien",
 					"comme main gagnante",
 				},
 			},
@@ -1424,6 +1583,21 @@ return {
 					"{C:mult}+#1#{} Multi si",
 					"la main jouée",
 					"contient une {C:attention}#2#",
+				},
+			},
+			j_cry_demicolon = {
+				name = "Deux-points-et-demie",
+				text = {
+					"{C:attention}Force-déclenche{} le Joker",
+					"à droite de celui-ci",
+				},
+			},
+			j_cry_starfruit = {
+				name = "Starfruit",
+				text = {
+					"{X:dark_edition,C:white}^#1#{} Multi,",
+					"perd {X:dark_edition,C:white}^#2#{} Multi à chaque",
+					"{C:attention}réapprovisionnement{} de la boutique",
 				},
 			},
 			j_cry_digitalhallucinations = {
@@ -1597,7 +1771,7 @@ return {
 				},
 			},
 			j_cry_highfive = {
-				name = "High five",
+				name = "Tapes-m'en-Cinq",
 				text = {
 					"Si le rang le plus haut {C:attention}marqué{}",
 					"est un {C:attention}5{}, convertit {C:attention}toutes{} les cartes marquées",
@@ -1611,6 +1785,15 @@ return {
 					"{X:dark_edition,C:white}^#1#{} Multi si",
 					"les cartes jouées n'ont été marqués",
 					"que {C:attention}#2#{} fois ou moins",
+				},
+			},
+			j_cry_familiar_currency = {
+				name = "Monnaie connue",
+				text = {
+					"Crée un {C:attention}Joker Mème{}",
+					"à la fin de la manche",
+					"pour {C:money}$#1#{} {C:inactive}(si possible)",
+					"{C:inactive}(Selon la place disponible)",
 				},
 			},
 			j_cry_filler = {
@@ -1663,6 +1846,14 @@ return {
 					"{C:red}+#1#{} Multi si la",
 					"main jouée contient",
 					"une {C:attention}#2#",
+				},
+			},
+			j_cry_undefined = {
+				name = "Undefined Joker",
+				text = {
+					"{C:red}+#1#{} Multi si la",
+					"main jouée contient",
+					"un {C:attention}#2#",
 				},
 			},
 			j_cry_formidiulosus = {
@@ -1809,6 +2000,7 @@ return {
 					"{C:attention}#2#{} fois,",
 					"chaque carte jouée donne",
 					"{X:mult,C:white} X#1# {} Multi lorsqu'elle est comptée",
+					"{C:inactive}(Maximum {}{C:attention}#3#{}{C:inactive} redéclenchements)",
 				},
 			},
 			j_cry_jawbreaker = {
@@ -1907,6 +2099,7 @@ return {
 					"Les {C:attention}Rois{} comptés donnent",
 					"{C:attention}+#1#{} à la taille de la main cette manche",
 					"et redéclenchent les effets des cartes {C:attention}tenues en main{}",
+					"{C:inactive}(Actuellement {}{C:attention}+#2#{}{C:inactive})",
 				},
 			},
 			j_cry_lightupthenight = {
@@ -2028,7 +2221,7 @@ return {
 					"{C:attention}première défausse{} de chaque manche",
 				},
 			},
-			j_cry_Megg = {
+			j_cry_megg = {
 				name = "Mœuf",
 				text = {
 					"Vendre cette carte crée",
@@ -2050,7 +2243,7 @@ return {
 					"{X:mult,C:white}X#1#{} Multi pour chaque membre",
 					"dans le {C:attention}serveur Discord{} de {C:attention}Cryptid{}",
 					"{C:inactive}(Actuellement {X:mult,C:white}X#2#{C:inactive} Multi)",
-					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
+					"{C:blue,s:0.7}https://discord.gg/eUf9Ur6RyB{}",
 				},
 			},
 			j_cry_membershipcardtwo = {
@@ -2059,7 +2252,7 @@ return {
 					"{C:chips}+#1#{} Jeton#<s>1# pour chaque membre",
 					"dans le {C:attention}serveur Discord{} de {C:attention}Cryptid{}",
 					"{C:inactive}(Actuellement {C:chips}+#2#{C:inactive} Jeton#<s>2#)",
-					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
+					"{C:blue,s:0.7}https://discord.gg/eUf9Ur6RyB{}",
 				},
 			},
 			j_cry_membershipcardtwo_balanced = {
@@ -2068,7 +2261,7 @@ return {
 					"{C:chips}+#1#{} Jeton#<s>1# tous les {C:attention}8{} membres",
 					"dans le {C:attention}serveur Discord{} de {C:attention}Cryptid{}",
 					"{C:inactive}(Actuellement {C:chips}+#2#{C:inactive} Jeton#<s>2#)",
-					"{C:blue,s:0.7}https://discord.gg/cryptid{}",
+					"{C:blue,s:0.7}https://discord.gg/eUf9Ur6RyB{}",
 				},
 			},
 			j_cry_meteor = {
@@ -2305,6 +2498,14 @@ return {
 					"donne un {C:attention}Badge{} aléatoire",
 				},
 			},
+			j_cry_pity_prize_modest = {
+				name = "Lot de pitié",
+				text = {
+					"Lorsqu'un {C:attention}Paquet Booster{} est passé,",
+					"donne un {C:attention}Badge{} aléatoire",
+					"{C:red,E:2}S'auto-détruit{}",
+				},
+			},
 			j_cry_pot_of_jokes = {
 				name = "Pot de Blagues",
 				text = {
@@ -2526,8 +2727,9 @@ return {
 					"{C:attention}+#1#{} emplacement#<s>1# de coupon",
 				},
 				unlock = {
-					"Win a run with",
-					"only {C:attention}High Card",
+					"Gagner une partie",
+					"avec uniquement",
+					"des {C:attention}Carte Haute",
 				},
 			},
 			j_cry_fleshpanopticon = {
@@ -2538,6 +2740,71 @@ return {
 					"{C:red}s'auto-détruit{}, et crée",
 					"une carte {C:spectral}Portail{} {C:dark_edition}Négative{}",
 					'{C:inactive,s:0.8}"This prison... to hold... me?"',
+				},
+			},
+			j_cry_sock_and_sock = {
+				name = "Chaussettes de Cirque", -- un cirque plutôt digital, mdr
+				text = {
+					"Redéclenche toutes les",
+					"cartes {C:attention}Abstraites{} {C:attention}#1#{} fois",
+				},
+			},
+			j_cry_brokenhome = {
+				name = "Maison cassée",
+				text = {
+					"{X:mult,C:white} X#1# {} Multi",
+					"{C:green}#2# chance#<s>2# sur #3#{} que cette carte",
+					"soit détruite à la fin",
+					"de la manche",
+				},
+			},
+			j_cry_yarnball = {
+				name = "Boule de laine",
+				text = {
+					"Ajoute le niveau du {C:attention}Badge Chat{} le plus élevé",
+					"à toutes les {C:green}probabilités affichées",
+				},
+			},
+			j_cry_pizza = {
+				name = "Pizza",
+				text = {
+					"Après {C:attention}#1#{} {C:inactive}[#2#]{} manche#<s>1#",
+					"vendre ce Joker crée",
+					"{C:attention}#3#{} Parts de pizza",
+				},
+			},
+			j_cry_pizza_slice = {
+				name = "Part de pizza",
+				text = {
+					"Ce Joker gagne {X:mult,C:white}X#1#{} Multi",
+					"lorsqu'une {C:attention}Part de pizza{} est vendue",
+					"{C:inactive}(Actuellement{} {X:mult,C:white}X#2#{}{C:inactive} Multi){}",
+				},
+			},
+			j_cry_paved_joker = {
+				name = "Joker pavé",
+				text = {
+					"Les Cartes Pierre peuvent remplir",
+					"{C:attention}#1#{} trou#<s>1# dans les",
+					"{C:attention}Quintes{} et {C:attention}Couleurs{}",
+				},
+			},
+			j_cry_fading_joker = {
+				name = "Joker effacé",
+				text = {
+					"Ce Joker gagne",
+					"{X:mult,C:white}X#1#{} Multi lorsqu'une",
+					"carte {C:attention}Périssable{} est affaiblie",
+					"{C:inactive}(Actuellement{} {X:mult,C:white}X#2#{} {C:inactive}Multi){}",
+				},
+			},
+			j_cry_poor_joker = {
+				name = "Joker pauvre",
+				text = {
+					"Ce Joker gagne",
+					"{X:mult,C:white}X#1#{} Multi lorsqu'une",
+					"carte {C:attention}Location{} prend de l'argent",
+					"{C:inactive}(Actuellement{} {C:mult}+#2#{} {C:inactive}Multi){}",
 				},
 			},
 			j_cry_spaceglobe = {
@@ -2691,6 +2958,43 @@ return {
 					"contient une {C:attention}#2#",
 				},
 			},
+			j_cry_nebulous = {
+				name = "Joker nébuleux",
+				text = {
+					"{C:chips}+#1#{} Jeton#<s>1# si",
+					"la main jouée",
+					"ne contient {C:attention}#2#",
+				},
+			},
+			j_cry_words_cant_even = {
+				name = "Un joker dont je ne suis pas en mesure de décrire avec des mots",
+				text = {
+					"{X:mult,C:white}X#1#{} Multi si",
+					"la main jouée",
+					"contient {C:attention}#2#",
+				},
+			},
+			j_cry_many_lost_minds = {
+				name = "Nombreux sont ceux que ce joker a rendus fous en essayant de le comprendre",
+				text = {
+					"{C:chips}+#1#{} Jetons si",
+					"la main jouée",
+					"contient {C:attention}#2#",
+				},
+			},
+			j_cry_annihalation = {
+				name = "La destruction et la fin nette pure et dure de tout ce qui a rendu Balatro sacré",
+				text = {
+					"{X:dark_edition,C:white}^#1#{} Multi si",
+					"la main jouée",
+					"contient {C:attention}#2#",
+				},
+				unlock = {
+					"Gagner une partie",
+					"en jouant l'{E:1,C:attention}#1#",
+					"comme main gagnante",
+				},
+			},
 			j_cry_trick_or_treat = {
 				name = "Des bonbons ou un sort!",
 				text = {
@@ -2720,7 +3024,7 @@ return {
 				text = {
 					"Vendre cette carte",
 					"{C:attention}multiplie{} les valeurs",
-					"des jokers possédés de {C:attention}X1.5{}",
+					"des jokers possédés de {C:attention}X#1#{}",
 				},
 			},
 			j_cry_unity = {
@@ -2883,7 +3187,7 @@ return {
 		},
 		Planet = {
 			c_cry_Klubi = {
-				name = "Klubi",
+				name = "Risti",
 				text = {
 					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
 					"Améliore",
@@ -2893,7 +3197,7 @@ return {
 				},
 			},
 			c_cry_Lapio = {
-				name = "Lapio",
+				name = "Pata",
 				text = {
 					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
 					"Améliore",
@@ -2904,6 +3208,16 @@ return {
 			},
 			c_cry_Kaikki = {
 				name = "Kaikki",
+				text = {
+					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
+					"Améliore",
+					"{C:attention}#1#{},",
+					"{C:attention}#2#{},",
+					"et {C:attention}#3#{}",
+				},
+			},
+			c_cry_voxel = {
+				name = "Voxel",
 				text = {
 					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
 					"Améliore",
@@ -2933,7 +3247,7 @@ return {
 				},
 			},
 			c_cry_Sydan = {
-				name = "Sydan",
+				name = "Hertta",
 				text = {
 					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
 					"Améliore",
@@ -2943,7 +3257,7 @@ return {
 				},
 			},
 			c_cry_Timantti = {
-				name = "Timantti",
+				name = "Ruutu",
 				text = {
 					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
 					"Améliore",
@@ -2996,6 +3310,26 @@ return {
 					"Augmente la puissance des",
 					"mains {C:attention}ascensionnées{} de {X:gold,C:white}#2#{}",
 					"{C:inactive}(Actuellement {X:gold,C:white}X(#3#^asc){C:inactive})",
+				},
+			},
+			c_cry_Timantii = {
+				name = "Ruutu",
+				text = {
+					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
+					"Améliore",
+					"{C:attention}#1#{},",
+					"{C:attention}#2#{},",
+					"et {C:attention}#3#{}",
+				},
+			},
+			-- give it up for le rien
+			c_cry_nibiru = {
+				name = "Nibiru",
+				text = {
+					"{S:0.8}({S:0.8,V:1}niv.#1#{S:0.8}){} Améliore",
+					"{C:attention}#2#",
+					"{C:mult}+#3#{} Multi et",
+					"{C:chips}+#4#{} Jeton#<s>4#",
 				},
 			},
 		},
@@ -3141,9 +3475,19 @@ return {
 			sleeve_cry_antimatter_sleeve = {
 				name = "Pochette d'Antimatière",
 				text = {
-					"Applique les {C:attention}effects{}",
+					"Applique les {C:attention}effets{}",
 					"et autres {C:attention}effets spéciaux{}",
 					"de toutes les autres pochettes",
+					"{C:red}WIP",
+				},
+			},
+			sleeve_cry_antimatter_sleeve_balanced = {
+				name = "Pochette d'Antimatière",
+				text = {
+					"Applique les {C:attention}effets{}",
+					"et autres {C:attention}effets spéciaux{}",
+					"de {C:attention}toutes{} les pochettes",
+					"battues avec la {C:gold}Mise Or{}",
 					"{C:red}WIP",
 				},
 			},
@@ -3170,6 +3514,7 @@ return {
 				text = {
 					"Crée {C:attention}#1#{} copie#<s>1# {C:dark_edition}Négatives{}",
 					"d'un consommable {C:attention}aléatoire",
+					"en votre possession",
 					"{C:inactive,s:0.8}Ne copie pas Chambré{}",
 				},
 			},
@@ -3259,6 +3604,14 @@ return {
 					"Ajoute un {C:cry_azure}Sceau Azur{}",
 					"à {C:attention}#1#{} carte",
 					"sélectionnée",
+				},
+			},
+			c_cry_meld = {
+				name = "Mélange", -- c'était "le Mélange qd c'était un tarot"
+				text = {
+					"Transforme un {C:attention}Joker{} ou",
+					"une {C:attention}carte à jouer{} en",
+					"carte {C:dark_edition}Double-face",
 				},
 			},
 			c_cry_vacuum = {
@@ -3683,6 +4036,30 @@ return {
 					"{s:0.8,C:inactive}Badges de Copie exclus",
 				},
 			},
+			tag_cry_clone = {
+				name = "Badge Clone",
+				text = {
+					"Les objets de la boutique coûtent {C:attention}X#1#{}",
+					"plus cher, octroie une {C:attention}Copie{}",
+					"de la prochaîne carte achetée",
+				},
+			},
+			tag_cry_lens = {
+				name = "Badge Optique",
+				text = {
+					"Applique {C:dark_edition}Négatif{}",
+					"à {C:attention}#1#{} consommable#<s>1#",
+					"aléatoire#<s>1#",
+				},
+			},
+			tag_cry_palette_cleanser = {
+				name = "Badge Nettoyant Palette",
+				text = {
+					"Enlève un sticker {C:attention}aléatoire{}",
+					"d'un Joker ou carte à jouer",
+					"{C:attention}aléatoire{}",
+				},
+			},
 		},
 		Tarot = {
 			c_cry_automaton = {
@@ -3701,12 +4078,12 @@ return {
 					"{C:attention}Carte#<s>1# écho",
 				},
 			},
-			c_cry_meld = {
-				name = "le Mélange",
+			c_cry_instability = {
+				name = "Instabilité",
 				text = {
-					"Transforme un {C:attention}Joker{} ou",
-					"une {C:attention}carte à jouer{} en",
-					"carte {C:dark_edition}Double-face",
+					"Transforme jusqu'à {C:attention}#1#{}",
+					"carte#<s>1# sélectionnée#<s>1# en",
+					"{C:attention}Carte#<s>1# abstraites",
 				},
 			},
 			c_cry_theblessing = {
@@ -3873,6 +4250,9 @@ return {
 					"Les cartes {C:planet}Planète{} apparaissent",
 					"{C:attention}X#1#{} plus souvent",
 					"dans la boutique",
+					"Permet de contrôler le {C:planet}taux d'apparition{}",
+					"{C:planet}des planètes{} dans la boutique",
+					"{C:inactive}(Voir les {C:attention}Infos de la partie{C:inactive})",
 					"Toutes les futures cartes",
 					"{C:planet}Planète{} sont {C:green}gratuites{}",
 				},
@@ -3953,8 +4333,11 @@ return {
 					"Les cartes {C:tarot}Tarot{} apparaissent",
 					"{C:attention}X#1#{} plus souvent",
 					"dans la boutique",
+					"Permet de contrôler le {C:tarot}taux d'apparition{}",
+					"{C:tarot}des Tarots{} dans la boutique",
+					"{C:inactive}(Voir les {C:attention}Infos de la partie{C:inactive})",
 					"Toutes les futures cartes",
-					"{C:tarot}Tarot{} seront {C:green}gratuites{}",
+					"{C:tarot}Tarot{} sont {C:green}gratuites{}",
 				},
 				unlock = {
 					"Acheter {C:attention}100{} cartes",
@@ -4002,12 +4385,21 @@ return {
 				text = {
 					"{C:attention}+#1#{} limite",
 					"de sélection de cartes",
-					"{C:inactive,s:0.7}NOTE: Aura plus de{}",
-					"{C:inactive,s:0.7}fonctionnalités plus tard{}",
+					"Toutes les cartes sélectionnées contribuent",
+					"aux {C:attention}Mains Ascensionées{}",
 				},
 			},
 		},
 		Other = {
+			alt_wheel_of_fortune = {
+				name = "La Roue de Fortune",
+				text = {
+					"{C:green}#1# chance(s) sur #2#{} d'ajouter une édition",
+					"{C:dark_edition}Brillantes{}, {C:dark_edition}Holographique{} ou",
+					"{C:dark_edition}Polychrome{}",
+					"à un {C:attention}Joker au hasard",
+				},
+			},
 			disabled = {
 				name = "Désactivé",
 				text = {
@@ -4062,6 +4454,16 @@ return {
 				text = {
 					"Quand ce joker est {C:cry_code}déclenché{},",
 					"déclenche {C:cry_code}#1#",
+					"{C:inactive}Ne marche pas avec toutes les cartes{}",
+					"{C:inactive}mais tous les jokers peuvent déclencher l'autre{}",
+				},
+			},
+			cry_global_sticker = {
+				name = "Global",
+				text = {
+					"Cette carte est {C:cry_code}prioritaire",
+					"lorsque des cartes sont tirées,",
+					"si possible",
 				},
 			},
 			cry_flickering = {
@@ -4079,6 +4481,22 @@ return {
 					"{C:attention}#1#{} déclenchements",
 				},
 			},
+			cry_function_sticker = {
+				name = "Fonction://",
+				text = {
+					"Crée {C:cry_code}#1#{}",
+					"à l'utilisation",
+				},
+			},
+			cry_function_sticker_desc = { --for function:// card
+				name = "Fonction://",
+				text = {
+					"Crée le consommable",
+					"{C:cry_code}Fonction://{} suivant",
+					"{C:inactive}Actuellement #1#, #2# puis #3#{}",
+				},
+			},
+
 			cry_possessed = {
 				name = "Possédé",
 				text = {
@@ -4103,10 +4521,11 @@ return {
 				},
 			},
 			ev_cry_choco0 = {
-				name = "",
+				name = "Événements possibles",
 				text = {
-					"Les détails d'un {C:cry_ascendant,E:1}événement",
-					"seront affichés ici",
+					"{T:ev_cry_choco1}1{} {T:ev_cry_choco2}2{} {T:ev_cry_choco3}3{} {T:ev_cry_choco4}4{} {T:ev_cry_choco5}5{}",
+					"{T:ev_cry_choco6}6{} {T:ev_cry_choco7}7{} {T:ev_cry_choco8}8{} {T:ev_cry_choco9}9{} {T:ev_cry_choco10}10{}",
+					"{C:inactive}(Survolez pour plus d'informations)",
 				},
 			},
 			ev_cry_choco1 = {
@@ -4368,6 +4787,15 @@ return {
 					"{C:attention}Joker Mème{} parmi {C:attention}#2#{}",
 				},
 			},
+			p_cry_baneful_1 = {
+				name = "Paquet Bouffon Maléfique",
+				text = {
+					"Jusqu'à {C:attention}#1#{} Joker#<s>1#",
+					"parmi {C:attention}#2#{} Joker#<s>2# {X:cry_cursed,C:white}Maudit#<s>2#{}",
+					"{C:attention}Skipping{} will {C:red}banish{}",
+					"{C:attention}rightmost{} owned Joker",
+				},
+			},
 			undiscovered_code = {
 				name = "Non découvert",
 				text = {
@@ -4408,6 +4836,12 @@ return {
 				name = "a",
 				text = {
 					'{C:inactive,s:0.7}"Je déteste cette carte" - SDM_0, 2024{}{}',
+				},
+			},
+			cry_multiuse = {
+				name = "m",
+				text = {
+					"{C:inactive}Réutilisable: ({C:cry_code}#1#{C:inactive} utilisations restantes)",
 				},
 			},
 		},
@@ -4496,6 +4930,7 @@ return {
 			["cry_UltPair"] = "Super Paire",
 			["cry_WholeDeck"] = Cryptid_config.family_mode and "Jeu complet" or "un putain de jeu complet",
 			["cry-Cluster Bulwark"] = "Capharna-rempart",
+			["cry_None"] = "Rien",
 		},
 		poker_hand_descriptions = {
 			["cry_Bulwark"] = {
@@ -4514,6 +4949,24 @@ return {
 				"Une main qui contient toutes les cartes",
 				"d'un jeu standard de 52 cartes.",
 				"Je sais pas quoi dire, mais tu es fou.",
+			},
+			["cry_None"] = { "Une main contenant 0 cartes" },
+
+			["cry_Declare0"] = { "Compte toujours comme une Quinte" },
+			["cry_Declare1"] = { "Compte toujours comme une Couleur" },
+			["cry_Declare2"] = { "Compte toujours comme un Full" },
+
+			["cry_Declare0_suitless"] = {
+				"Compte toujours comme une Quinte",
+				"La main n'a pas besoin de couleurs particulières",
+			},
+			["cry_Declare1_suitless"] = {
+				"Compte toujours comme une Couleur",
+				"La main n'a pas besoin de couleurs particulières",
+			},
+			["cry_Declare2_suitless"] = {
+				"Compte toujours comme un Full",
+				"La main n'a pas besoin de couleurs particulières",
 			},
 		},
 		achievement_names = {
@@ -4540,6 +4993,11 @@ return {
 			ach_cry_pin = "L'épingle de la honte",
 			ach_cry_youre_fucking_kidding = Cryptid_config.family_mode and "J'ai plus besoin de ça"
 				or "Tu te fous de moi",
+			ach_cry_decked = "Remis en jeu",
+			ach_cry_despaired = "Déparaillé",
+			ach_cry_stoned = "Solide",
+			ach_cry_fucked = "Foutu",
+			ach_cry_technically_positive = "Techniquement positif",
 		},
 		achievement_descriptions = {
 			ach_cry_ace_in_crash = 'check_for_unlock({type = "ace_in_crash"})',
@@ -4558,12 +5016,17 @@ return {
 			ach_cry_patience_virtue = "Attendre 2 minutes face à la Boucle Lavande avant de jouer la première main, puis battre la blinde",
 			ach_cry_perfectly_balanced = "Battre le Jeu Très Équilibré avec la Mise Ascendante",
 			ach_cry_pull_request = "Faire ://ENGAGER apparaître le même joker qu'il a détruit",
-			ach_cry_traffic_jam = "Battre tous les challenges Heure de Pointe",
+			ach_cry_traffic_jam = "Battre tous les challenges Heure de pointe",
 			ach_cry_ult_full_skip = "Gagner en 1 tour",
 			ach_cry_used_crash = "Utiliser ://CRASH",
 			ach_cry_what_have_you_done = "Supprimer ou sacrifier un Joker exotique",
 			ach_cry_pin = "Perdre une partie face à l'Épingle",
 			ach_cry_youre_fucking_kidding = "Défausser " .. localize("cry_WholeDeck", "poker_hands"),
+			ach_cry_decked = "Monter " .. localize("cry_WholeDeck", "poker_hands") .. " au niveau 5252",
+			ach_cry_despaired = "Monter " .. localize("cry_UltPair", "poker_hands") .. " au niveau 2222",
+			ach_cry_fucked = "Monter " .. localize("cry_Clusterfuck", "poker_hands") .. " au niveau 69",
+			ach_cry_stoned = "Monter " .. localize("cry_Bulwark", "poker_hands") .. " au niveau 420",
+			ach_cry_technically_positive = "Obtenir un Joker Négatif négatif",
 		},
 		challenge_names = {
 			c_cry_ballin = "Ballin'",
@@ -4617,6 +5080,8 @@ return {
 
 			k_cry_program_pack = "Paquet Programme",
 			k_cry_meme_pack = "Paquet Meme",
+			k_cry_baneful_pack = "Paquet Bouffon Maléfique",
+			cry_baneful_warning = "Passer bannira le Joker le plus à droite",
 
 			cry_critical_hit_ex = "Coup critique!",
 			cry_critical_miss_ex = "Échec critique!",
@@ -4631,16 +5096,19 @@ return {
 			cry_debuff_oldflint = "Pas de Couleur",
 			cry_debuff_oldmark = "No hands containing a Pair",
 			cry_debuff_obsidian_orb = "Applique les capacités de tous les boss battus",
+			cry_blind_baneful_pack = "Après la manche, ouvre un Paquet Bouffon Maléfique",
 
 			cry_tax_placeholder = "(X0.4 taille de la blinde)",
 			cry_joke_placeholder = "(multiple de 8)",
 
 			k_code = "Code",
+			k_chips = "Jetons",
 			k_content_set = "Set à thème",
 			b_content_sets = "Sets à thème",
 			--Why aren't these in vanilla?
 			b_tag = "Badge",
 			b_blind = "Blinde",
+			rush_hour_reminder = "Activez l'Horloge et la Boucle Lavande pour jouer à Heure de pointe",
 
 			b_tarot_rate = "Taux de tarot",
 			b_planet_rate = "Taux de planète",
@@ -4668,6 +5136,7 @@ return {
 
 			b_flip = "RETOURNER",
 			b_merge = "FUSIONNER",
+			b_store = "STOCKER",
 
 			cry_asc_hands = "Mains Asc.",
 			cry_p_star = "Étoile",
@@ -4679,6 +5148,7 @@ return {
 			cry_again_q = "Encore?",
 			cry_curse = "Malédiction",
 			cry_curse_ex = "Malédiction!",
+			cry_demicolon = "Demi-déclenché!",
 			cry_sobbing = "À l'aide...",
 			cry_gaming = "Gaming",
 			cry_gaming_ex = "Gaming!",
@@ -4697,6 +5167,7 @@ return {
 			cry_unredeemed = "Plus échangé...",
 			cry_active = "Actif",
 			cry_inactive = "Inactif",
+			cry_divorced = "Divorcé!",
 
 			k_disable_music = "Désactiver la musique",
 
@@ -4707,6 +5178,7 @@ return {
 			k_planet_disc = "Disque Circumstellaire",
 			k_planet_satellite = "Satellites Naturels",
 			k_planet_universe = Cryptid_config.family_mode and "Univers" or "Le putain d'univers",
+			k_planet_nibiru = "Inexistante",
 
 			cry_notif_jimball_1 = "Jimboule",
 			cry_notif_jimball_2 = "Notice de droits d'auteur",
@@ -4747,6 +5219,7 @@ return {
 			unique = "Unique",
 			cry_rigged = "Truqué",
 			cry_hooked = "Accroché",
+			cry_global_sticker = "Global",
 			cry_flickering = "Luisant",
 			cry_possessed = "Possédé",
 

@@ -55,34 +55,6 @@ local equilibrium = {
 	apply = function(self)
 		G.GAME.modifiers.cry_equilibrium = true
 	end,
-	init = function(self)
-		local gp = get_pack
-		function get_pack(k, t)
-			if G.GAME.modifiers.cry_equilibrium then
-				if not P_CRY_ITEMS then
-					P_CRY_ITEMS = {}
-					local valid_pools = { "Joker", "Consumeables", "Voucher", "Booster" }
-					for _, id in ipairs(valid_pools) do
-						for k, v in pairs(G.P_CENTER_POOLS[id]) do
-							if not Cryptid.no(v, "doe", k) then
-								P_CRY_ITEMS[#P_CRY_ITEMS + 1] = v.key
-							end
-						end
-					end
-					for k, v in pairs(G.P_CARDS) do
-						if not Cryptid.no(v, "doe", k) then
-							P_CRY_ITEMS[#P_CRY_ITEMS + 1] = v.key
-						end
-					end
-				end
-				return G.P_CENTERS[pseudorandom_element(
-					P_CRY_ITEMS,
-					pseudoseed("cry_equipackbrium" .. G.GAME.round_resets.ante)
-				)]
-			end
-			return gp(k, t)
-		end
-	end,
 	unlocked = false,
 	check_for_unlock = function(self, args)
 		if Cryptid.safe_get(G, "jokers") then
@@ -147,13 +119,22 @@ local infinite = {
 	name = "cry-Infinite",
 	key = "infinite",
 	order = 2,
-	config = { cry_highlight_limit = 1e20, hand_size = 1 },
+	config = { hand_size = 1 },
 	pos = { x = 3, y = 0 },
 	atlas = "atlasdeck",
-	apply = function(self)
-		G.GAME.modifiers.cry_highlight_limit = self.config.cry_highlight_limit
-	end,
 	unlocked = false,
+	apply = function(self)
+		G.GAME.infinitedeck = true
+		G.E_MANAGER:add_event(Event({
+			trigger = "after",
+			delay = 0.7,
+			func = function()
+				SMODS.change_play_limit(1e6)
+				SMODS.change_discard_limit(1e6)
+				return true
+			end,
+		}))
+	end,
 	check_for_unlock = function(self, args)
 		if args.type == "hand_contents" then
 			if #args.cards >= 6 then
@@ -377,17 +358,26 @@ local legendary = {
 	},
 	name = "cry-Legendary",
 	key = "legendary",
-	config = { cry_legendary = true, cry_legendary_rate = 0.2 },
+	config = { cry_legendary = true, cry_legendary_rate = 5 },
 	pos = { x = 0, y = 6 },
 	atlas = "atlasdeck",
 	order = 15,
+	loc_vars = function(self, info_queue, center)
+		return { vars = { SMODS.get_probability_vars(self, 1, self.config.cry_legendary_rate, "Legendary Deck") } }
+	end,
 	calculate = function(self, back, context)
 		if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
 			if G.jokers then
 				if #G.jokers.cards < G.jokers.config.card_limit then
-					local legendary_poll = pseudorandom(pseudoseed("cry_legendary"))
-					legendary_poll = legendary_poll / (G.GAME.probabilities.normal or 1)
-					if legendary_poll < self.config.cry_legendary_rate then
+					if
+						SMODS.pseudorandom_probability(
+							self,
+							"cry_legendary",
+							1,
+							self.config.cry_legendary_rate,
+							"Legendary Deck"
+						)
+					then
 						local card = create_card("Joker", G.jokers, true, 4, nil, nil, nil, "")
 						card:add_to_deck()
 						card:start_materialize()
@@ -460,18 +450,21 @@ local critical = {
 	name = "cry-Critical",
 	key = "critical",
 	order = 10,
-	config = { cry_crit_rate = 0.25, cry_crit_miss_rate = 0.125 },
+	config = { cry_crit_rate = 4, cry_crit_miss_rate = 8 },
 	pos = { x = 4, y = 5 },
 	atlas = "atlasdeck",
 	loc_vars = function(self, info_queue, center)
-		return { vars = { G.GAME.probabilities.normal or 1 } }
+		local _, aaa = SMODS.get_probability_vars(self, 1, self.config.cry_crit_miss_rate, "Critical Deck")
+		return { vars = { SMODS.get_probability_vars(self, 1, self.config.cry_crit_rate, "Critical Deck"), aaa } }
 	end,
 	calculate = function(self, card, context)
 		if context.final_scoring_step then
+			local aaa =
+				SMODS.pseudorandom_probability(self, "cry_critical", 1, self.config.cry_crit_rate, "Critical Deck")
+			local bbb =
+				SMODS.pseudorandom_probability(self, "cry_critical", 1, self.config.cry_crit_miss_rate, "Critical Deck")
 			local check
-			local crit_poll = pseudorandom(pseudoseed("cry_critical"))
-			crit_poll = crit_poll / (G.GAME.probabilities.normal or 1)
-			if crit_poll < self.config.cry_crit_rate then
+			if aaa then
 				check = 2
 				G.E_MANAGER:add_event(Event({
 					func = function()
@@ -487,7 +480,7 @@ local critical = {
 						return true
 					end,
 				}))
-			elseif crit_poll < self.config.cry_crit_rate + self.config.cry_crit_miss_rate then
+			elseif bbb then
 				check = 0.5
 				G.E_MANAGER:add_event(Event({
 					func = function()
@@ -552,9 +545,7 @@ local glowing = {
 		if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
 			for i = 1, #G.jokers.cards do
 				if not Card.no(G.jokers.cards[i], "immutable", true) then
-					Cryptid.with_deck_effects(G.jokers.cards[i], function(card)
-						Cryptid.misprintize(card, { min = 1.25, max = 1.25 }, nil, true)
-					end)
+					Cryptid.manipulate(G.jokers.cards[i], { value = 1.25 })
 				end
 			end
 		end
@@ -697,8 +688,8 @@ local antimatter = {
 	key = "antimatter",
 	config = {
 		cry_antimatter = true,
-		cry_crit_rate = 0.25, --Critical Deck
-		cry_legendary_rate = 0.2, --Legendary Deck
+		cry_crit_rate = 4, --Critical Deck
+		cry_legendary_rate = 5, --Legendary Deck
 		-- Enhanced Decks
 		cry_force_enhancement = "random",
 		cry_force_edition = "random",
@@ -882,7 +873,16 @@ local antimatter = {
 					~= 0
 				or skip
 			then
-				G.GAME.modifiers.cry_highlight_limit = 1e20
+				G.GAME.infinitedeck = true
+				G.E_MANAGER:add_event(Event({
+					trigger = "after",
+					delay = 0.7,
+					func = function()
+						SMODS.change_play_limit(1e6)
+						SMODS.change_discard_limit(1e6)
+						return true
+					end,
+				}))
 				G.GAME.starting_params.hand_size = G.GAME.starting_params.hand_size + 1
 			end
 			-- Wormhole deck
@@ -986,8 +986,6 @@ local antimatter = {
 
 		function Cryptid.antimatter_trigger_final_scoring(self, context, skip)
 			if context.context == "final_scoring_step" then
-				local crit_poll = pseudorandom(pseudoseed("cry_critical"))
-				crit_poll = crit_poll / (G.GAME.probabilities.normal or 1)
 				--Critical Deck
 				if
 					(
@@ -997,7 +995,15 @@ local antimatter = {
 						~= 0
 					or skip
 				then
-					if crit_poll < self.config.cry_crit_rate then
+					if
+						SMODS.pseudorandom_probability(
+							self,
+							"cry_critical",
+							1,
+							self.config.cry_crit_rate,
+							"Antimatter Deck"
+						)
+					then
 						context.mult = context.mult ^ 2
 						update_hand_text({ delay = 0 }, { mult = context.mult, chips = context.chips })
 						G.E_MANAGER:add_event(Event({
@@ -1090,9 +1096,7 @@ local antimatter = {
 					or skip
 				then
 					for i = 1, #G.jokers.cards do
-						Cryptid.with_deck_effects(G.jokers.cards[i], function(card)
-							Cryptid.misprintize(card, { min = 1.25, max = 1.25 }, nil, true)
-						end)
+						Cryptid.manipulate(G.jokers.cards[i], { value = 1.25 })
 					end
 				end
 				--Legendary Deck
@@ -1112,9 +1116,15 @@ local antimatter = {
 						or skip
 					then
 						if #G.jokers.cards < G.jokers.config.card_limit then
-							local legendary_poll = pseudorandom(pseudoseed("cry_legendary"))
-							legendary_poll = legendary_poll / (G.GAME.probabilities.normal or 1)
-							if legendary_poll < self.config.cry_legendary_rate then
+							if
+								SMODS.pseudorandom_probability(
+									self,
+									"cry_legendary",
+									1,
+									self.config.cry_legendary_rate,
+									"Antimatter Deck"
+								)
+							then
 								local card = create_card("Joker", G.jokers, true, 4, nil, nil, nil, "")
 								card:add_to_deck()
 								card:start_materialize()
@@ -1234,7 +1244,7 @@ local antimatter = {
 	unlocked = false,
 	check_for_unlock = function(self, args)
 		if args.type == "win_deck" then
-			if get_deck_win_stake("b_cry_blank") > 0 and get_deck_win_stake() >= 8 then
+			if get_deck_win_stake("b_cry_blank") >= 8 then
 				unlock_card(self)
 			end
 		end

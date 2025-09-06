@@ -30,7 +30,7 @@ function loadStackTracePlus()
     local pcall, type, pairs, ipairs = pcall, type, pairs, ipairs
     local error = error
 
-    assert(debug, "debug table must be available at this point")
+    assert(debug, "Internal: Debug table must be available at this point")
 
     local io_open = io.open
     local string_gmatch = string.gmatch
@@ -100,7 +100,7 @@ function loadStackTracePlus()
     -- Parses a line, looking for possible function definitions (in a very naïve way)
     -- Returns '(anonymous)' if no function name was found in the line
     local function ParseLine(line)
-        assert(type(line) == "string")
+        assert(type(line) == "string", ("Internal: line \"%s\" is type \"%s\", should be a string"):format(tostring(line), type(line)))
         -- print(line)
         local match = line:match("^%s*function%s+(%w+)")
         if match then
@@ -671,6 +671,18 @@ function injectStackTrace()
         end
         if #sanitizedmsg ~= #msg then
             table.insert(err, "Invalid UTF-8 string in error message.")
+        end
+
+        if V and SMODS and SMODS.save_game and V(SMODS.save_game or '0.0.0') ~= V(SMODS.version or '0.0.0') then
+            table.insert(err, 'This crash may be caused by continuing a run that was started on a previous version of Steamodded. Try creating a new run.')
+        end
+
+        if V and V(MODDED_VERSION or '0.0.0') ~= V(RELEASE_VERSION or '0.0.0') then
+            table.insert(err, '\n\nDevelopment version of Steamodded detected! If you are not actively developing a mod, please try using the latest release instead.\n\n')
+        end
+
+        if not V then
+            table.insert(err, '\nA bad lovely patch has resulted in this crash.\n')
         end
 
         local success, msg = pcall(getDebugInfoForCrash)

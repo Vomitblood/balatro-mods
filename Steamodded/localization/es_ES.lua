@@ -62,6 +62,112 @@ return {
                     '¡Este mod ha sido',
                     '{C:attention}desactivado{}!'
                 }
+            },
+            -- card perma bonuses
+            card_extra_chips = {
+                text = {
+                    "{C:chips}#1#{} fichas extra",
+                },
+            },
+            card_x_chips = {
+                text = {
+                    "{X:chips,C:white}X#1#{} fichas"
+                }
+            },
+            card_extra_x_chips = {
+                text = {
+                    "{X:chips,C:white}X#1#{} fichas extra"
+                }
+            },
+            card_extra_mult = {
+                text = {
+                    "{C:mult}#1#{} multi extra"
+                }
+            },
+            card_x_mult = {
+                text = {
+                    "{X:mult,C:white}X#1#{} multi"
+                }
+            },
+            card_extra_x_mult = {
+                text = {
+                    "{X:mult,C:white}X#1#{} multi extra"
+                }
+            },
+            card_extra_p_dollars = {
+                text = {
+                    "{C:money}#1#{} cuando anota",
+                }
+            },
+            card_extra_h_chips = {
+                text = {
+                    "{C:chips}#1#{} fichas mientras esté en tu mano",
+                }
+            },
+            card_h_x_chips = {
+                text = {
+                    "{X:chips,C:white}X#1#{} fichas mientras esté en tu mano",
+                }
+            },
+            card_extra_h_x_chips = {
+                text = {
+                    "{X:chips,C:white}X#1#{} fichas extra mientras esté en tu mano",
+                }
+            },
+            card_extra_h_mult = {
+                text = {
+                    "{C:mult}#1#{} multi extra mientras esté en tu mano",
+                }
+            },
+            card_h_x_mult = {
+                text = {
+                    "{X:mult,C:white}X#1#{} multi mientras esté en tu mano",
+                }
+            },
+            card_extra_h_x_mult = {
+                text = {
+                    "{X:mult,C:white}X#1#{} multi extra mientras esté en tu mano",
+                }
+            },
+            card_extra_h_dollars = {
+                text = {
+                    "{C:money}#1#{} si está en tu mano al final de la ronda",
+                },
+            },
+            card_extra_repetitions = {
+                text = {
+                    "Reactiva esta",
+                    "carta {C:attention}#1#{} #2#",
+                },
+            },
+            artist = {
+                text = {
+                    "{C:inactive}Artista",
+                },
+            },
+            artist_credit = {
+                name = "Artista",
+                text = {
+                    "{E:1}#1#{}"
+                },
+            },
+            generic_card_limit = {
+                name = "Límite de Cartas",
+                text = {
+                    '{C:dark_edition}#1#{} ranura del área'
+                }
+            },
+            generic_card_limit_plural = {
+                name = "Límite de Cartas",
+                text = {
+                    '{C:dark_edition}#1#{} ranuras del área'
+                }
+            },
+            generic_extra_slots = {
+                name = "Ranuras Usadas",
+                text = {
+                    'Ocupa {C:dark_edition}#1#{} ranuras'
+                }
             }
         },
         Edition = {
@@ -69,6 +175,44 @@ return {
                 name = "Negativa",
                 text = {
                     "{C:dark_edition}+#1#{} de tamaño de mano"
+                },
+            },
+            e_negative_generic = {
+                name = "Negativa",
+                text = {
+                    "{C:dark_edition}+#1#{} ranura del área"
+                },
+            }
+        },
+        Enhanced = {
+            m_gold = {
+                name = "Carta de oro",
+                text = {
+                    "{C:money}#1#{} si esta",
+                    "carta está en tu mano",
+                    "al final de la ronda",
+                },
+            },
+            m_stone = {
+                name = "Carta de piedra",
+                text = {
+                    "{C:chips}#1#{} fichas",
+                    "sin categoría ni palo",
+                },
+            },
+            m_mult = {
+                name = "Carta multi",
+                text = {
+                    "{C:mult}#1#{} multi",
+                },
+            },
+            m_lucky = {
+                name = "Carta de la suerte",
+                text = {
+                    "{C:green}#1# en #3#{} probabilidades",
+                    "de {C:mult}+#2#{} multi",
+                    "{C:green}#6# en #5#{} probabilidades",
+                    "de ganar {C:money}$#4#",
                 },
             },
         }
@@ -101,6 +245,7 @@ return {
             b_unknown = 'Desconocido',
             b_lovely_mod = '(Mod de Lovely) ',
             b_by = ' Por: ',
+            b_priority = 'Prioridad: ',
             b_config = "Configuración",
             b_additions = 'Adiciones',
             b_stickers = 'Stickers',
@@ -108,10 +253,36 @@ return {
             b_applies_stakes_1 = 'Aplica ',
             b_applies_stakes_2 = '',
             b_graphics_mipmap_level = "Nivel de Mipmap",
+            b_browse = 'Navegar',
+            b_search_prompt = 'Buscar mods',
+            b_search_button = 'Buscar',
+            b_seeded_unlocks = 'Desbloqueos con código',
+            b_seeded_unlocks_info = 'Habilita desbloqueos y descubrimientos en partidas con código',
+            ml_achievement_settings = {
+                'Deshabilitado',
+                'Habilitado',
+                'Ignorar Restricciones'
+            },
+            b_deckskins_lc = 'Colores de bajo contraste',
+            b_deckskins_hc = 'Colores de alto contraste',
+            b_deckskins_def = 'Colores por defecto',
+            b_limit = 'Hasta ',
+            b_retrigger_single = 'vez',
+            b_retrigger_plural = 'veces'
         },
         v_dictionary = {
             c_types = '#1# Tipos',
             cashout_hidden = '...y #1# más',
+            a_xchips = "X#1# fichas",
+            a_xchips_minus = "-X#1# fichas",
+            smods_version_mismatch = {
+                "¡Tu versión de Steamodded ha cambiado",
+                "desde que has comenzado esta partida!",
+                "Continuarla podría producir",
+                "comportamiento inesperado y que el juego se bloquee.",
+                "Versión de inicio: #1#",
+                "Versión actual: #2#",
+            }
         },
     }
 }

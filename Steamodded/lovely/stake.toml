@@ -123,7 +123,7 @@ match_indent = true
 target = "functions/misc_functions.lua"
 pattern = 'function get_blind_amount(ante)'
 position = "after"
-payload = '''if G.GAME.modifiers.scaling and G.GAME.modifiers.scaling > 3 then return SMODS.get_blind_amount(ante) end'''
+payload = '''if G.GAME.modifiers.scaling and (G.GAME.modifiers.scaling ~= 1 and G.GAME.modifiers.scaling ~= 2 and G.GAME.modifiers.scaling ~= 3) then return SMODS.get_blind_amount(ante) end'''
 match_indent = true
 
 # set_joker_usage
@@ -188,3 +188,39 @@ pattern = 'G.viewed_stake = math.min(max_stake+1, G.viewed_stake)'
 position = "after"
 payload = '''if G.viewed_stake > #G.P_CENTER_POOLS.Stake then G.viewed_stake = #G.P_CENTER_POOLS.Stake end'''
 match_indent = true
+
+# Fix stake select in run start
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+match_indent = true
+position = 'at'
+pattern = '''
+local max_stake = get_deck_win_stake(G.GAME.viewed_back.effect.center.key) or 0
+G.viewed_stake = math.min(G.viewed_stake, max_stake + 1)
+'''
+payload = '''
+-- local max_stake = get_deck_win_stake(G.GAME.viewed_back.effect.center.key) or 0
+-- G.viewed_stake = math.min(G.viewed_stake, max_stake + 1)
+'''
+
+# pt 2
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+match_indent = true
+position = 'at'
+pattern = '''
+local max_stake = get_deck_win_stake(G.GAME.viewed_back.effect.center.key)
+if G.PROFILES[G.SETTINGS.profile].all_unlocked then max_stake = #G.P_CENTER_POOLS['Stake'] end
+
+G.viewed_stake = math.min(max_stake+1, G.viewed_stake)
+'''
+payload = '''
+--[[
+local max_stake = get_deck_win_stake(G.GAME.viewed_back.effect.center.key)
+if G.PROFILES[G.SETTINGS.profile].all_unlocked then max_stake = #G.P_CENTER_POOLS['Stake'] end
+  
+G.viewed_stake = math.min(max_stake+1, G.viewed_stake)
+]]--
+'''
