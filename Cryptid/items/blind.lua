@@ -423,7 +423,6 @@ local joke = {
 	boss = {
 		min = 1,
 		max = 10,
-		yes_orb = true,
 	},
 	atlas = "blinds",
 	order = 15,
@@ -448,14 +447,15 @@ local joke = {
 	collection_loc_vars = function(self)
 		return { vars = { "8", localize("cry_joke_placeholder") } }
 	end,
-	cry_calc_ante_gain = function(self)
-		if to_big(G.GAME.chips) > to_big(G.GAME.blind.chips) * 2 then
-			if G.GAME.round_resets.ante == 1 then
-				G.GAME.cry_ach_conditions.the_jokes_on_you_triggered = true
+	calculate = function(self, blind, context)
+		if context.modify_ante and context.ante_end and not blind.disabled then
+			if to_big(G.GAME.chips) > to_big(G.GAME.blind.chips) * 2 then
+				if G.GAME.round_resets.ante == 1 then
+					G.GAME.cry_ach_conditions.the_jokes_on_you_triggered = true
+				end
+				return { modify = G.GAME.win_ante - G.GAME.round_resets.ante % G.GAME.win_ante }
 			end
-			return G.GAME.win_ante - G.GAME.round_resets.ante % G.GAME.win_ante
 		end
-		return 1
 	end,
 }
 local hammer = {
@@ -604,7 +604,7 @@ local shackle = {
 		if G.GAME.modifiers.cry_force_edition and G.GAME.modifiers.cry_force_edition == "negative" then
 			return false
 		end
-		return #Cryptid.advanced_find_joker(nil, nil, "e_negative", nil, true) ~= 0
+		return #Cryptid.advanced_find_joker(nil, nil, "e_negative", nil, true, "j") ~= 0
 	end,
 	recalc_debuff = function(self, card, from_blind)
 		if
@@ -931,17 +931,32 @@ local chromatic = {
 	boss = {
 		min = 1,
 		max = 666666,
-		yes_orb = true,
 	},
 	atlas = "blinds_two",
 	order = 25,
 	boss_colour = HEX("a34f98"),
-	cry_modify_score = function(self, score)
-		if math.floor(G.GAME.current_round.hands_played + 1) % 2 == 1 then
-			return score * -1
-		else
-			return score
+	set_blind = function(self, reset, silent)
+		G.GAME.chromatic_mod = 0
+		SMODS.set_scoring_calculation("cry_chromatic")
+	end,
+	defeat = function(self, silent)
+		G.GAME.chromatic_mod = nil
+		SMODS.set_scoring_calculation("multiply")
+	end,
+	disable = function(self, silent)
+		G.GAME.chromatic_mod = nil
+		SMODS.set_scoring_calculation("multiply")
+	end,
+	press_play = function(self)
+		if not G.GAME.blind.disabled then
+			G.GAME.blind.prepped = true
 		end
+	end,
+	drawn_to_hand = function(self)
+		if G.GAME.blind.prepped and not G.GAME.blind.disabled then
+			G.GAME.chromatic_mod = G.GAME.chromatic_mod + 1
+		end
+		G.GAME.blind.prepped = nil
 	end,
 }
 

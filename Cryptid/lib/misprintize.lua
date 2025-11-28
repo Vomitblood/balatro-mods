@@ -18,12 +18,20 @@ Cryptid.misprintize_value_blacklist = {
 	colour = false,
 	suit_nominal_original = false,
 	times_played = false,
+	extra_slots_used = false,
+	card_limit = false,
 	-- TARGET: Misprintize Value Blacklist (format: key = false, )
 }
 Cryptid.misprintize_bignum_blacklist = {
 	odds = false,
 	cry_prob = false,
-	--nominal = false,
+	perma_repetitions = false,
+	repetitions = false,
+	nominal = false, --keep here, please.
+}
+Cryptid.misprintize_value_cap = {
+	perma_repetitions = 40,
+	repetitions = 40,
 }
 
 function Cryptid.calculate_misprint(initial, min, max, grow_type, pow_level)
@@ -496,12 +504,19 @@ function Cryptid.manipulate_table(card, ref_table, ref_value, args, tblkey)
 						or Cryptid.base_values[card.config.center.key][i .. "consumeable"]
 				end
 			end
-			if args.big ~= nil then
-				ref_table[ref_value][i] = Cryptid.manipulate_value(num, args, args.big, i)
-			else
-				ref_table[ref_value][i] = Cryptid.manipulate_value(num, args, Cryptid.is_card_big(card), i)
+			local new_val = Cryptid.manipulate_value(num, args, args.big or Cryptid.is_card_big(card), i)
+			ref_table[ref_value][i] = new_val
+
+			-- take double scale / scalae into account
+			if ref_value == "ability" and ref_table.ability.cry_scaling_info then
+				ref_table.ability.cry_scaling_info[i] = new_val
 			end
-		elseif i ~= "immutable" and type(v) == "table" and Cryptid.misprintize_value_blacklist[i] ~= false then
+		elseif
+			i ~= "immutable"
+			and not (ref_value == "ability" and i == "cry_scaling_info")
+			and type(v) == "table"
+			and Cryptid.misprintize_value_blacklist[i] ~= false
+		then
 			Cryptid.manipulate_table(card, ref_table[ref_value], i, args)
 		end
 	end
@@ -554,6 +569,9 @@ function Cryptid.manipulate_value(num, args, is_big, name)
 				num = to_big(num):arrow(args.value.arrows, to_big(args.value.height))
 			end
 		end
+	end
+	if Cryptid.misprintize_value_cap[name] then
+		num = math.min(num, Cryptid.misprintize_value_cap[name])
 	end
 	if Cryptid.misprintize_bignum_blacklist[name] == false then
 		num = to_number(num)

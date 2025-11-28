@@ -2,6 +2,7 @@
 return {
     compact_deck_enabled = true,
     compact_deck_visible_cards = 100,
+    hide_deck = false,
 
     deck_view_stack_enabled = true,
     deck_view_stack_modifiers = false,
@@ -18,18 +19,16 @@ return {
     deck_view_hide_drawn_cards = false,
     -- todo: maybe custom shader for drawn cards to adjust opacity
 
+    blinds_info = true,
     improved_hand_sorting = false,
     dynamic_hand_align = false,
-    draw_non_essential_shaders = true,
     hide_tags = false,
     hide_consumables = false,
-    hide_deck = false,
-    hide_jokers = false,
     
     flames_intensity_min = 0.5,
     flames_intensity_max = 10,
     flames_relative_intensity = false,
-    flames_slower_speed = false,
+    flames_intensity_vanilla = false,
     flames_volume = 100,
 
     jokers_controls_buttons = true,

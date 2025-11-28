@@ -198,6 +198,7 @@ function Blind:defeat(s)
 	end
 	if
 		--Stop impossible blind combinations from happening
+		--Needs a better system than this, needs a lovely patch for other mods to add to this list currently (TODO)
 		(self.name ~= "cry-oldarm" or not G.GAME.defeated_blinds["bl_psychic"])
 		and (self.name ~= "The Psychic" or not G.GAME.defeated_blinds["bl_cry_oldarm"])
 		and (self.name ~= "cry-oldarm" or not G.GAME.defeated_blinds["bl_cry_scorch"])
@@ -208,6 +209,10 @@ function Blind:defeat(s)
 		and (self.name ~= "cry-Tax" or not G.GAME.defeated_blinds["bl_cry_lavender_loop"])
 		and (self.name ~= "The Needle" or not G.GAME.defeated_blinds["bl_cry_tax"])
 		and (self.name ~= "cry-Tax" or not G.GAME.defeated_blinds["bl_needle"])
+		and (self.name ~= "The Needle" or not G.GAME.defeated_blinds["bl_cry_chromatic"])
+		and (self.name ~= "cry-chromatic" or not G.GAME.defeated_blinds["bl_needle"])
+		and (self.name ~= "cry-Tax" or not G.GAME.defeated_blinds["bl_cry_chromatic"])
+		and (self.name ~= "cry-chromatic" or not G.GAME.defeated_blinds["bl_cry_tax"])
 	then
 		G.GAME.defeated_blinds[self.config.blind.key or ""] = true
 	end
@@ -222,6 +227,8 @@ function Game:start_run(args)
 	if not G.GAME.defeated_blinds then
 		G.GAME.defeated_blinds = {}
 	end
+	G.consumeables.config.highlighted_limit = 1e100
+	G.jokers.config.highlighted_limit = 1e100
 end
 
 --patch for multiple Clocks to tick separately and load separately
@@ -738,7 +745,7 @@ function SMODS.create_mod_badges(obj, badges)
 			}
 			local function eq_col(x, y)
 				for i = 1, 4 do
-					if x[1] ~= y[1] then
+					if x[i] ~= y[i] then
 						return false
 					end
 				end
@@ -1832,6 +1839,7 @@ function end_round()
 			Cryptid.enabled("set_cry_poker_hand_stuff") == true
 			and not Cryptid.safe_get(G.PROFILES, G.SETTINGS.profile, "cry_none")
 		then
+			G.PROFILES[G.SETTINGS.profile].cry_none2 = true
 			G.PROFILES[G.SETTINGS.profile].cry_none = true
 		end
 		if not Cryptid.enabled("set_cry_poker_hand_stuff") then
@@ -1968,6 +1976,7 @@ G.FUNCS.play_cards_from_highlighted = function(e)
 	-- None Stuff
 	if G.GAME.stamp_mod and not G.PROFILES[G.SETTINGS.profile].cry_none and #G.hand.highlighted == 1 then
 		G.PROFILES[G.SETTINGS.profile].cry_none = true
+		G.PROFILES[G.SETTINGS.profile].cry_none2 = true
 		print("nonelock stuff here")
 		G.GAME.hands["cry_None"].visible = true
 	end
@@ -2158,20 +2167,20 @@ function get_straight(hand, min_length, skip, wrap)
 end
 
 local get_prob_vars_ref = SMODS.get_probability_vars
-function SMODS.get_probability_vars(trigger_obj, base_numerator, base_denominator, identifier, from_roll)
+function SMODS.get_probability_vars(trigger_obj, base_numerator, base_denominator, identifier, from_roll, no_mod, ...)
 	local mod = trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_prob or 1
 	local numerator = base_numerator * mod
-	if trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_rigged then
+	if trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_rigged and not no_mod then
 		numerator = base_denominator
 	end
-	return get_prob_vars_ref(trigger_obj, numerator, base_denominator, identifier, from_roll)
+	return get_prob_vars_ref(trigger_obj, numerator, base_denominator, identifier, from_roll, no_mod, ...)
 end
 
 local pseudorandom_probability_ref = SMODS.pseudorandom_probability
-function SMODS.pseudorandom_probability(trigger_obj, seed, base_numerator, base_denominator, identifier)
+function SMODS.pseudorandom_probability(trigger_obj, seed, base_numerator, base_denominator, identifier, no_mod, ...)
 	local mod = trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_prob or 1
 	local numerator = base_numerator * mod
-	if trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_rigged then
+	if trigger_obj and trigger_obj.ability and trigger_obj.ability.cry_rigged and not no_mod then
 		SMODS.post_prob = SMODS.post_prob or {}
 		SMODS.post_prob[#SMODS.post_prob + 1] = {
 			pseudorandom_result = true,
@@ -2183,7 +2192,7 @@ function SMODS.pseudorandom_probability(trigger_obj, seed, base_numerator, base_
 		}
 		return true
 	end
-	return pseudorandom_probability_ref(trigger_obj, seed, numerator, base_denominator, identifier)
+	return pseudorandom_probability_ref(trigger_obj, seed, numerator, base_denominator, identifier, no_mod, ...)
 end
 
 local is_eternalref = SMODS.is_eternal
@@ -2197,17 +2206,98 @@ end
 local unlock_allref = G.FUNCS.unlock_all
 G.FUNCS.unlock_all = function(e)
 	unlock_allref(e)
+	G.PROFILES[G.SETTINGS.profile].cry_none2 = true
 	G.PROFILES[G.SETTINGS.profile].cry_none = (Cryptid.enabled("set_cry_poker_hand_stuff") == true)
 end
 
--- Calc ante gain for The Joke (Scuffed)
-local smods_calc = SMODS.calculate_context
-function SMODS.calculate_context(context, return_table, no_resolve)
-	local aaa = smods_calc(context, return_table, no_resolve)
-	if context.modify_ante and context.ante_end then
-		if G.GAME.blind then
-			aaa.modify = G.GAME.blind:cry_calc_ante_gain() - 1
-		end
+local scie = SMODS.calculate_individual_effect
+function SMODS.calculate_individual_effect(effect, scored_card, key, amount, from_edition, ...)
+	local ret = scie(effect, scored_card, key, amount, from_edition, ...)
+	if ret then
+		return ret
 	end
-	return aaa
+
+	if key == "cry_broken_swap" and amount > 0 then
+		if effect.card and effect.card ~= scored_card then
+			juice_card(effect.card)
+		end
+		-- only need math.min due to amount being required to be greater than 0
+		amount = math.min(amount, 1)
+
+		local chips = SMODS.Scoring_Parameters.chips
+		local mult = SMODS.Scoring_Parameters.mult
+		local chip_mod = chips.current * amount
+		local mult_mod = mult.current * amount
+
+		chips:modify(mult_mod - chip_mod)
+		mult:modify(chip_mod - mult_mod)
+
+		if not Cryptid.safe_get(Talisman, "config_file", "disable_anims") then
+			G.E_MANAGER:add_event(Event({
+				func = function()
+					-- scored_card:juice_up()
+					local pitch_mod = pseudorandom("cry_broken_sync") * 0.05 + 0.85
+					-- wolf fifth as opposed to plasma deck's just-intonated fifth
+					-- yes i'm putting music theory nerd stuff in here no you cannot stop me
+					play_sound("gong", pitch_mod, 0.3)
+					play_sound("gong", pitch_mod * 1.4814814, 0.2)
+					play_sound("tarot1", 1.5)
+					ease_colour(G.C.UI_CHIPS, mix_colours(G.C.BLUE, G.C.RED, amount))
+					ease_colour(G.C.UI_MULT, mix_colours(G.C.RED, G.C.BLUE, amount))
+					G.E_MANAGER:add_event(Event({
+						trigger = "after",
+						blockable = false,
+						blocking = false,
+						delay = 0.8,
+						func = function()
+							ease_colour(G.C.UI_CHIPS, G.C.BLUE, 0.8)
+							ease_colour(G.C.UI_MULT, G.C.RED, 0.8)
+							return true
+						end,
+					}))
+					G.E_MANAGER:add_event(Event({
+						trigger = "after",
+						blockable = false,
+						blocking = false,
+						no_delete = true,
+						delay = 1.3,
+						func = function()
+							G.C.UI_CHIPS[1], G.C.UI_CHIPS[2], G.C.UI_CHIPS[3], G.C.UI_CHIPS[4] =
+								G.C.BLUE[1], G.C.BLUE[2], G.C.BLUE[3], G.C.BLUE[4]
+							G.C.UI_MULT[1], G.C.UI_MULT[2], G.C.UI_MULT[3], G.C.UI_MULT[4] =
+								G.C.RED[1], G.C.RED[2], G.C.RED[3], G.C.RED[4]
+							return true
+						end,
+					}))
+					return true
+				end,
+			}))
+			if not effect.remove_default_message then
+				if effect.balance_message then
+					card_eval_status_text(
+						effect.message_card or effect.juice_card or scored_card or effect.card or effect.focus,
+						"extra",
+						nil,
+						percent,
+						nil,
+						effect.balance_message
+					)
+				else
+					card_eval_status_text(
+						effect.message_card or effect.juice_card or scored_card or effect.card or effect.focus,
+						"extra",
+						nil,
+						percent,
+						nil,
+						{ message = localize("cry_balanced_q"), colour = { 0.8, 0.45, 0.85, 1 } }
+					)
+				end
+			end
+			delay(0.6)
+		end
+
+		return true
+	end
 end
+
+SMODS.scoring_parameter_keys[#SMODS.scoring_parameter_keys + 1] = "cry_broken_swap"

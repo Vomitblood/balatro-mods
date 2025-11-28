@@ -585,9 +585,21 @@ local effarcire = {
 	demicoloncompat = true,
 	calculate = function(self, card, context)
 		if not context.blueprint and not context.retrigger_joker or context.forcetrigger then
-			if context.first_hand_drawn or context.forcetrigger then
-				G.FUNCS.draw_from_deck_to_hand(#G.deck.cards)
-				return nil, true
+			if context.first_hand_drawn or context.forcetrigger and not G.GAME.effarcire_buffer then
+				G.GAME.effarcire_buffer = true
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						G.FUNCS.draw_from_deck_to_hand(#G.deck.cards)
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								G.GAME.effarcire_buffer = nil
+								save_run()
+								return true
+							end,
+						}))
+						return true
+					end,
+				}))
 			elseif G.hand.config.card_limit < 1 then
 				G.hand.config.card_limit = 1
 			end
@@ -645,8 +657,7 @@ local crustulum = {
 				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
-				message_key = "a_chips",
-				colour = G.C.CHIPS,
+				message_colour = G.C.CHIPS,
 			})
 			return nil, true
 		end
@@ -665,8 +676,7 @@ local crustulum = {
 				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
-				message_key = "a_chips",
-				colour = G.C.CHIPS,
+				message_colour = G.C.CHIPS,
 			})
 			return {
 				chip_mod = lenient_bignum(card.ability.extra.chips),
@@ -819,41 +829,45 @@ local scalae = {
 		end
 	end,
 	calc_scaling = function(self, card, other, current_scaling, current_scalar, args)
-		if other.ability.name ~= "cry-Scalae" then
-			if not G.GAME.cryptid_base_scales then
-				G.GAME.cryptid_base_scales = {}
-			end
-			if not G.GAME.cryptid_base_scales[other.config.center.key] then
-				G.GAME.cryptid_base_scales[other.config.center.key] = {}
-			end
-			if not G.GAME.cryptid_base_scales[other.config.center.key][args.scalar_value] then
-				G.GAME.cryptid_base_scales[other.config.center.key][args.scalar_value] = current_scalar
-			end
-			local true_base = G.GAME.cryptid_base_scales[other.config.center.key][args.scalar_value]
-			local orig_scale_scale = current_scaling
-			local new_scale = lenient_bignum(
-				to_big(true_base)
-					* (
-						(
-							1
-							+ (
-								(to_big(orig_scale_scale) / to_big(true_base))
-								^ (to_big(1) / to_big(card.ability.extra.scale))
-							)
-						) ^ to_big(card.ability.extra.scale)
-					)
-			)
-			if not Cryptid.is_card_big(other) and to_big(new_scale) >= to_big(1e300) then
-				new_scale = 1e300
-			end
-			return {
-				scalar_value = new_scale,
-				message = localize("k_upgrade_ex"),
-			}
+		-- checks if the scaled joker is also a scalae
+		-- if so, return nothing
+		if other.config.center.key == self.key then
+			return
 		end
+
+		-- store original scaling rate
+		if not other.ability.cry_scaling_info then
+			other.ability.cry_scaling_info = {
+				[args.scalar_value] = current_scalar,
+			}
+		elseif not other.ability.cry_scaling_info[args.scalar_value] then
+			other.ability.cry_scaling_info[args.scalar_value] = current_scalar
+		end
+
+		-- joker scaling stuff
+		local original_scalar = other.ability.cry_scaling_info[args.scalar_value]
+		local new_scale = lenient_bignum(
+			to_big(original_scalar)
+				* (
+					(
+						1
+						+ (
+							(to_big(current_scaling) / to_big(original_scalar))
+							^ (to_big(1) / to_big(card.ability.extra.scale))
+						)
+					) ^ to_big(card.ability.extra.scale)
+				)
+		)
+		args.scalar_table[args.scalar_value] = new_scale
+
+		return {
+			message = localize("k_upgrade_ex"),
+		}
 	end,
+
 	loc_vars = function(self, info_queue, card)
 		local example = { 2, 3, 4 }
+		-- this is literally just straight up wrong atm, scalae doesn't work like this
 		for i = 1, #example do
 			example[i] = to_big(example[i]) ^ (card.ability.extra.scale + 1)
 		end
@@ -1353,8 +1367,8 @@ local verisimile = {
 	object_type = "Joker",
 	name = "cry-verisimile",
 	key = "verisimile",
-	pos = { x = 0, y = 1 },
-	soul_pos = { x = 1, y = 1, extra = { x = 2, y = 1 } },
+	pos = { x = 6, y = 5 },
+	soul_pos = { x = 8, y = 5, extra = { x = 7, y = 5 } },
 	config = { extra = { xmult = 1 } },
 	rarity = "cry_exotic",
 	cost = 50,
@@ -1365,12 +1379,12 @@ local verisimile = {
 	demicoloncompat = true,
 	blueprint_compat = true,
 
-	atlas = "placeholders",
+	atlas = "atlasexotic",
 	loc_vars = function(self, info_queue, center)
 		return { vars = { number_format(center.ability.extra.xmult) } }
 	end,
 	calculate = function(self, card, context)
-		if context.pseudorandom_result and context.result then
+		if context.pseudorandom_result and context.result and not context.blueprint then
 			-- implementation that doesn't use SMODS.scale_card; use if scale_card causes weird or unexpected behavior
 			--[[
 			card.ability.extra.xmult = lenient_bignum(card.ability.extra.xmult + context.denominator)
@@ -1393,15 +1407,16 @@ local verisimile = {
 				ref_value = "xmult",
 				scalar_table = context,
 				scalar_value = "denominator",
-				scaling_message = {
-					message = localize({
-						type = "variable",
-						key = "a_xmult",
-						vars = { number_format(card.ability.extra.xmult) },
-					}),
-				},
+				scaling_message = {},
 			})
 
+			return {
+				message = localize({
+					type = "variable",
+					key = "a_xmult",
+					vars = { number_format(card.ability.extra.xmult) },
+				}),
+			}
 		-- forcetriggers won't scale non verisimile, because how much would you scale it by
 		elseif context.joker_main or context.forcetrigger then
 			return {
@@ -1657,6 +1672,197 @@ local formidiulosus = {
 		code = { "Foegro" },
 	},
 }
+local caeruleum = {
+	dependencies = {
+		items = {
+			"c_cry_gateway",
+			"set_cry_exotic",
+		},
+	},
+	object_type = "Joker",
+	name = "cry-Caeruleum",
+	key = "caeruleum",
+
+	config = {},
+
+	init = function(self)
+		local scie = SMODS.calculate_individual_effect
+		function SMODS.calculate_individual_effect(effect, scored_card, key, amount, from_edition, ...)
+			local card = effect.card or scored_card
+			local caeruleum_messages = {}
+
+			if Cryptid.safe_get(card, "ability", "cry_caeruleum") then
+				for i = 1, #G.jokers.cards do
+					if G.jokers.cards[i] == card then
+						for _, b in ipairs(card.ability.cry_caeruleum) do
+							local caeruleum = G.jokers.cards[i + (b and 1 or -1)]
+							local was_key_changed, new_key, op = Cryptid.caeruleum_new_key(key)
+
+							-- change the key!
+							if was_key_changed then
+								key = new_key
+
+								-- no _mod returns because i hate them
+								effect.remove_default_message = (key:sub(-4) == "_mod")
+
+								-- create a new message for caeruleum to display
+								local chipsMessageKeys = {
+									"a_chips",
+									"a_xchips",
+									"a_powchips",
+								}
+
+								-- these get run through card_eval_status_text AFTER the normal calculate_individual_effect runs
+								caeruleum_messages[#caeruleum_messages + 1] = {
+									caeruleum,
+									"extra",
+									nil,
+									percent,
+									nil,
+									{
+										message = localize({
+											type = "variable",
+											key = chipsMessageKeys[op],
+											vars = {
+												number_format(amount),
+											},
+										}),
+										focus = caeruleum,
+										sound = "chips1",
+									},
+								}
+							end
+						end
+					end
+				end
+			end
+
+			-- run normal function
+			local ret = scie(effect, scored_card, key, amount, from_edition, ...)
+
+			-- display caeruleum messages
+			if #caeruleum_messages > 0 then
+				for _, msg in ipairs(caeruleum_messages) do
+					card_eval_status_text(unpack(msg))
+				end
+			end
+
+			-- return result
+			return ret
+		end
+	end,
+
+	pos = { x = 3, y = 6 },
+	rarity = "cry_exotic",
+	order = 519,
+	cost = 50,
+	blueprint_compat = false,
+	demicoloncompat = false,
+	atlas = "atlasexotic",
+	soul_pos = { x = 5, y = 6, extra = { x = 4, y = 6 } },
+	loc_vars = function(self, info_queue, center)
+		return {
+			vars = {},
+		}
+	end,
+	calculate = function(self, card, context)
+		-- used to "mark" jokers to be affected by caeruleum
+		if context.before and context.cardarea == G.jokers then
+			local left_joker = nil
+			local right_joker = nil
+
+			for i = 1, #G.jokers.cards do
+				if G.jokers.cards[i] == card then
+					left_joker = G.jokers.cards[i - 1]
+					right_joker = G.jokers.cards[i + 1]
+				end
+			end
+
+			-- allows caeruleum to stack
+			-- boolean value is true if the joker was to the left of caeruleum (so caeruleum is to the right of it)
+			if left_joker and left_joker.config.center.key ~= "j_cry_caeruleum" then
+				left_joker.ability.cry_caeruleum = left_joker.ability.cry_caeruleum or {}
+				left_joker.ability.cry_caeruleum[#left_joker.ability.cry_caeruleum + 1] = true
+			end
+
+			if right_joker and right_joker.config.center.key ~= "j_cry_caeruleum" then
+				right_joker.ability.cry_caeruleum = right_joker.ability.cry_caeruleum or {}
+				right_joker.ability.cry_caeruleum[#right_joker.ability.cry_caeruleum + 1] = false
+			end
+		end
+
+		if context.after and context.cardarea == G.jokers then
+			-- reset this on every joker just to avoid weird bugs
+			for i = 1, #G.jokers.cards do
+				G.jokers.cards[i].ability.cry_caeruleum = nil
+			end
+		end
+	end,
+	cry_credits = {
+		idea = { "HexaCryonic" },
+		art = { "Tatteredlurker" },
+		code = { "InvalidOS" },
+	},
+}
+
+local chipsOperators = {
+	{
+		keys = {
+			"eq_chips",
+			"Eqchips_mod",
+			"EQchips_mod",
+			-- TARGET: add =chips modifiers (or succession if you're silly)
+		},
+		operation = 0,
+	},
+	{
+		keys = {
+			"chips",
+			"h_chips",
+			"chip_mod",
+		},
+		operation = 1,
+	},
+	{
+		keys = {
+			"xchips",
+			"x_chips",
+			"Xchip_mod",
+		},
+		operation = 2,
+	},
+}
+
+local chipsReturnOperators = {
+	"chips",
+	"xchips",
+	"echips",
+}
+
+--- Handles Caeruleum's operator increase.
+--- @param key string The key being checked.
+--- @return boolean was_key_changed Whether the key was actually changed.
+--- @return string new_key The new key if it was changed, or old one if it wasn't.
+--- @return integer? op The new operator's position in the hyperoperation sequence. `nil` if the key wasn't changed.\n(1 is addition, 2 is multiplication, 3 is exponentiation)
+function Cryptid.caeruleum_new_key(key)
+	if not SMODS.Calculation_Controls.chips or not key then
+		return false, key
+	end
+
+	for _, op in ipairs(chipsOperators) do
+		for _, key2 in pairs(op.keys) do
+			if key == key2 then
+				local op2 = math.max(1, math.min(op.operation + 1, 3))
+				local new_key = chipsReturnOperators[op2]
+
+				return true, new_key, op2
+			end
+		end
+	end
+
+	return false, key
+end
+
 local items = {
 	gateway,
 	iterum,
@@ -1676,10 +1882,11 @@ local items = {
 	facile,
 	gemino,
 	energia,
-	--verisimile, WHY IS THIS AN EXOTIC????????????????????
+	verisimile, -- it's an exotic because it's fucking peak
 	--rescribere, [NEEDS REFACTOR]
 	duplicare,
 	formidiulosus, -- see tenebris
+	caeruleum,
 }
 return {
 	name = "Exotic Jokers",

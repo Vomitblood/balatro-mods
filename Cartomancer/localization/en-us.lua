@@ -16,15 +16,14 @@ return {
             carto_deck_view_stack_modifiers = "Stack all modifiers",
             carto_deck_view_stack_chips = "Stack different chip values",
             -- carto_deck_view_stack_suits = "Stack all suits", -- Do not think this is necessary if steamodded adds suit pages.
-            carto_deck_view_stack_x_color = "Stack display color (hex)  ",
-            carto_deck_view_stack_background_opacity = "Stack display opacity ",
-            carto_deck_view_stack_pos_vertical = "Vertical stack alignment  ",
+            carto_deck_view_stack_x_color = "Color ",
+            carto_deck_view_stack_background_opacity = "Opacity ",
+            carto_deck_view_stack_pos = "Alignment ",
             carto_deck_view_stack_pos_vertical_options = {
                 "top",
                 "center",
                 "bottom"
             },
-            carto_deck_view_stack_pos_horizontal = "Horizontal stack alignment  ",
             carto_deck_view_stack_pos_horizontal_options = {
                 "left",
                 "middle",
@@ -32,18 +31,20 @@ return {
             },
             carto_deck_view_unique_cards = "Unique cards:",
 
-            carto_draw_non_essential_shaders = "Draw non-essential shaders",
-            carto_improved_hand_sorting = "Improved hand sorting",
-            carto_dynamic_hand_align = "Improved hand align for huge hand size",
+            carto_improved_hand_sorting = "More hand sorting options",
+            carto_dynamic_hand_align = "Better align for cards with huge hand size",
             carto_hide_tags = "Hide tags",
             carto_hide_consumables = "Hide consumables",
             carto_hide_deck = "Hide deck",
-            carto_hide_jokers = "Hide jokers",
 
+            carto_flames_chips = "Chips",
+            carto_flames_mult = "Mult",
             carto_flames_intensity_min = "Min intensity ",
             carto_flames_intensity_max = "Max intensity ",
-            carto_flames_relative_intensity = "Relative score intensity",
-            carto_flames_slower_speed = "Slower flames on big scores",
+            carto_flames_relative_intensity = "Score intensity relative to current blind",
+            carto_flames_intensity_vanilla = "Ignore min/max intensity",
+            carto_flames_gasoline_title = "Preview",
+            carto_flames_gasoline = "",
             carto_flames_volume = "Flames volume ",
             
             carto_jokers_controls_buttons = "Show joker area buttons",
@@ -59,6 +60,11 @@ return {
             carto_kb_toggle_consumables = "Toggle consumables visibility",
             carto_kb_toggle_jokers = "Toggle jokers visibility",
             carto_kb_toggle_jokers_buttons = "Toggle jokers buttons",
+
+            carto_blinds_info_setting = "Show Blinds Info tab",
+            carto_blinds_info_current = "Current",
+            carto_blinds_info_extra = "History",
+            carto_blinds_info_title = "Boss Blinds History",
         }
     }
 }

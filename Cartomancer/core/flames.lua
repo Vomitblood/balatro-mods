@@ -1,15 +1,22 @@
+local nan = math.huge/math.huge
+local big_numbah = 1e308
 
-
-function Cartomancer.get_flames_intensity()
+function Cartomancer.get_flames_intensity(preview)
     local value
-    if Cartomancer.SETTINGS.flames_relative_intensity then
+    if preview then
+        value = Cartomancer._INTERNAL_gasoline
+    elseif Cartomancer.SETTINGS.flames_relative_intensity then
         -- Scale intensity relative to the required score
         value = math.max(0., math.log(G.ARGS.score_intensity.earned_score/G.ARGS.score_intensity.required_score + 5, 5))
     else
         value = math.max(0., math.log(G.ARGS.score_intensity.earned_score, 5) - 2)
     end
 
-    if Cartomancer.SETTINGS.flames_intensity_max >= Cartomancer._INTERNAL_max_flames_intensity then
+    if value == math.huge or not value or value == nan then
+        value = big_numbah
+    end
+
+    if Cartomancer.SETTINGS.flames_intensity_vanilla then
         return value
     end
 
@@ -23,18 +30,18 @@ function Cartomancer.handle_flames_volume(value)
     return Cartomancer.SETTINGS.flames_volume/100. * value
 end
 
-local function intensity_for_big_scores(real_intensity)
-    local power = 0.55
+function Cartomancer.init_setting_flames()
+    G.ARGS.flame_handler.chips_cart = G.ARGS.flame_handler.chips_cart or {
+        id = 'flame_chips_cart',
+        arg_tab = 'chip_flames_cart',
+        colour = G.C.UI_CHIPS,
+        accent = G.C.UI_CHIPLICK or SMODS and SMODS.Scoring_Parameters and SMODS.Scoring_Parameters.chips and SMODS.Scoring_Parameters.chips.lick or {1, 1, 1, 1}
+    }
 
-    real_intensity = math.max(0, real_intensity)
-
-    return math.max(0, math.min(6, real_intensity) + math.max(1, math.log(real_intensity)) ^ power) - 1.
-end
-
-function Cartomancer.handle_flames_timer(timer, intensity)
-    if not Cartomancer.SETTINGS.flames_slower_speed then
-        return timer + G.real_dt*(1 + intensity*0.2)
-    end
-
-    return timer + G.real_dt*(1 + intensity_for_big_scores(intensity)*0.7)
+    G.ARGS.flame_handler.mult_cart = G.ARGS.flame_handler.mult_cart or {
+        id = 'flame_mult_cart',
+        arg_tab = 'mult_flames_cart',
+        colour = G.C.UI_MULT,
+        accent = G.C.UI_MULTLICK or SMODS and SMODS.Scoring_Parameters and SMODS.Scoring_Parameters.mult and SMODS.Scoring_Parameters.mult.lick or {1, 1, 1, 1}
+    }
 end

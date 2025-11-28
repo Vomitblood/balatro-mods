@@ -528,6 +528,7 @@ Cryptid.big_num_blacklist = {
 	["j_cry_wonka_bar"] = true,
 	["j_cry_oldcandy"] = true,
 	["j_cry_negative"] = true,
+	["j_cry_energia"] = true,
 
 	["c_magician"] = true,
 	["c_empress"] = true,
@@ -1451,6 +1452,11 @@ end
 -- "log base (x) of (y)". Pre-Calculus courses recommended
 function Cryptid.funny_log(x, y)
 	return math.log(y) / math.log(x)
+end
+
+-- Clamps n between min and max
+function Cryptid.clamp(n, min, max)
+	return math.min(math.max(n, min), max)
 end
 
 local say_stuff_ref = Card_Character.say_stuff

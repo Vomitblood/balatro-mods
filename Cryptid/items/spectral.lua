@@ -33,7 +33,8 @@ local lock = {
 	use = function(self, card, area, copier)
 		local used_consumable = copier or card
 		check_for_unlock({ cry_used_consumable = "c_cry_lock" })
-		local target = #G.jokers.cards == 1 and G.jokers.cards[1] or G.jokers.cards[math.random(#G.jokers.cards)]
+		local target = #G.jokers.cards == 1 and G.jokers.cards[1]
+			or pseudorandom_element(G.jokers.cards, pseudoseed("Dudeman"))
 		G.E_MANAGER:add_event(Event({
 			trigger = "after",
 			delay = 0.4,
@@ -1176,7 +1177,7 @@ local typhoon = {
 	cost = 4,
 	atlas = "atlasnotjokers",
 	pos = { x = 0, y = 4 },
-	use = function(self, card, area, copier) --Good enough
+	use = function(self, card, area, copier)
 		local used_consumable = copier or card
 		check_for_unlock({ cry_used_consumable = "c_cry_typhoon" })
 		local cards = Cryptid.get_highlighted_cards({ G.hand }, card, 1, card.ability.max_highlighted)
@@ -1185,7 +1186,7 @@ local typhoon = {
 			G.E_MANAGER:add_event(Event({
 				func = function()
 					play_sound("tarot1")
-					highlighted:juice_up(0.3, 0.5)
+					used_consumable:juice_up(0.3, 0.5)
 					return true
 				end,
 			}))
@@ -1194,7 +1195,7 @@ local typhoon = {
 				delay = 0.1,
 				func = function()
 					if highlighted then
-						highlighted:set_seal("cry_azure")
+						highlighted:set_seal("cry_azure", nil, true)
 					end
 					return true
 				end,

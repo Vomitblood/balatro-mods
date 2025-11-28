@@ -5,7 +5,7 @@ return {
 				name = "Antimatter Deck",
 				text = {
 					"Applies the {C:legendary,E:1}upsides{}",
-					"of {C:attention}every{} deck",
+					"of {C:attention}almost every{} deck",
 				},
 				unlock = {
 					"Win a run",
@@ -17,8 +17,26 @@ return {
 				name = "Antimatter Deck",
 				text = {
 					"Applies the {C:legendary,E:1}upsides{}",
-					"of {C:attention}every{} deck won",
+					"of {C:attention}almost every{} deck won",
 					"with {C:gold}Gold Stake{}",
+				},
+				unlock = {
+					"Win a run",
+					"with {C:attention}Blank Deck",
+					"on {C:attention}Gold Stake",
+				},
+			},
+			b_cry_antimatter_custom = {
+				name = "Antimatter Deck",
+				text = {
+					"Applies the {C:legendary,E:1}upsides{}",
+					"of {C:attention}some{} decks won",
+					"with {C:gold}Gold Stake{}",
+				},
+				unlock = {
+					"Win a run",
+					"with {C:attention}Blank Deck",
+					"on {C:attention}Gold Stake",
 				},
 			},
 			b_cry_beige = {
@@ -1214,6 +1232,31 @@ return {
 					"{C:attention}10 minutes",
 				},
 			},
+			j_cry_broken_sync_catalyst = {
+				name = "Broken Sync Catalyst",
+				text = {
+					"Swaps {C:attention}#1#%{} of {C:chips}Chips{} with {C:attention}#1#%{} of {C:mult}Mult{}",
+					"{C:inactive,s:0.8}I've seen this one before...",
+					"{C:inactive,s:0.8}...it's seen better days.",
+				},
+			},
+			j_cry_thalia = {
+				name = "Thalia and Melpomeme",
+				text = {
+					"{C:white,X:mult}X#1#{} Mult for every",
+					"pair of unique rarities",
+					"{C:inactive}(Currently {C:white,X:mult}X#2#{C:inactive}){}",
+				},
+			},
+			j_cry_keychange = {
+				name = "Key Change",
+				text = {
+					"Gains {C:white,X:mult}X#1#{} if {C:attention}poker hand{} has",
+					"not been played this round",
+					"Resets at {C:attention}end of round{}",
+					"{C:inactive}(Currently {C:white,X:mult}X#2#{C:inactive{}){}",
+				},
+			},
 			j_cry_brittle = {
 				name = "Brittle Candy",
 				text = {
@@ -1246,6 +1289,14 @@ return {
 					"Can store {C:attention}#1#{} selected shop item#<s>1#",
 					"When sold: Add the stored item#<s>1#",
 					"to the next shop",
+				},
+			},
+			j_cry_caeruleum = {
+				name = "Caeruleum",
+				text = {
+					"Adjacent {C:chips}chips{}-modifying jokers",
+					"use the next highest {C:attention}operator{} for scoring",
+					"{C:inactive}(Caps at exponentiation)",
 				},
 			},
 			j_cry_candy_basket = {
@@ -1593,8 +1644,9 @@ return {
 			["j_cry_Double Scale"] = { -- ?????????????
 				name = "Double Scale",
 				text = {
-					"Scaling {C:attention}Jokers{}",
-					"scale {C:attention}quadratically",
+					"Whenever a {C:attention}Joker scales{}",
+					"The {C:attention}scaling rate{} is increased by its {C:attention}original scale rate{}",
+					"{C:inactive,s:0.8}(Does not stack with copies of this Joker){}",
 					"{C:inactive,s:0.8}(ex. +1, +3, +6, +10)",
 					"{C:inactive,s:0.8}(grows by +1, +2, +3)",
 				},
@@ -3276,6 +3328,18 @@ return {
 					"and {C:attention}#3#{}",
 				},
 			},
+			c_cry_perkele = {
+				name = "Perkele",
+				text = {
+					"({V:1}lvl.#4#{})({V:2}lvl.#5#{})({V:3}lvl.#6#{})",
+					"Level up",
+					"{C:attention}#1#{},",
+					"{C:attention}#2#{},",
+					"and {C:attention}#3#{}",
+					"{C:inactive}(Currently {X:gold,C:white}X#7#{C:inactive} {C:chips}C{}+{C:mult}M{C:inactive} Multiplier",
+					"{C:inactive}Per {C:attention}1{C:inactive} Ascension power)",
+				},
+			},
 			c_cry_voxel = {
 				name = "Voxel",
 				text = {
@@ -4426,6 +4490,16 @@ return {
 					"trigger {C:cry_code}#1#",
 					"{C:inactive}Not all cards can be triggered this way{}",
 					"{C:inactive}but all Jokers can trigger the other{}",
+					"Removed at end of round",
+				},
+			},
+			cry_hooked_2 = {
+				name = "Hooked",
+				text = {
+					"When this Joker is {C:cry_code}triggered{},",
+					"trigger {C:cry_code}#1#",
+					"{C:inactive}Not all cards can be triggered this way{}",
+					"{C:inactive}but all Jokers can trigger the other{}",
 				},
 			},
 			cry_global_sticker = {
@@ -4716,8 +4790,19 @@ return {
 			o_sunplanet = {
 				name = "Observatory Effect",
 				text = {
-					"Held {C:attention}Sol{} Cards increase",
-					"{C:attention}Ascension power",
+					"Held {C:attention}Sol{} and {C:attention}Perkele{} Cards",
+					"increase {C:attention}Ascension power",
+					"{C:inactive}(Currently {X:gold,C:white}+#1#{C:inactive})",
+				},
+			},
+			o_perkele = {
+				name = "Observatory Effect",
+				text = {
+					"{X:dark_edition,C:white}^#2#{} mult if played hand is a",
+					"{C:attention}#4#{}",
+					"{X:mult,C:white}X#2#{} mult if played hand is a {C:attention}#3#{}",
+					"Held {C:attention}Sol{} and {C:attention}Perkele{} Cards",
+					"increase {C:attention}Ascension power",
 					"{C:inactive}(Currently {X:gold,C:white}+#1#{C:inactive})",
 				},
 			},
@@ -5136,6 +5221,7 @@ return {
 			cry_p_star = "Star",
 
 			cry_again_q = "Again?",
+			cry_balanced_q = "Balanced...?",
 			cry_curse = "Curse",
 			cry_curse_ex = "Curse!",
 			cry_demicolon = "Demitrigger!",
@@ -5189,6 +5275,7 @@ return {
 			cry_gameset_mainline = "Mainline",
 			cry_gameset_madness = "Madness",
 			cry_gameset_custom = "Modified",
+			cry_gameset_Custom = "Custom",
 			cry_gameset_exp = "Experimental",
 			cry_gameset_exp_modest = "Experimental (Modest)",
 			cry_gameset_exp_mainline = "Experimental (Mainline)",

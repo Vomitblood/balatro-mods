@@ -10,7 +10,7 @@ priority = 69
 target = "game.lua"
 pattern = "boot_timer('prep stage', 'splash prep',1)"
 position = "before"
-payload = "Cartomancer.load_mod_file('internal/localization.lua', 'localization')"
+payload = "Cartomancer.load_mod_file('internal/localization.lua', 'cartomancer.localization')"
 match_indent = true
 
 # Add tab button to settings menu
@@ -71,6 +71,14 @@ match_indent = true
 position = "at"
 pattern = "self.config.chosen = true"
 payload = "self.config.chosen = chosen_temp or true"
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+match_indent = true
+position = "before"
+pattern = '''{n=G.UIT.C, config={align = "cm", minh = args.h,r = 0.1, minw = 0.8, colour = args.colour,shadow = true}, nodes={'''
+payload = "not args.hide_value and "
 
 # Add dynamic label support to UIBox_button
 [[patches]]

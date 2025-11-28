@@ -343,7 +343,7 @@ SMODS.Rarity({
 	pools = { ["Joker"] = true },
 	get_weight = function(self, weight, object_type)
 		-- The game shouldn't try generating Epic Jokers when they are disabled
-		if Cryptid_config["Epic Jokers"] then
+		if Cryptid.enabled("set_cry_epic") then
 			return 0.003
 		else
 			return 0
@@ -540,23 +540,28 @@ SMODS.Sound({
 			and Cryptid_config.Cryptid
 			and Cryptid_config.Cryptid.jimball_music
 			-- Lowering priority for edition Jimballs later
-			and 7
+			and 200
 	end,
 })
 SMODS.Sound({
 	key = "music_code",
 	path = "music_code.ogg",
 	select_music_track = function()
-		return Cryptid_config.Cryptid
+		return (
+			Cryptid_config.Cryptid
 			and Cryptid_config.Cryptid.code_music
 			and (
-				(
-					G.pack_cards
-					and G.pack_cards.cards
-					and G.pack_cards.cards[1]
-					and G.pack_cards.cards[1].ability.set == "Code"
-				) or (G.GAME and G.GAME.USING_CODE)
+								-- in a code pack
+(
+					G.booster_pack
+					and not G.booster_pack.REMOVED
+					and SMODS.OPENED_BOOSTER
+					and SMODS.OPENED_BOOSTER.config.center.kind == "Code"
+				)
+				-- using a code card
+				or (G.GAME and G.GAME.USING_CODE)
 			)
+		) and 100
 	end,
 })
 SMODS.Sound({
@@ -565,14 +570,13 @@ SMODS.Sound({
 	select_music_track = function()
 		if G.GAME.cry_music_big then
 			return G.GAME.cry_music_big
-		end
-		if
+		elseif
 			Cryptid_config.Cryptid
 			and Cryptid_config.Cryptid.big_music
 			and to_big(G.GAME.round_scores["hand"].amt) > to_big(10) ^ 1000000
 		then
-			G.GAME.cry_music_big = true
-			return true
+			G.GAME.cry_music_big = 6
+			return 100.001
 		end
 	end,
 })
@@ -581,9 +585,11 @@ SMODS.Sound({
 	path = "music_exotic.ogg",
 	volume = 0.4,
 	select_music_track = function()
-		return Cryptid_config.Cryptid
+		return (
+			Cryptid_config.Cryptid
 			and Cryptid_config.Cryptid.exotic_music
 			and #Cryptid.advanced_find_joker(nil, "cry_exotic", nil, nil, true) ~= 0
+		) and 100.002
 	end,
 })
 SMODS.Sound({
@@ -862,5 +868,25 @@ SMODS.Scoring_Calculation({
 				},
 			},
 		}
+	end,
+})
+
+-- Scoring Calculation for The Chromatic
+SMODS.Scoring_Calculation({
+	key = "chromatic",
+	func = function(self, chips, mult, flames)
+		if Cryptid.safe_get(G, "GAME", "chromatic_mod") then
+			if G.GAME.chromatic_mod % 2 == 1 then
+				return chips * mult * -1
+			end
+		end
+		return chips * mult
+	end,
+	update_ui = function(self, container, chip_display, mult_display, operator)
+		local aaa = Cryptid.safe_get(G, "GAME", "chromatic_mod") or -1
+		if aaa > 0 and aaa % 2 == 1 then
+			ease_colour(G.C.UI_CHIPS, HEX("a34f98"), 0.3)
+			ease_colour(G.C.UI_MULT, HEX("a34f98"), 0.3)
+		end
 	end,
 })

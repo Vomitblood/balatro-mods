@@ -861,7 +861,7 @@ function Cryptid.forcetrigger(card, context)
 		-- if card.ability.name == "Blueprint" then results = { jokers = { } } end
 		if card.ability.name == "Wee Joker" then
 			SMODS.scale_card(card, {
-				ref_table = card.ability,
+				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
 				no_message = true,
@@ -1011,7 +1011,8 @@ function Cryptid.forcetrigger(card, context)
 			SMODS.scale_card(card, {
 				ref_table = card.ability,
 				ref_value = "x_mult",
-				scalar_value = "extra",
+				scalar_table = card.ability.extra,
+				scalar_value = "xmult",
 				no_message = true,
 			})
 			results = { jokers = { Xmult_mod = card.ability.x_mult, card = card } }

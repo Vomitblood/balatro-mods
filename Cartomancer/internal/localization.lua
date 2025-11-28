@@ -1,8 +1,5 @@
 if Cartomancer.use_smods() then return end
 
--- Vanilla will only support default loc cuz yes.
-local loc_table = Cartomancer.load_mod_file('localization/en-us.lua', 'localization')
-
 -- Credits: Steamodded
 -- I was lazy and it's not like I'm going to code anything different from this anyways~
 local function recurse(target, ref_table)
@@ -15,14 +12,45 @@ local function recurse(target, ref_table)
         end
     end
 end
-recurse(loc_table, G.localization)
 
---local cas = CardArea.sort
---function CardArea:sort(method)
---    if method == 'sort_id' and self.cards[1] and self.cards[1].sort_id then
---        table.sort(self.cards, function (a, b) return a.sort_id > b.sort_id end )
---        return
---    end
---
---    return cas(self, method)
---end
+local function add_defaults(default_table, target_table)
+    if type(default_table) ~= 'table' then return end
+    for k, v in pairs(default_table) do
+        if target_table[k] then
+            if type(v) == "table" then
+                add_defaults(v, target_table[k])
+            end
+        else
+            target_table[k] = v
+        end
+    end
+end
+
+local function load_localization()
+    local default_table = Cartomancer.load_mod_file('localization/en-us.lua', 'cartomancer.localization')
+
+    local loc_file = Cartomancer.path.."/localization/"..G.SETTINGS.language..".lua"
+
+    local loc_table
+    if Cartomancer.nfs.fileExists(loc_file) then
+        loc_table = load(Cartomancer.nfs.read(loc_file), "Cartomancer - Localization")()
+
+        -- Use english strings for missing localization strings
+        if G.SETTINGS.language ~= "en-us" then
+            add_defaults(default_table, loc_table)
+        end
+    else
+        loc_table = default_table
+    end
+
+    recurse(loc_table, G.localization)
+end
+
+load_localization()
+
+local init_localization_ref = init_localization
+function init_localization(...)
+    load_localization()
+    return init_localization_ref(...)
+end
+

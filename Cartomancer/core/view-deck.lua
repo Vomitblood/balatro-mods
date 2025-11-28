@@ -68,6 +68,55 @@ function Cartomancer.table_size(t)
     return size
 end
 
+-- Compatibility with old settings ;-; 
+-- should have made this properly at the very beginning :(
+local legacy_vertical = {
+    top = 1,
+    center = 2,
+    bottom = 3,
+}
+local legacy_horizontal = {
+    left = 1,
+    middle = 2,
+    right = 3,
+}
+local function fix_settings_values()
+    if type(Cartomancer.SETTINGS.deck_view_stack_pos_vertical) == "string" then
+        Cartomancer.SETTINGS.deck_view_stack_pos_vertical = legacy_vertical[Cartomancer.SETTINGS.deck_view_stack_pos_vertical]
+    end
+    if type(Cartomancer.SETTINGS.deck_view_stack_pos_vertical) ~= "number" then
+        Cartomancer.SETTINGS.deck_view_stack_pos_vertical = 1
+    end
+    
+    if type(Cartomancer.SETTINGS.deck_view_stack_pos_horizontal) == "string" then
+        Cartomancer.SETTINGS.deck_view_stack_pos_horizontal = legacy_horizontal[Cartomancer.SETTINGS.deck_view_stack_pos_horizontal]
+    end
+    if type(Cartomancer.SETTINGS.deck_view_stack_pos_horizontal) ~= "number" then
+        Cartomancer.SETTINGS.deck_view_stack_pos_horizontal = 2
+    end
+
+end
+
+local vertical_options = {
+    "t", -- top
+    "c", -- center
+    "b"  -- bottom
+}
+local horizontal_options = {
+    "l", -- left
+    "m", -- middle
+    "r"  -- right
+}
+
+local function get_align_from_settings()
+    fix_settings_values()
+
+    local vertical = vertical_options[Cartomancer.SETTINGS.deck_view_stack_pos_vertical]
+    local horizontal = horizontal_options[Cartomancer.SETTINGS.deck_view_stack_pos_horizontal]
+
+    return vertical .. horizontal
+end
+
 function Cartomancer.add_unique_count()
     local unique_count = 0
 
@@ -92,21 +141,44 @@ end
 
 -- Handle amount display
 
------ Copied from incantation
-G.FUNCS.disable_quantity_display = function(e)
-    local preview_card = e.config.ref_table
-    e.states.visible = preview_card.stacked_quantity > 1
+
+local function copy_values(to, from)
+    for k, v in pairs(from) do
+        to[k] = v
+    end
 end
 
+local old_opacity
+local background_color = {}
+
+local old_color
+local x_color = {}
+
+----- Copied from incantation
+G.FUNCS.cartomancer_deck_view_quantity = function(e)
+    local preview_card = e.config.ref_table
+    e.states.visible = preview_card.stacked_quantity > 1
+
+    if Cartomancer.INTERNAL_in_config then
+        if old_opacity ~= Cartomancer.SETTINGS.deck_view_stack_background_opacity then
+            old_opacity = Cartomancer.SETTINGS.deck_view_stack_background_opacity
+            copy_values(background_color, adjust_alpha(darken(G.C.BLACK, 0.2), Cartomancer.SETTINGS.deck_view_stack_background_opacity / 100))
+        end
+        if old_color ~= Cartomancer.SETTINGS.deck_view_stack_x_color then
+            old_color = Cartomancer.SETTINGS.deck_view_stack_x_color
+            copy_values(x_color, Cartomancer.hex_to_color(Cartomancer.SETTINGS.deck_view_stack_x_color))
+        end
+    end
+end
 
 function Card:create_quantity_display()
     if not Cartomancer.SETTINGS.deck_view_stack_enabled then
         return
     end
 
-    local X_COLOR = HEX(Cartomancer.SETTINGS.deck_view_stack_x_color)
-
     if not self.children.stack_display and self.stacked_quantity > 1 then
+        copy_values(background_color, adjust_alpha(darken(G.C.BLACK, 0.2), Cartomancer.SETTINGS.deck_view_stack_background_opacity / 100))
+        copy_values(x_color, Cartomancer.hex_to_color(Cartomancer.SETTINGS.deck_view_stack_x_color))
         self.children.stack_display = UIBox {
             definition = {
                 n = G.UIT.ROOT,
@@ -118,15 +190,15 @@ function Card:create_quantity_display()
                     r = 0.001,
                     padding = 0.1,
                     align = 'cm',
-                    colour = adjust_alpha(darken(G.C.BLACK, 0.2), Cartomancer.SETTINGS.deck_view_stack_background_opacity / 100),
+                    colour = background_color,
                     shadow = false,
-                    func = 'disable_quantity_display',
+                    func = 'cartomancer_deck_view_quantity',
                     ref_table = self
                 },
                 nodes = {
                     {
                         n = G.UIT.T, -- node type
-                        config = { text = 'x', scale = 0.35, colour = X_COLOR }
+                        config = { text = 'x', scale = 0.35, colour = x_color }
                         , padding = -1
                     },
                     {
@@ -139,7 +211,7 @@ function Card:create_quantity_display()
                 }
             },
             config = {
-                align = (Cartomancer.SETTINGS.deck_view_stack_pos_vertical:sub(1, 1)) .. (Cartomancer.SETTINGS.deck_view_stack_pos_horizontal:sub(1, 1)),
+                align = get_align_from_settings(),
                 bond = 'Strong',
                 parent = self
             },
@@ -148,5 +220,40 @@ function Card:create_quantity_display()
                 drag = { can = true }
             }
         }
+    end
+end
+
+function Cartomancer.get_view_deck_preview_area()
+    if not Cartomancer.view_deck_preview_area then
+        local preview = CardArea(
+        G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
+        G.CARD_W,
+        G.CARD_H,
+        {card_limit = 1, type = 'title', view_deck = true, highlight_limit = 0, card_w = G.CARD_W*0.7, draw_layers = {'card'}})
+        local card = Card(preview.T.x + preview.T.w/2, preview.T.y, G.CARD_W*0.7, G.CARD_H*0.7, G.P_CARDS.S_A, G.P_CENTERS.m_gold)
+
+        card.stacked_quantity = 69
+        card.no_ui = true
+        card:create_quantity_display()
+
+        card:hard_set_T()
+        preview:emplace(card)
+
+        Cartomancer.view_deck_preview_area = preview
+    end
+
+    return Cartomancer.view_deck_preview_area
+end
+
+Cartomancer.update_view_deck_preview = function ()
+    if not Cartomancer.view_deck_preview_area then
+        return
+    end
+    for _, card in pairs(Cartomancer.view_deck_preview_area.cards) do
+        if card.children.stack_display then
+            card.children.stack_display:remove()
+            card.children.stack_display = nil
+        end
+        card:create_quantity_display()
     end
 end

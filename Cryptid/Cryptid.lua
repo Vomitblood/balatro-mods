@@ -42,7 +42,7 @@ end
 local function process_items(f, mod)
 	local ret = f()
 	if not ret.disabled then
-		if ret.init then
+		if ret.init and type(ret.init) == "function" then
 			ret:init()
 		end
 		if ret.items then
@@ -73,12 +73,6 @@ local function process_items(f, mod)
 				if item.init then
 					item:init()
 				end
-				--[[if not item.gameset_config then
-					-- by default, disable on modest
-					item.gameset_config = {
-						modest = {disabled = true},
-					}
-				end--]]
 				if not Cryptid.object_registry[item.object_type] then
 					Cryptid.object_registry[item.object_type] = {}
 				end
@@ -187,6 +181,7 @@ function SMODS.injectItems(...)
 		end
 	end
 	if G.PROFILES[G.SETTINGS.profile].all_unlocked then
+		G.PROFILES[G.SETTINGS.profile].cry_none2 = true
 		G.PROFILES[G.SETTINGS.profile].cry_none = (Cryptid.enabled("set_cry_poker_hand_stuff") == true)
 	end
 	G.P_CENTERS.j_stencil.immutable = true
